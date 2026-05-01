@@ -1,0 +1,226 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-blocks {
+  flex: 1;
+  padding: 12px 12px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editor-footer {
+  padding: 10px 12px 14px;
+  position: sticky;
+  bottom: 0;
+  background: #f8f7fb;
+  border-top: 1px solid var(--ui-border);
+}
+
+/* ── Block card ────────────────────────────────────────── */
+.editor-block {
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
+  background: #fff;
+  border-left: 3px solid var(--block-color, #9ca3af);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+
+.editor-block--selected {
+  box-shadow: 0 0 0 2px var(--block-color, #9ca3af);
+  border-color: transparent;
+}
+
+.editor-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+.editor-block-header:hover { background: #fafafa; }
+
+.editor-block-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--block-color, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex: 1;
+}
+
+.editor-block-controls {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.ctrl-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--ui-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.1s, color 0.1s;
+}
+.ctrl-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: var(--ui-text);
+}
+.ctrl-btn:disabled { opacity: 0.25; cursor: default; }
+.ctrl-btn--danger:hover:not(:disabled) {
+  background: #fee2e2;
+  color: var(--ui-danger);
+}
+
+.editor-block-body {
+  border-top: 1px solid var(--ui-border);
+  background: #fafafa;
+}
+
+/* ── Shared editor styles used by block editors ─────────── */
+.ep-hint {
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.cloze-words-preview {
+  font-size: 12px;
+  color: var(--ui-text-muted);
+  margin: 0;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 5px;
+  padding: 6px 10px;
+}
+
+.mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mc-option-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mc-label {
+  font-weight: 600;
+  font-size: 13px;
+  width: 18px;
+  flex-shrink: 0;
+  color: var(--ui-text);
+}
+
+.mc-input {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+}
+.mc-input:focus { border-color: var(--ui-accent); }
+
+.mc-hint {
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.q-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.q-part {
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  padding: 10px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.q-part-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.q-part-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-text-muted);
+}
+
+.q-part-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: var(--ui-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  padding: 0;
+  line-height: 1;
+}
+.q-part-remove:hover {
+  background: #fee2e2;
+  color: var(--ui-danger);
+}
+
+.match-grid-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 24px;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ui-text-muted);
+  padding: 0 2px;
+}
+
+.match-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 24px;
+  gap: 6px;
+  align-items: center;
+}
+
+.match-row input {
+  padding: 5px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  width: 100%;
+}
+.match-row input:focus { border-color: var(--ui-accent); }

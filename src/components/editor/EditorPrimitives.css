@@ -1,0 +1,120 @@
+.ep-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.ep-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ui-text-muted);
+}
+
+.ep-field input,
+.ep-field select,
+.ep-field textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--ui-text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ep-field input:focus,
+.ep-field select:focus,
+.ep-field textarea:focus {
+  border-color: var(--ui-accent);
+}
+
+.ep-row {
+  display: flex;
+  gap: 10px;
+}
+
+.ep-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ui-text);
+  cursor: pointer;
+  user-select: none;
+}
+.ep-check-row input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--ui-accent);
+  cursor: pointer;
+}
+
+.ep-list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ep-list-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ep-list-row input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--ui-text);
+  outline: none;
+  background: #fff;
+}
+.ep-list-row input:focus { border-color: var(--ui-accent); }
+
+.ep-list-remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--ui-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.ep-list-remove:hover {
+  background: #fee2e2;
+  color: var(--ui-danger);
+}
+
+.ep-list-add {
+  align-self: flex-start;
+  border: 1px dashed var(--ui-border);
+  background: none;
+  color: var(--ui-accent);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  margin-top: 2px;
+}
+.ep-list-add:hover {
+  background: #ede9fe;
+  border-color: var(--ui-accent);
+}
+
+.block-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px;
+}
