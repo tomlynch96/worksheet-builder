@@ -1,0 +1,379 @@
+/* ── A4 page shell ──────────────────────────────────────
+   210 × 297 mm at 96 dpi = 794 × 1123 px.
+   Margins: 18mm ≈ 68px
+   ─────────────────────────────────────────────────────── */
+.a4-page {
+  width: 794px;
+  min-height: 1123px;
+  background: #fff;
+  padding: 68px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  box-sizing: border-box;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  font-size: 11pt;
+  line-height: 1.45;
+  color: #000;
+  flex-shrink: 0;
+}
+
+/* ── Shared typography ──────────────────────────────────── */
+.pr-placeholder {
+  color: #aaa;
+  font-style: italic;
+  font-weight: normal;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.pr-header {
+  margin-bottom: 18px;
+}
+
+.pr-header-badges {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.pr-badge {
+  font-size: 8.5pt;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pr-badge--board { background: #1e3a5f; color: #fff; }
+.pr-badge--tier  { background: #e5e7eb; color: #374151; }
+
+.pr-title {
+  font-size: 18pt;
+  font-weight: 700;
+  margin: 0 0 3px;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.pr-topic {
+  font-size: 10pt;
+  color: #374151;
+  margin: 0 0 12px;
+}
+
+.pr-student-fields {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 10pt;
+  margin-bottom: 12px;
+}
+
+.pr-field-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pr-underline {
+  display: inline-block;
+  width: 160px;
+  border-bottom: 1px solid #000;
+}
+.pr-underline--short { width: 80px; }
+
+.pr-header-rule {
+  border: none;
+  border-top: 2px solid #000;
+  margin-top: 4px;
+}
+
+/* ── Instructions ────────────────────────────────────────── */
+.pr-instructions {
+  margin-bottom: 16px;
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border-radius: 3px;
+  background: #f9fafb;
+}
+
+.pr-instructions-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 10pt;
+}
+.pr-instructions-list li + li { margin-top: 3px; }
+
+/* ── Questions ───────────────────────────────────────────── */
+.pr-question {
+  margin-bottom: 20px;
+}
+
+.pr-question-stem {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.pr-q-num {
+  font-weight: 700;
+  flex-shrink: 0;
+  min-width: 20px;
+}
+
+.pr-q-text {
+  flex: 1;
+}
+
+.pr-marks {
+  font-size: 9.5pt;
+  color: #374151;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: 8px;
+  align-self: flex-end;
+}
+
+.answer-lines {
+  margin-left: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.answer-line {
+  height: 28px;
+  border-bottom: 1px solid #9ca3af;
+}
+
+/* ── Sub-parts ───────────────────────────────────────────── */
+.pr-parts {
+  margin-left: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pr-part-stem {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.pr-part-label {
+  font-weight: 700;
+  flex-shrink: 0;
+  min-width: 22px;
+}
+
+/* ── Multiple choice ─────────────────────────────────────── */
+.pr-mc-options {
+  margin-left: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.pr-mc-option {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.pr-mc-label {
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 18px;
+}
+
+/* ── Worked example ──────────────────────────────────────── */
+.pr-worked-example {
+  border: 2px solid #1e3a5f;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  background: #f8faff;
+}
+
+.pr-worked-title {
+  font-weight: 700;
+  font-size: 10.5pt;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #1e3a5f;
+}
+
+.pr-worked-steps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 10.5pt;
+}
+.pr-worked-steps li + li { margin-top: 4px; }
+
+/* ── Information ─────────────────────────────────────────── */
+.pr-information {
+  border-left: 4px solid #b45309;
+  background: #fffbeb;
+  padding: 8px 12px;
+  margin-bottom: 18px;
+  border-radius: 0 3px 3px 0;
+}
+
+.pr-information-heading {
+  font-weight: 700;
+  font-size: 10pt;
+  color: #b45309;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pr-information-content {
+  margin: 0;
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+
+/* ── Shared activity heading ─────────────────────────────── */
+.pr-activity-heading {
+  font-size: 10.5pt;
+  font-style: italic;
+  margin: 0 0 8px;
+}
+
+/* ── Match them up ───────────────────────────────────────── */
+.pr-match {
+  margin-bottom: 18px;
+}
+
+.pr-match-table {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.pr-match-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pr-match-cell {
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  padding: 5px 9px;
+  font-size: 10.5pt;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+.pr-match-cell--left  { background: #f8faff; }
+.pr-match-cell--right { background: #fff; }
+
+.pr-match-lines {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 0 12px;
+  gap: 6px;
+}
+
+.pr-match-dot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+}
+
+.pr-match-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid #374151;
+  background: #fff;
+}
+
+/* ── Cloze ───────────────────────────────────────────────── */
+.pr-cloze {
+  margin-bottom: 18px;
+}
+
+.pr-word-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+  background: #f9fafb;
+}
+
+.pr-word-bank-word {
+  font-size: 10.5pt;
+  padding: 2px 8px;
+  border: 1px solid #9ca3af;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.pr-cloze-text {
+  font-size: 10.5pt;
+  line-height: 1.9;
+  margin: 0;
+}
+
+.pr-cloze-blank {
+  display: inline-block;
+  border-bottom: 1.5px solid #000;
+  min-width: 60px;
+  white-space: pre;
+}
+
+/* ── Order the steps ─────────────────────────────────────── */
+.pr-order-steps {
+  margin-bottom: 18px;
+}
+
+.pr-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pr-step-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10.5pt;
+}
+
+.pr-step-box {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid #374151;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Figure ──────────────────────────────────────────────── */
+.pr-figure {
+  border: 1.5px dashed #9ca3af;
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 8px;
+  margin-bottom: 18px;
+  background: #f9fafb;
+}
+
+.pr-figure-label {
+  font-size: 9.5pt;
+  color: #6b7280;
+  font-style: italic;
+}
