@@ -14,6 +14,7 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <span className="topbar-brand">Worksheet Builder</span>
+        <span className="topbar-version">v0.2 ✓</span>
         <PDFDownloadLink
           document={<WorksheetPDF worksheet={worksheet} />}
           fileName="worksheet.pdf"
