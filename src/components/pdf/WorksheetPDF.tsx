@@ -82,7 +82,7 @@ const s = StyleSheet.create({
   wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, borderWidth: 1, borderColor: '#d1d5db', padding: '7 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 9 },
   wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '1 7', borderRadius: 2, backgroundColor: '#fff' },
   clozeText: { fontSize: 10.5, lineHeight: 1.9 },
-  clozeBlank: { borderBottomWidth: 1.5, borderBottomColor: '#000' },
+  clozeBlank: { borderBottomWidth: 1.5, borderBottomColor: '#000', borderBottomStyle: 'solid' },
 
   // Order steps
   orderSteps: { marginBottom: 16 },
@@ -272,7 +272,7 @@ function PDFCloze({ block }: { block: ClozeBlock }) {
       <Text style={s.clozeText}>
         {parts.map((part, i) =>
           part.type === 'blank'
-            ? <Text key={i} style={s.clozeBlank}>{' '.repeat(Math.max(part.value.length + 4, 8))}</Text>
+            ? <Text key={i} style={s.clozeBlank}>{' '.repeat(Math.max(part.value.length + 4, 8))}</Text>
             : <Text key={i}>{part.value}</Text>
         )}
       </Text>
@@ -330,7 +330,9 @@ export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
     <Document>
       <Page size="A4" style={s.page}>
         {worksheet.blocks.map(block => (
-          <PDFBlock key={block.id} block={block} blocks={worksheet.blocks} />
+          <View key={block.id} wrap={false}>
+            <PDFBlock block={block} blocks={worksheet.blocks} />
+          </View>
         ))}
       </Page>
     </Document>
