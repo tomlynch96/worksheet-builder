@@ -5,7 +5,15 @@
 .a4-page {
   width: 794px;
   min-height: 1123px;
-  background: #fff;
+  /* Page break line at every 1123px (A4 height at 96dpi) */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent calc(1123px - 2px),
+    rgba(239, 68, 68, 0.5) calc(1123px - 2px),
+    rgba(239, 68, 68, 0.5) 1123px
+  );
+  background-color: #fff;
   padding: 68px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
   box-sizing: border-box;
@@ -14,6 +22,7 @@
   line-height: 1.45;
   color: #000;
   flex-shrink: 0;
+  position: relative;
 }
 
 /* ── Shared typography ──────────────────────────────────── */
