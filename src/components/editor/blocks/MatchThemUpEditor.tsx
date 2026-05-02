@@ -1,7 +1,7 @@
 import type { MatchThemUpBlock, MatchItem } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
-import { RichField } from '../RichField'
+import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: MatchThemUpBlock
@@ -38,24 +38,10 @@ export function MatchThemUpEditor({ block, dispatch }: Props) {
       {block.items.map((item, i) => (
         <div key={item.id} className="match-row">
           <div style={{ flex: 1 }}>
-            <RichField
-              id={`${block.id}-left-${i}`}
-              label={`Term ${i + 1}`}
-              value={item.left}
-              onChange={left => updateItem(i, { left })}
-              placeholder="Term…"
-              multiline={false}
-            />
+            <RichTextEditor value={item.left} onChange={left => updateItem(i, { left })} placeholder="Term…" multiline={false} />
           </div>
           <div style={{ flex: 1 }}>
-            <RichField
-              id={`${block.id}-right-${i}`}
-              label={`Definition ${i + 1}`}
-              value={item.right}
-              onChange={right => updateItem(i, { right })}
-              placeholder="Definition…"
-              multiline={false}
-            />
+            <RichTextEditor value={item.right} onChange={right => updateItem(i, { right })} placeholder="Definition…" multiline={false} />
           </div>
           <button type="button" className="ep-list-remove" onClick={() => removeItem(i)}>×</button>
         </div>

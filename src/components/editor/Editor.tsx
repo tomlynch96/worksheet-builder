@@ -2,8 +2,8 @@ import type { Worksheet, BlockType } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
 import { AddBlockMenu } from './AddBlockMenu'
-import { RichFieldProvider } from './RichFieldContext'
-import { SharedRTE } from './SharedRTE'
+import { ActiveEditorProvider } from './ActiveEditorContext'
+import { RTEToolbar } from './RTEToolbar'
 import './Editor.css'
 
 const BLOCK_LABELS: Record<BlockType, string> = {
@@ -45,63 +45,62 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const { blocks } = worksheet
 
   return (
-    <RichFieldProvider>
-    <div className="editor">
-      <div className="editor-blocks">
-        {blocks.map((block, idx) => {
-          const isSelected = block.id === selectedId
-          const color = BLOCK_COLORS[block.type]
-          const isFirst = idx === 0
-          const isLast = idx === blocks.length - 1
+    <ActiveEditorProvider>
+      <RTEToolbar />
+      <div className="editor">
+        <div className="editor-blocks">
+          {blocks.map((block, idx) => {
+            const isSelected = block.id === selectedId
+            const color = BLOCK_COLORS[block.type]
+            const isFirst = idx === 0
+            const isLast = idx === blocks.length - 1
 
-          return (
-            <div
-              key={block.id}
-              className={`editor-block ${isSelected ? 'editor-block--selected' : ''}`}
-              style={{ '--block-color': color } as React.CSSProperties}
-            >
-              <div className="editor-block-header" onClick={() => onSelect(isSelected ? null : block.id)}>
-                <span className="editor-block-type">{BLOCK_LABELS[block.type]}</span>
-                <div className="editor-block-controls">
-                  <button
-                    type="button"
-                    className="ctrl-btn"
-                    disabled={isFirst}
-                    onClick={e => { e.stopPropagation(); dispatch({ type: 'MOVE_BLOCK', id: block.id, direction: 'up' }) }}
-                    aria-label="Move up"
-                  >↑</button>
-                  <button
-                    type="button"
-                    className="ctrl-btn"
-                    disabled={isLast}
-                    onClick={e => { e.stopPropagation(); dispatch({ type: 'MOVE_BLOCK', id: block.id, direction: 'down' }) }}
-                    aria-label="Move down"
-                  >↓</button>
-                  <button
-                    type="button"
-                    className="ctrl-btn ctrl-btn--danger"
-                    onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BLOCK', id: block.id }); onSelect(null) }}
-                    aria-label="Delete block"
-                  >×</button>
+            return (
+              <div
+                key={block.id}
+                className={`editor-block ${isSelected ? 'editor-block--selected' : ''}`}
+                style={{ '--block-color': color } as React.CSSProperties}
+              >
+                <div className="editor-block-header" onClick={() => onSelect(isSelected ? null : block.id)}>
+                  <span className="editor-block-type">{BLOCK_LABELS[block.type]}</span>
+                  <div className="editor-block-controls">
+                    <button
+                      type="button"
+                      className="ctrl-btn"
+                      disabled={isFirst}
+                      onClick={e => { e.stopPropagation(); dispatch({ type: 'MOVE_BLOCK', id: block.id, direction: 'up' }) }}
+                      aria-label="Move up"
+                    >↑</button>
+                    <button
+                      type="button"
+                      className="ctrl-btn"
+                      disabled={isLast}
+                      onClick={e => { e.stopPropagation(); dispatch({ type: 'MOVE_BLOCK', id: block.id, direction: 'down' }) }}
+                      aria-label="Move down"
+                    >↓</button>
+                    <button
+                      type="button"
+                      className="ctrl-btn ctrl-btn--danger"
+                      onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BLOCK', id: block.id }); onSelect(null) }}
+                      aria-label="Delete block"
+                    >×</button>
+                  </div>
                 </div>
+
+                {isSelected && (
+                  <div className="editor-block-body">
+                    <BlockEditor block={block} dispatch={dispatch} />
+                  </div>
+                )}
               </div>
+            )
+          })}
+        </div>
 
-              {isSelected && (
-                <div className="editor-block-body">
-                  <BlockEditor block={block} dispatch={dispatch} />
-                </div>
-              )}
-            </div>
-          )
-        })}
+        <div className="editor-footer">
+          <AddBlockMenu dispatch={dispatch} onAdded={id => onSelect(id)} />
+        </div>
       </div>
-
-      <SharedRTE />
-
-      <div className="editor-footer">
-        <AddBlockMenu dispatch={dispatch} onAdded={id => onSelect(id)} />
-      </div>
-    </div>
-    </RichFieldProvider>
+    </ActiveEditorProvider>
   )
 }

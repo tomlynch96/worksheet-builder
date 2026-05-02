@@ -1,7 +1,7 @@
 import type { MultipleChoiceBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
-import { RichField } from '../RichField'
+import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: MultipleChoiceBlock
@@ -33,9 +33,7 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Question stem">
-        <RichField
-          id={`${block.id}-stem`}
-          label="Question stem"
+        <RichTextEditor
           value={block.stem}
           onChange={stem => update({ stem })}
           placeholder="Question stem…"
@@ -57,9 +55,7 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
             />
             <span className="mc-label">{LABELS[i] ?? i + 1}</span>
             <div style={{ flex: 1 }}>
-              <RichField
-                id={`${block.id}-opt-${i}`}
-                label={`Option ${LABELS[i] ?? i + 1}`}
+              <RichTextEditor
                 value={opt}
                 onChange={val => updateOption(i, val)}
                 placeholder={`Option ${LABELS[i] ?? i + 1}`}

@@ -15,67 +15,6 @@
   gap: 6px;
 }
 
-/* ── Shared RTE panel ────────────────────────────────────── */
-.shared-rte {
-  flex-shrink: 0;
-  border-top: 2px solid var(--ui-accent);
-  padding: 8px 12px 10px;
-  background: #fff;
-}
-
-.shared-rte-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--ui-accent);
-  margin-bottom: 5px;
-}
-
-.shared-rte-empty {
-  font-size: 12px;
-  color: var(--ui-text-muted);
-  font-style: italic;
-  padding: 10px 0 4px;
-  text-align: center;
-}
-
-/* ── RichField (clickable field preview) ─────────────────── */
-.rich-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: 5px;
-  background: #fff;
-  cursor: pointer;
-  min-height: 32px;
-  transition: border-color 0.15s, background 0.15s;
-}
-.rich-field:hover { border-color: var(--ui-accent); background: #fafaff; }
-.rich-field--active { border-color: var(--ui-accent); background: #ede9fe; }
-
-.rich-field-text {
-  flex: 1;
-  font-size: 12px;
-  color: var(--ui-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rich-field-text--empty {
-  color: #aaa;
-  font-style: italic;
-}
-
-.rich-field-icon {
-  font-size: 12px;
-  color: var(--ui-text-muted);
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
 .editor-footer {
   flex-shrink: 0;
   padding: 10px 12px 14px;
