@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
+import { htmlToPdf } from '../../utils/htmlToPdf'
 
 // ── Styles ────────────────────────────────────────────────
 // react-pdf uses pt units. A4 page: 595 × 842 pt. Margin: 51pt (~18mm).
@@ -57,7 +58,7 @@ const s = StyleSheet.create({
   // Worked example
   workedExample: { borderWidth: 2, borderColor: '#1e3a5f', borderRadius: 3, padding: '8 12', marginBottom: 16, backgroundColor: '#f8faff' },
   workedTitle: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#1e3a5f', marginBottom: 6, textTransform: 'uppercase' },
-  workedStep: { fontSize: 10, marginBottom: 4, marginLeft: 10 },
+  workedStep: { fontSize: 10, marginBottom: 4, marginLeft: 10, flexDirection: 'row' },
 
   // Information
   information: { borderLeftWidth: 4, borderLeftColor: '#b45309', backgroundColor: '#fffbeb', padding: '7 10', marginBottom: 16 },
@@ -82,7 +83,7 @@ const s = StyleSheet.create({
   wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, borderWidth: 1, borderColor: '#d1d5db', padding: '7 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 9 },
   wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '1 7', borderRadius: 2, backgroundColor: '#fff' },
   clozeText: { fontSize: 10.5, lineHeight: 1.9 },
-  clozeBlank: { borderBottomWidth: 1.5, borderBottomColor: '#000', borderBottomStyle: 'solid' },
+  clozeBlank: { fontSize: 10.5, color: '#000', letterSpacing: 1.5 },
 
   // Order steps
   orderSteps: { marginBottom: 16 },
@@ -156,7 +157,7 @@ function PDFQuestion({ block, num }: { block: QuestionBlock; num: number }) {
     <View style={s.question}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.stem}</Text>
+        {htmlToPdf(block.stem, s.qText)}
         {!hasParts && block.marks > 0 && (
           <Text style={s.marks}>[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</Text>
         )}
@@ -168,7 +169,7 @@ function PDFQuestion({ block, num }: { block: QuestionBlock; num: number }) {
             <View key={part.id} style={s.part}>
               <View style={s.partStem}>
                 <Text style={s.partLabel}>({part.label})</Text>
-                <Text style={s.qText}>{part.stem}</Text>
+                {htmlToPdf(part.stem, s.qText)}
                 {part.marks > 0 && (
                   <Text style={s.marks}>[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</Text>
                 )}
@@ -188,7 +189,7 @@ function PDFMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: nu
     <View style={s.question}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.stem}</Text>
+        {htmlToPdf(block.stem, s.qText)}
         {block.marks > 0 && (
           <Text style={s.marks}>[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</Text>
         )}
@@ -197,7 +198,7 @@ function PDFMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: nu
         {block.options.map((opt, i) => (
           <View key={i} style={s.mcOption}>
             <Text style={s.mcLabel}>{LABELS[i] ?? String(i + 1)}</Text>
-            <Text>{opt}</Text>
+            {htmlToPdf(opt, {})}
           </View>
         ))}
       </View>
@@ -210,7 +211,10 @@ function PDFWorkedExample({ block }: { block: WorkedExampleBlock }) {
     <View style={s.workedExample}>
       <Text style={s.workedTitle}>{block.title || 'Worked example'}</Text>
       {block.steps.map((step, i) => (
-        <Text key={i} style={s.workedStep}>{i + 1}. {step}</Text>
+        <View key={i} style={s.workedStep}>
+          <Text>{i + 1}. </Text>
+          {htmlToPdf(step, {})}
+        </View>
       ))}
     </View>
   )
@@ -220,7 +224,7 @@ function PDFInformation({ block }: { block: InformationBlock }) {
   return (
     <View style={s.information}>
       {block.heading ? <Text style={s.infoHeading}>{block.heading}</Text> : null}
-      <Text style={s.infoContent}>{block.content}</Text>
+      {htmlToPdf(block.content, s.infoContent)}
     </View>
   )
 }
@@ -234,7 +238,7 @@ function PDFMatchThemUp({ block }: { block: MatchThemUpBlock }) {
         <View style={s.matchCol}>
           {block.items.map((item) => (
             <View key={item.id} style={[s.matchCell, s.matchCellLeft]}>
-              <Text>{item.left}</Text>
+              {htmlToPdf(item.left, { fontSize: 10 })}
             </View>
           ))}
         </View>
@@ -249,7 +253,7 @@ function PDFMatchThemUp({ block }: { block: MatchThemUpBlock }) {
         <View style={s.matchCol}>
           {shuffledRight.map((right, i) => (
             <View key={i} style={s.matchCell}>
-              <Text>{right}</Text>
+              {htmlToPdf(right, { fontSize: 10 })}
             </View>
           ))}
         </View>
@@ -272,7 +276,7 @@ function PDFCloze({ block }: { block: ClozeBlock }) {
       <Text style={s.clozeText}>
         {parts.map((part, i) =>
           part.type === 'blank'
-            ? <Text key={i} style={s.clozeBlank}>{' '.repeat(Math.max(part.value.length + 4, 8))}</Text>
+            ? <Text key={i} style={s.clozeBlank}>{'_'.repeat(Math.max(part.value.length + 4, 8))}</Text>
             : <Text key={i}>{part.value}</Text>
         )}
       </Text>

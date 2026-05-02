@@ -1,6 +1,7 @@
 import type { MultipleChoiceBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
+import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: MultipleChoiceBlock
@@ -23,7 +24,7 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
 
   function removeOption(idx: number) {
     const options = block.options.filter((_, i) => i !== idx)
-    const correctIndex = idx === block.correctIndex ? 0 : (block.correctIndex > idx ? block.correctIndex - 1 : block.correctIndex)
+    const correctIndex = block.correctIndex >= idx && block.correctIndex > 0 ? block.correctIndex - 1 : block.correctIndex
     update({ options, correctIndex })
   }
 
@@ -32,7 +33,12 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Question stem">
-        <textarea rows={2} value={block.stem} onChange={e => update({ stem: e.target.value })} />
+        <RichTextEditor
+          value={block.stem}
+          onChange={stem => update({ stem })}
+          placeholder="Question stem…"
+          multiline={false}
+        />
       </Field>
       <Field label="Marks">
         <input type="number" min={1} value={block.marks} onChange={e => update({ marks: +e.target.value })} style={{ maxWidth: 80 }} />
@@ -48,12 +54,14 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
               title="Mark as correct answer"
             />
             <span className="mc-label">{LABELS[i] ?? i + 1}</span>
-            <input
-              className="mc-input"
-              value={opt}
-              onChange={e => updateOption(i, e.target.value)}
-              placeholder={`Option ${LABELS[i] ?? i + 1}`}
-            />
+            <div style={{ flex: 1 }}>
+              <RichTextEditor
+                value={opt}
+                onChange={val => updateOption(i, val)}
+                placeholder={`Option ${LABELS[i] ?? i + 1}`}
+                multiline={false}
+              />
+            </div>
             <button type="button" className="ep-list-remove" onClick={() => removeOption(i)}>×</button>
           </div>
         ))}

@@ -1,6 +1,7 @@
 import type { InformationBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
+import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: InformationBlock
@@ -17,7 +18,11 @@ export function InformationEditor({ block, dispatch }: Props) {
         <input value={block.heading} onChange={e => update({ heading: e.target.value })} placeholder="e.g. Key information" />
       </Field>
       <Field label="Content">
-        <textarea rows={4} value={block.content} onChange={e => update({ content: e.target.value })} />
+        <RichTextEditor
+          value={block.content}
+          onChange={content => update({ content })}
+          placeholder="Information text…"
+        />
       </Field>
     </div>
   )

@@ -1,6 +1,7 @@
 import type { QuestionBlock, QuestionPart } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row } from '../EditorPrimitives'
+import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: QuestionBlock
@@ -32,7 +33,12 @@ export function QuestionEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Question stem">
-        <textarea rows={3} value={block.stem} onChange={e => update({ stem: e.target.value })} />
+        <RichTextEditor
+          value={block.stem}
+          onChange={stem => update({ stem })}
+          placeholder="Question stem…"
+          multiline={false}
+        />
       </Field>
       {block.parts.length === 0 && (
         <Row>
@@ -54,7 +60,12 @@ export function QuestionEditor({ block, dispatch }: Props) {
                 <button type="button" className="q-part-remove" onClick={() => removePart(i)}>×</button>
               </div>
               <Field label="Stem">
-                <textarea rows={2} value={part.stem} onChange={e => updatePart(i, { stem: e.target.value })} />
+                <RichTextEditor
+                  value={part.stem}
+                  onChange={stem => updatePart(i, { stem })}
+                  placeholder="Sub-question stem…"
+                  multiline={false}
+                />
               </Field>
               <Row>
                 <Field label="Marks">

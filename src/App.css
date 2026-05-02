@@ -36,6 +36,74 @@
   color: #e2e8f0;
 }
 
+/* ── Preset selector ──────────────────────────────────── */
+.topbar-presets { position: relative; }
+
+.btn-presets {
+  padding: 7px 14px;
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-presets:hover { background: rgba(255,255,255,0.1); }
+
+.presets-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+}
+
+.presets-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #e2e0ea;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  min-width: 320px;
+  overflow: hidden;
+}
+
+.presets-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 0;
+  padding: 8px 14px 6px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.preset-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.preset-option:hover { background: #f5f3ff; }
+
+.preset-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.preset-desc {
+  font-size: 11px;
+  color: #6b7280;
+}
+
 .btn-download {
   display: inline-flex;
   align-items: center;

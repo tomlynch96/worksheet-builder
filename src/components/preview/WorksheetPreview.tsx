@@ -1,8 +1,8 @@
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
+import { splitIntoPages } from '../../utils/pagination'
 import './WorksheetPreview.css'
 
-// Auto-number questions and multiple choice in document order
 function getQuestionNumber(blocks: Block[], id: string): number {
   let n = 0
   for (const b of blocks) {
@@ -10,6 +10,16 @@ function getQuestionNumber(blocks: Block[], id: string): number {
     if (b.id === id) return n
   }
   return n
+}
+
+// Render rich HTML or plain text safely
+function RichText({ html, className }: { html: string; className?: string }) {
+  if (!html || html === '<p></p>') return <span className="pr-placeholder">—</span>
+  // If it contains HTML tags, render as HTML; otherwise as plain text
+  if (html.includes('<')) {
+    return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />
+  }
+  return <span className={className}>{html}</span>
 }
 
 function AnswerLines({ count }: { count: number }) {
@@ -50,7 +60,7 @@ function PreviewInstructions({ block }: { block: InstructionsBlock }) {
   return (
     <div className="pr-instructions">
       <ul className="pr-instructions-list">
-        {block.items.map((item, i) => <li key={i}>{item}</li>)}
+        {block.items.map((item, i) => <li key={i}><RichText html={item} /></li>)}
       </ul>
     </div>
   )
@@ -62,7 +72,9 @@ function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) 
     <div className="pr-question">
       <div className="pr-question-stem">
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.stem || <em className="pr-placeholder">Question stem…</em>}</span>
+        <span className="pr-q-text">
+          {block.stem ? <RichText html={block.stem} /> : <em className="pr-placeholder">Question stem…</em>}
+        </span>
         {!hasParts && block.marks > 0 && (
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
@@ -74,7 +86,9 @@ function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) 
             <div key={part.id} className="pr-part">
               <div className="pr-part-stem">
                 <span className="pr-part-label">({part.label})</span>
-                <span className="pr-q-text">{part.stem || <em className="pr-placeholder">Sub-question stem…</em>}</span>
+                <span className="pr-q-text">
+                  {part.stem ? <RichText html={part.stem} /> : <em className="pr-placeholder">Sub-question…</em>}
+                </span>
                 {part.marks > 0 && (
                   <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
                 )}
@@ -94,7 +108,9 @@ function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num
     <div className="pr-question">
       <div className="pr-question-stem">
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.stem || <em className="pr-placeholder">Question stem…</em>}</span>
+        <span className="pr-q-text">
+          {block.stem ? <RichText html={block.stem} /> : <em className="pr-placeholder">Question stem…</em>}
+        </span>
         {block.marks > 0 && (
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
@@ -103,7 +119,7 @@ function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num
         {block.options.map((opt, i) => (
           <div key={i} className="pr-mc-option">
             <span className="pr-mc-label">{LABELS[i] ?? i + 1}</span>
-            <span>{opt || <em className="pr-placeholder">Option…</em>}</span>
+            {opt ? <RichText html={opt} /> : <em className="pr-placeholder">Option…</em>}
           </div>
         ))}
       </div>
@@ -117,7 +133,7 @@ function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
       <div className="pr-worked-title">{block.title || 'Worked example'}</div>
       <ol className="pr-worked-steps">
         {block.steps.map((step, i) => (
-          <li key={i}>{step || <em className="pr-placeholder">Step…</em>}</li>
+          <li key={i}>{step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}</li>
         ))}
       </ol>
     </div>
@@ -128,7 +144,9 @@ function PreviewInformation({ block }: { block: InformationBlock }) {
   return (
     <div className="pr-information">
       {block.heading && <div className="pr-information-heading">{block.heading}</div>}
-      <p className="pr-information-content">{block.content || <em className="pr-placeholder">Information text…</em>}</p>
+      <div className="pr-information-content">
+        {block.content ? <RichText html={block.content} /> : <em className="pr-placeholder">Information text…</em>}
+      </div>
     </div>
   )
 }
@@ -142,7 +160,7 @@ function PreviewMatchThemUp({ block }: { block: MatchThemUpBlock }) {
         <div className="pr-match-col">
           {block.items.map((item, i) => (
             <div key={item.id} className="pr-match-cell pr-match-cell--left">
-              {item.left || <em className="pr-placeholder">Term {i + 1}…</em>}
+              {item.left ? <RichText html={item.left} /> : <em className="pr-placeholder">Term {i + 1}…</em>}
             </div>
           ))}
         </div>
@@ -157,7 +175,7 @@ function PreviewMatchThemUp({ block }: { block: MatchThemUpBlock }) {
         <div className="pr-match-col">
           {shuffledRight.map((right, i) => (
             <div key={i} className="pr-match-cell pr-match-cell--right">
-              {right || <em className="pr-placeholder">Definition {i + 1}…</em>}
+              {right ? <RichText html={right} /> : <em className="pr-placeholder">Definition {i + 1}…</em>}
             </div>
           ))}
         </div>
@@ -184,7 +202,7 @@ function PreviewCloze({ block }: { block: ClozeBlock }) {
           ? <em className="pr-placeholder">Enter cloze text with [bracketed] words…</em>
           : parts.map((part, i) =>
               part.type === 'blank'
-                ? <span key={i} className="pr-cloze-blank">{' '.repeat(Math.max(part.value.length + 4, 8))}</span>
+                ? <span key={i} className="pr-cloze-blank">{'_'.repeat(Math.max(part.value.length + 4, 8))}</span>
                 : <span key={i}>{part.value}</span>
             )
         }
@@ -202,7 +220,7 @@ function PreviewOrderSteps({ block }: { block: OrderStepsBlock }) {
         {shuffled.map((step, i) => (
           <div key={i} className="pr-step-row">
             <span className="pr-step-box" />
-            <span>{step || <em className="pr-placeholder">Step…</em>}</span>
+            {step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}
           </div>
         ))}
       </div>
@@ -241,11 +259,16 @@ function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
 }
 
 export function WorksheetPreview({ worksheet }: { worksheet: Worksheet }) {
+  const pages = splitIntoPages(worksheet.blocks)
   return (
-    <div className="a4-page">
-      {worksheet.blocks.map(block => (
-        <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} />
+    <>
+      {pages.map((pageBlocks, pageIdx) => (
+        <div key={pageIdx} className="a4-page">
+          {pageBlocks.map(block => (
+            <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} />
+          ))}
+        </div>
       ))}
-    </div>
+    </>
   )
 }
