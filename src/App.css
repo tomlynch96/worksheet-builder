@@ -130,7 +130,7 @@
 .panel-editor {
   width: 420px;
   flex-shrink: 0;
-  overflow-y: auto;
+  overflow: hidden;
   background: #f8f7fb;
   border-right: 1px solid #e2e0ea;
   display: flex;

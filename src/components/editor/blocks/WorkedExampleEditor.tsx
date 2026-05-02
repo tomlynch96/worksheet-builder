@@ -1,7 +1,7 @@
 import type { WorkedExampleBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
-import { RichTextEditor } from '../RichTextEditor'
+import { RichField } from '../RichField'
 
 interface Props {
   block: WorkedExampleBlock
@@ -28,9 +28,11 @@ export function WorkedExampleEditor({ block, dispatch }: Props) {
       </Field>
       <div className="ep-list-editor">
         {block.steps.map((step, i) => (
-          <div key={i} className="ep-list-row" style={{ alignItems: 'flex-start' }}>
+          <div key={i} className="ep-list-row" style={{ alignItems: 'center' }}>
             <div style={{ flex: 1 }}>
-              <RichTextEditor
+              <RichField
+                id={`${block.id}-step-${i}`}
+                label={`Step ${i + 1}`}
                 value={step}
                 onChange={val => updateStep(i, val)}
                 placeholder={`Step ${i + 1}…`}

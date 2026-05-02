@@ -1,7 +1,7 @@
 import type { OrderStepsBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
-import { RichTextEditor } from '../RichTextEditor'
+import { RichField } from '../RichField'
 
 interface Props {
   block: OrderStepsBlock
@@ -29,9 +29,11 @@ export function OrderStepsEditor({ block, dispatch }: Props) {
       <p className="ep-hint">Enter steps in the correct order — they will be shuffled for students.</p>
       <div className="ep-list-editor">
         {block.steps.map((step, i) => (
-          <div key={i} className="ep-list-row" style={{ alignItems: 'flex-start' }}>
+          <div key={i} className="ep-list-row" style={{ alignItems: 'center' }}>
             <div style={{ flex: 1 }}>
-              <RichTextEditor
+              <RichField
+                id={`${block.id}-step-${i}`}
+                label={`Step ${i + 1}`}
                 value={step}
                 onChange={val => updateStep(i, val)}
                 placeholder={`Step ${i + 1}…`}

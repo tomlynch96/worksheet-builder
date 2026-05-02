@@ -2,14 +2,13 @@ import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
 import katex from 'katex'
-import 'katex/dist/katex.min.css'
 
 function MathView({ node }: NodeViewProps) {
   const latex = (node.attrs as { latex: string }).latex || ''
   const html = katex.renderToString(latex, {
     throwOnError: false,
     displayMode: false,
-    output: 'html',
+    output: 'mathml',
   })
   return (
     <NodeViewWrapper as="span" className="math-node" contentEditable={false}>

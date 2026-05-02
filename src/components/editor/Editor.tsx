@@ -2,6 +2,8 @@ import type { Worksheet, BlockType } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
 import { AddBlockMenu } from './AddBlockMenu'
+import { RichFieldProvider } from './RichFieldContext'
+import { SharedRTE } from './SharedRTE'
 import './Editor.css'
 
 const BLOCK_LABELS: Record<BlockType, string> = {
@@ -43,6 +45,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const { blocks } = worksheet
 
   return (
+    <RichFieldProvider>
     <div className="editor">
       <div className="editor-blocks">
         {blocks.map((block, idx) => {
@@ -93,9 +96,12 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
         })}
       </div>
 
+      <SharedRTE />
+
       <div className="editor-footer">
         <AddBlockMenu dispatch={dispatch} onAdded={id => onSelect(id)} />
       </div>
     </div>
+    </RichFieldProvider>
   )
 }
