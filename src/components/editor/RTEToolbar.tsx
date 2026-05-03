@@ -73,12 +73,29 @@ export function RTEToolbar() {
     setShowMath(false)
   }
 
+  const isChemActive = editor?.isActive('chemInline') ?? false
+
+  function openChemPopover() {
+    if (isChemActive && editor) {
+      setChemInput(editor.getAttributes('chemInline').chem ?? '')
+    } else {
+      setChemInput('')
+    }
+    setShowChem(v => !v)
+    setShowMath(false)
+    setShowSymbols(false)
+  }
+
   function insertChem() {
     if (!chemInput.trim() || !editor) return
-    editor.chain().focus().insertContent({
-      type: 'chemInline',
-      attrs: { chem: chemInput.trim() },
-    }).run()
+    if (isChemActive) {
+      editor.chain().focus().updateAttributes('chemInline', { chem: chemInput.trim() }).run()
+    } else {
+      editor.chain().focus().insertContent({
+        type: 'chemInline',
+        attrs: { chem: chemInput.trim() },
+      }).run()
+    }
     setChemInput('')
     setShowChem(false)
   }
@@ -137,14 +154,16 @@ export function RTEToolbar() {
       <span className="rtebar-group" style={{ position: 'relative' }}>
         <button
           type="button"
-          className={`rtebar-btn${showChem ? ' rtebar-btn--on' : ''}`}
-          title="Insert chemical formula or equation"
+          className={`rtebar-btn${showChem || isChemActive ? ' rtebar-btn--on' : ''}`}
+          title={isChemActive ? 'Edit chemical formula' : 'Insert chemical formula or equation'}
           disabled={!editor}
-          onMouseDown={e => { e.preventDefault(); setShowChem(v => !v); setShowMath(false); setShowSymbols(false) }}
+          onMouseDown={e => { e.preventDefault(); openChemPopover() }}
         >⚗</button>
         {showChem && (
           <div className="rtebar-popover rtebar-chem-popover">
-            <span className="rtebar-popover-label">Chemical formula / equation</span>
+            <span className="rtebar-popover-label">
+              {isChemActive ? 'Edit chemical formula' : 'Chemical formula / equation'}
+            </span>
             <input
               className="rtebar-math-input"
               value={chemInput}
@@ -176,7 +195,9 @@ export function RTEToolbar() {
               <span><code>H2O</code> subscripts</span>
               <span><code>Ca^2+</code> charges</span>
             </div>
-            <button type="button" className="rtebar-math-insert" onClick={insertChem}>Insert</button>
+            <button type="button" className="rtebar-math-insert" onClick={insertChem}>
+              {isChemActive ? 'Update' : 'Insert'}
+            </button>
           </div>
         )}
       </span>

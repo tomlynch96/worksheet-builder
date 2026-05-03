@@ -36,26 +36,83 @@ const OPS: Record<string, string> = {
   infty:'∞', propto:'∝', sim:'∼', equiv:'≡', degree:'°',
 }
 
-// ── Chemistry notation → Unicode converter ────────────────
-// Converts mhchem-style notation (e.g. "2H2 + O2 -> 2H2O") to Unicode.
+// ── Chemistry notation → PDF segment renderer ─────────────
+// Parses mhchem-style notation into {text, kind} segments.
+// Uses font-size changes for sub/superscripts instead of Unicode
+// characters (KaTeX fonts don't include Unicode sub/super code points).
 
-export function chemToUnicode(chem: string): string {
-  let s = chem.trim()
-  // Arrows
-  s = s.replace(/<=>|<->/g, '⇌').replace(/->/g, '→')
-  // Explicit LaTeX-style superscripts: ^{...} and ^x (for charges typed as H^+, Ca^2+)
-  s = s.replace(/\^\{([^}]*)\}/g, (_, n) => toSup(n))
-  s = s.replace(/\^([0-9a-zA-Z+\-])/g, (_, c) => toSup(c))
-  // Multi-digit charges: digits followed by +/- at end of formula token
-  s = s.replace(/(\d+)([+-])(?=[\s,)→⇌]|$)/g, (_, n, sign) =>
-    toSup(n) + (sign === '+' ? '⁺' : '⁻'))
-  // Single charge: +/- immediately after a letter or digit at end of token
-  s = s.replace(/([A-Za-z\d])([+-])(?=[\s,)→⇌]|$)/g, (_, pre, sign) =>
-    pre + (sign === '+' ? '⁺' : '⁻'))
-  // Subscript digits: digits immediately following a letter (element symbol)
-  s = s.replace(/([A-Za-z])(\d+)/g, (_, letter, digits) =>
-    letter + toSub(digits))
-  return s
+type ChemSeg = { text: string; kind: 'normal' | 'sub' | 'sup' }
+
+export function parseChemSegs(raw: string): ChemSeg[] {
+  const s = raw.trim().replace(/<=>|<->/g, '⇌').replace(/->/g, '→')
+  const result: ChemSeg[] = []
+  let i = 0
+
+  const pushNormal = (ch: string) => {
+    const last = result[result.length - 1]
+    if (last?.kind === 'normal') last.text += ch
+    else result.push({ text: ch, kind: 'normal' })
+  }
+
+  while (i < s.length) {
+    if (s[i] === '^' && s[i + 1] === '{') {
+      const end = s.indexOf('}', i + 2)
+      result.push({ text: end >= 0 ? s.slice(i + 2, end) : s.slice(i + 2), kind: 'sup' })
+      i = end >= 0 ? end + 1 : s.length; continue
+    }
+    if (s[i] === '^' && i + 1 < s.length) {
+      result.push({ text: s[i + 1], kind: 'sup' }); i += 2; continue
+    }
+    if (s[i] === '_' && s[i + 1] === '{') {
+      const end = s.indexOf('}', i + 2)
+      result.push({ text: end >= 0 ? s.slice(i + 2, end) : s.slice(i + 2), kind: 'sub' })
+      i = end >= 0 ? end + 1 : s.length; continue
+    }
+    if (s[i] === '_' && i + 1 < s.length) {
+      result.push({ text: s[i + 1], kind: 'sub' }); i += 2; continue
+    }
+    // Implicit subscript: digit(s) after an element letter
+    if (/\d/.test(s[i])) {
+      const prev = result[result.length - 1]
+      const afterEl = prev?.kind === 'sub' || (prev?.kind === 'normal' && /[A-Za-z]$/.test(prev.text))
+      if (afterEl) {
+        let digits = ''
+        while (i < s.length && /\d/.test(s[i])) digits += s[i++]
+        // Trailing charge on this token
+        if ((s[i] === '+' || s[i] === '-') && (!s[i + 1] || /[\s→⇌,)]/.test(s[i + 1]))) {
+          result.push({ text: digits, kind: 'sub' })
+          result.push({ text: s[i++], kind: 'sup' })
+        } else {
+          result.push({ text: digits, kind: 'sub' })
+        }
+        continue
+      }
+    }
+    // Implicit charge: +/- directly after letter/digit at end of token
+    if (s[i] === '+' || s[i] === '-') {
+      const prev = result[result.length - 1]
+      const afterEl = prev && (prev.kind === 'sub' || (prev.kind === 'normal' && /[A-Za-z\d]$/.test(prev.text)))
+      const endOfToken = !s[i + 1] || /[\s→⇌,)]/.test(s[i + 1])
+      if (afterEl && endOfToken) { result.push({ text: s[i++], kind: 'sup' }); continue }
+    }
+    pushNormal(s[i++])
+  }
+  return result
+}
+
+export function chemToPdfElements(chem: string, style: any, key: string): ReactElement {
+  const segs = parseChemSegs(chem)
+  const baseSize = (style.fontSize as number) || 11
+  const smallSize = baseSize * 0.72
+  return (
+    <Text key={key} style={{ ...style, fontFamily: 'KaTeX-Main' }}>
+      {segs.map((seg, idx) =>
+        seg.kind === 'normal'
+          ? <Text key={idx}>{seg.text}</Text>
+          : <Text key={idx} style={{ fontSize: smallSize }}>{seg.text}</Text>
+      )}
+    </Text>
+  )
 }
 
 export function latexToUnicode(latex: string): string {
@@ -141,7 +198,7 @@ function nodesToPdf(nodes: NodeList, style: any, key = ''): ReactElement[] {
           out.push(<Text key={k} style={{ ...style, fontFamily: 'KaTeX-Math' }}>{latexToUnicode(latex)}</Text>)
         } else if (el.getAttribute('data-type') === 'chem') {
           const chem = el.getAttribute('data-chem') || ''
-          out.push(<Text key={k} style={{ ...style, fontFamily: 'KaTeX-Math' }}>{chemToUnicode(chem)}</Text>)
+          out.push(chemToPdfElements(chem, style, k))
         } else {
           out.push(...nodesToPdf(el.childNodes, style, k))
         }
