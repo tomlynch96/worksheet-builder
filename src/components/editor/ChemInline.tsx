@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
@@ -18,11 +19,17 @@ function ChemView({ node, updateAttributes }: NodeViewProps) {
   const chem = (node.attrs as { chem: string }).chem || ''
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const displayRef = useRef<HTMLSpanElement>(null)
 
   function openEdit(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
     setDraft(chem)
+    if (displayRef.current) {
+      const r = displayRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 6, left: r.left })
+    }
     setEditing(true)
   }
 
@@ -36,19 +43,35 @@ function ChemView({ node, updateAttributes }: NodeViewProps) {
     setEditing(false)
   }
 
+  // Close popover on outside click
+  useEffect(() => {
+    if (!editing) return
+    function handle(e: MouseEvent) {
+      const popover = document.querySelector('.chem-popover')
+      if (popover && !popover.contains(e.target as Node)) cancel()
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [editing])
+
   const displayHtml = renderChem(chem)
   const previewHtml = renderChem(draft)
 
   return (
-    <NodeViewWrapper as="span" className="chem-node-wrap" contentEditable={false}>
+    <NodeViewWrapper as="span" className="math-node" contentEditable={false}>
       <span
-        className={`math-node chem-display${editing ? ' chem-display--editing' : ''}`}
+        ref={displayRef}
+        className={`chem-display${editing ? ' chem-display--editing' : ''}`}
         dangerouslySetInnerHTML={{ __html: displayHtml || chem }}
         onClick={openEdit}
         title="Click to edit"
       />
-      {editing && (
-        <span className="chem-popover" onMouseDown={e => e.stopPropagation()}>
+      {editing && createPortal(
+        <div
+          className="chem-popover"
+          style={{ top: pos.top, left: pos.left }}
+          onMouseDown={e => e.stopPropagation()}
+        >
           <span className="chem-popover-label">Edit formula</span>
           <input
             className="chem-popover-input"
@@ -78,7 +101,8 @@ function ChemView({ node, updateAttributes }: NodeViewProps) {
               onMouseDown={e => { e.preventDefault(); cancel() }}
             >Cancel</button>
           </span>
-        </span>
+        </div>,
+        document.body
       )}
     </NodeViewWrapper>
   )

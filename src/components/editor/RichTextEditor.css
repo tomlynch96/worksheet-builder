@@ -39,10 +39,9 @@
   padding: 0 2px;
 }
 
-/* Chem node wrapper — provides anchor for the edit popover */
+/* Chem node wrapper */
 .chem-node-wrap {
   display: inline;
-  position: relative;
 }
 
 .chem-display {
@@ -59,12 +58,10 @@
   border-radius: 3px;
 }
 
-/* Inline edit popover on the chem node */
+/* Edit popover — rendered via portal at document.body (position: fixed) */
 .chem-popover {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 300;
+  position: fixed;
+  z-index: 9999;
   background: #fff;
   border: 1px solid #e2e0ea;
   border-radius: 7px;
