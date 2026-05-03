@@ -28,7 +28,6 @@
   border-radius: 7px;
   background: #fff;
   border-left: 3px solid var(--block-color, #9ca3af);
-  overflow: hidden;
   transition: box-shadow 0.15s;
 }
 
@@ -91,8 +90,6 @@
 .editor-block-body {
   border-top: 1px solid var(--ui-border);
   background: #fafafa;
-  max-height: 480px;
-  overflow-y: auto;
 }
 
 /* ── Shared editor styles used by block editors ─────────── */
