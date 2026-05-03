@@ -48,7 +48,7 @@ function ChemView({ node, updateAttributes }: NodeViewProps) {
     if (!editing) return
     function handle(e: MouseEvent) {
       const popover = document.querySelector('.chem-popover')
-      if (popover && !popover.contains(e.target as Node)) cancel()
+      if (popover && !popover.contains(e.target as globalThis.Node)) cancel()
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
