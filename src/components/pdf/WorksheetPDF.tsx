@@ -1,6 +1,10 @@
-import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Font } from '@react-pdf/renderer'
+import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
+
+Font.register({ family: 'KaTeX-Math', src: katexMathItalicUrl })
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
+import { htmlToPdf } from '../../utils/htmlToPdf'
 
 // ── Styles ────────────────────────────────────────────────
 // react-pdf uses pt units. A4 page: 595 × 842 pt. Margin: 51pt (~18mm).
@@ -57,7 +61,7 @@ const s = StyleSheet.create({
   // Worked example
   workedExample: { borderWidth: 2, borderColor: '#1e3a5f', borderRadius: 3, padding: '8 12', marginBottom: 16, backgroundColor: '#f8faff' },
   workedTitle: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#1e3a5f', marginBottom: 6, textTransform: 'uppercase' },
-  workedStep: { fontSize: 10, marginBottom: 4, marginLeft: 10 },
+  workedStep: { fontSize: 10, marginBottom: 4, marginLeft: 10, flexDirection: 'row' },
 
   // Information
   information: { borderLeftWidth: 4, borderLeftColor: '#b45309', backgroundColor: '#fffbeb', padding: '7 10', marginBottom: 16 },
@@ -82,7 +86,7 @@ const s = StyleSheet.create({
   wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, borderWidth: 1, borderColor: '#d1d5db', padding: '7 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 9 },
   wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '1 7', borderRadius: 2, backgroundColor: '#fff' },
   clozeText: { fontSize: 10.5, lineHeight: 1.9 },
-  clozeBlank: { borderBottomWidth: 1.5, borderBottomColor: '#000', borderBottomStyle: 'solid' },
+  clozeBlank: { fontSize: 10.5, color: '#000', letterSpacing: 1.5 },
 
   // Order steps
   orderSteps: { marginBottom: 16 },
@@ -95,10 +99,12 @@ const s = StyleSheet.create({
 })
 
 // ── Helper ────────────────────────────────────────────────
+const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
+
 function getQuestionNumber(blocks: Block[], id: string): number {
   let n = 0
   for (const b of blocks) {
-    if (b.type === 'question' || b.type === 'multiple_choice') n++
+    if (NUMBERED_TYPES.has(b.type)) n++
     if (b.id === id) return n
   }
   return n
@@ -156,7 +162,7 @@ function PDFQuestion({ block, num }: { block: QuestionBlock; num: number }) {
     <View style={s.question}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.stem}</Text>
+        {htmlToPdf(block.stem, s.qText)}
         {!hasParts && block.marks > 0 && (
           <Text style={s.marks}>[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</Text>
         )}
@@ -168,7 +174,7 @@ function PDFQuestion({ block, num }: { block: QuestionBlock; num: number }) {
             <View key={part.id} style={s.part}>
               <View style={s.partStem}>
                 <Text style={s.partLabel}>({part.label})</Text>
-                <Text style={s.qText}>{part.stem}</Text>
+                {htmlToPdf(part.stem, s.qText)}
                 {part.marks > 0 && (
                   <Text style={s.marks}>[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</Text>
                 )}
@@ -188,7 +194,7 @@ function PDFMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: nu
     <View style={s.question}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.stem}</Text>
+        {htmlToPdf(block.stem, s.qText)}
         {block.marks > 0 && (
           <Text style={s.marks}>[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</Text>
         )}
@@ -197,7 +203,7 @@ function PDFMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: nu
         {block.options.map((opt, i) => (
           <View key={i} style={s.mcOption}>
             <Text style={s.mcLabel}>{LABELS[i] ?? String(i + 1)}</Text>
-            <Text>{opt}</Text>
+            {htmlToPdf(opt, {})}
           </View>
         ))}
       </View>
@@ -210,7 +216,10 @@ function PDFWorkedExample({ block }: { block: WorkedExampleBlock }) {
     <View style={s.workedExample}>
       <Text style={s.workedTitle}>{block.title || 'Worked example'}</Text>
       {block.steps.map((step, i) => (
-        <Text key={i} style={s.workedStep}>{i + 1}. {step}</Text>
+        <View key={i} style={s.workedStep}>
+          <Text>{i + 1}. </Text>
+          {htmlToPdf(step, {})}
+        </View>
       ))}
     </View>
   )
@@ -220,36 +229,32 @@ function PDFInformation({ block }: { block: InformationBlock }) {
   return (
     <View style={s.information}>
       {block.heading ? <Text style={s.infoHeading}>{block.heading}</Text> : null}
-      <Text style={s.infoContent}>{block.content}</Text>
+      {htmlToPdf(block.content, s.infoContent)}
     </View>
   )
 }
 
-function PDFMatchThemUp({ block }: { block: MatchThemUpBlock }) {
+function PDFMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
   const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
   return (
     <View style={s.match}>
-      {block.heading ? <Text style={s.activityHeading}>{block.heading}</Text> : null}
+      <View style={s.questionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={s.qText}>{block.heading || 'Match each term to its definition.'}</Text>
+      </View>
       <View style={s.matchTable}>
         <View style={s.matchCol}>
           {block.items.map((item) => (
             <View key={item.id} style={[s.matchCell, s.matchCellLeft]}>
-              <Text>{item.left}</Text>
+              {htmlToPdf(item.left, { fontSize: 10 })}
             </View>
           ))}
         </View>
-        <View style={s.matchLines}>
-          {block.items.map((_, i) => (
-            <View key={i} style={s.matchDotRow}>
-              <View style={s.matchDot} />
-              <View style={s.matchDot} />
-            </View>
-          ))}
-        </View>
+        <View style={{ width: 14 }} />
         <View style={s.matchCol}>
           {shuffledRight.map((right, i) => (
             <View key={i} style={s.matchCell}>
-              <Text>{right}</Text>
+              {htmlToPdf(right, { fontSize: 10 })}
             </View>
           ))}
         </View>
@@ -258,12 +263,15 @@ function PDFMatchThemUp({ block }: { block: MatchThemUpBlock }) {
   )
 }
 
-function PDFCloze({ block }: { block: ClozeBlock }) {
+function PDFCloze({ block, num }: { block: ClozeBlock; num: number }) {
   const parts = clozeToDisplayParts(block.text)
   const words = seededShuffle(extractClozeWords(block.text), block.id)
   return (
     <View style={s.cloze}>
-      {block.heading ? <Text style={s.activityHeading}>{block.heading}</Text> : null}
+      <View style={s.questionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={s.qText}>{block.heading || 'Fill in the blanks.'}</Text>
+      </View>
       {block.showWordBank && words.length > 0 && (
         <View style={s.wordBank}>
           {words.map((w, i) => <Text key={i} style={s.wordBankWord}>{w}</Text>)}
@@ -272,7 +280,7 @@ function PDFCloze({ block }: { block: ClozeBlock }) {
       <Text style={s.clozeText}>
         {parts.map((part, i) =>
           part.type === 'blank'
-            ? <Text key={i} style={s.clozeBlank}>{' '.repeat(Math.max(part.value.length + 4, 8))}</Text>
+            ? <Text key={i} style={s.clozeBlank}>{'_'.repeat(Math.max(part.value.length + 4, 8))}</Text>
             : <Text key={i}>{part.value}</Text>
         )}
       </Text>
@@ -280,11 +288,14 @@ function PDFCloze({ block }: { block: ClozeBlock }) {
   )
 }
 
-function PDFOrderSteps({ block }: { block: OrderStepsBlock }) {
+function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
   const shuffled = seededShuffle(block.steps, block.id)
   return (
     <View style={s.orderSteps}>
-      {block.heading ? <Text style={s.activityHeading}>{block.heading}</Text> : null}
+      <View style={s.questionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={s.qText}>{block.heading || 'Number these steps in the correct order.'}</Text>
+      </View>
       {shuffled.map((step, i) => (
         <View key={i} style={s.stepRow}>
           <View style={s.stepBox} />
@@ -310,16 +321,17 @@ function PDFSpacer({ block }: { block: SpacerBlock }) {
 }
 
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
+  const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
     case 'header':          return <PDFHeader block={block} />
     case 'instructions':    return <PDFInstructions block={block} />
-    case 'question':        return <PDFQuestion block={block} num={getQuestionNumber(blocks, block.id)} />
-    case 'multiple_choice': return <PDFMultipleChoice block={block} num={getQuestionNumber(blocks, block.id)} />
+    case 'question':        return <PDFQuestion block={block} num={num} />
+    case 'multiple_choice': return <PDFMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PDFWorkedExample block={block} />
     case 'information':     return <PDFInformation block={block} />
-    case 'match_them_up':   return <PDFMatchThemUp block={block} />
-    case 'cloze':           return <PDFCloze block={block} />
-    case 'order_steps':     return <PDFOrderSteps block={block} />
+    case 'match_them_up':   return <PDFMatchThemUp block={block} num={num} />
+    case 'cloze':           return <PDFCloze block={block} num={num} />
+    case 'order_steps':     return <PDFOrderSteps block={block} num={num} />
     case 'figure':          return <PDFFigure block={block} />
     case 'spacer':          return <PDFSpacer block={block} />
   }

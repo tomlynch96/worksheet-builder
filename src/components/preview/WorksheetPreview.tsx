@@ -1,15 +1,42 @@
+import katex from 'katex'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
+import { splitIntoPages } from '../../utils/pagination'
 import './WorksheetPreview.css'
 
-// Auto-number questions and multiple choice in document order
+const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
+
 function getQuestionNumber(blocks: Block[], id: string): number {
   let n = 0
   for (const b of blocks) {
-    if (b.type === 'question' || b.type === 'multiple_choice') n++
+    if (NUMBERED_TYPES.has(b.type)) n++
     if (b.id === id) return n
   }
   return n
+}
+
+// Post-process Tiptap HTML: replace empty math spans with rendered MathML
+function withMath(html: string): string {
+  if (!html || !html.includes('data-type="math"')) return html
+  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html')
+  doc.querySelectorAll('[data-type="math"]').forEach(el => {
+    const latex = el.getAttribute('data-latex') || ''
+    el.innerHTML = katex.renderToString(latex, {
+      throwOnError: false,
+      displayMode: false,
+      output: 'mathml',
+    })
+  })
+  return (doc.body.firstElementChild as HTMLElement).innerHTML
+}
+
+// Render rich HTML (with math) or plain text safely
+function RichText({ html, className }: { html: string; className?: string }) {
+  if (!html || html === '<p></p>') return <span className="pr-placeholder">—</span>
+  if (html.includes('<')) {
+    return <span className={className} dangerouslySetInnerHTML={{ __html: withMath(html) }} />
+  }
+  return <span className={className}>{html}</span>
 }
 
 function AnswerLines({ count }: { count: number }) {
@@ -50,7 +77,7 @@ function PreviewInstructions({ block }: { block: InstructionsBlock }) {
   return (
     <div className="pr-instructions">
       <ul className="pr-instructions-list">
-        {block.items.map((item, i) => <li key={i}>{item}</li>)}
+        {block.items.map((item, i) => <li key={i}><RichText html={item} /></li>)}
       </ul>
     </div>
   )
@@ -62,7 +89,9 @@ function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) 
     <div className="pr-question">
       <div className="pr-question-stem">
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.stem || <em className="pr-placeholder">Question stem…</em>}</span>
+        <span className="pr-q-text">
+          {block.stem ? <RichText html={block.stem} /> : <em className="pr-placeholder">Question stem…</em>}
+        </span>
         {!hasParts && block.marks > 0 && (
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
@@ -74,7 +103,9 @@ function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) 
             <div key={part.id} className="pr-part">
               <div className="pr-part-stem">
                 <span className="pr-part-label">({part.label})</span>
-                <span className="pr-q-text">{part.stem || <em className="pr-placeholder">Sub-question stem…</em>}</span>
+                <span className="pr-q-text">
+                  {part.stem ? <RichText html={part.stem} /> : <em className="pr-placeholder">Sub-question…</em>}
+                </span>
                 {part.marks > 0 && (
                   <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
                 )}
@@ -94,7 +125,9 @@ function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num
     <div className="pr-question">
       <div className="pr-question-stem">
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.stem || <em className="pr-placeholder">Question stem…</em>}</span>
+        <span className="pr-q-text">
+          {block.stem ? <RichText html={block.stem} /> : <em className="pr-placeholder">Question stem…</em>}
+        </span>
         {block.marks > 0 && (
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
@@ -103,7 +136,7 @@ function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num
         {block.options.map((opt, i) => (
           <div key={i} className="pr-mc-option">
             <span className="pr-mc-label">{LABELS[i] ?? i + 1}</span>
-            <span>{opt || <em className="pr-placeholder">Option…</em>}</span>
+            {opt ? <RichText html={opt} /> : <em className="pr-placeholder">Option…</em>}
           </div>
         ))}
       </div>
@@ -117,7 +150,7 @@ function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
       <div className="pr-worked-title">{block.title || 'Worked example'}</div>
       <ol className="pr-worked-steps">
         {block.steps.map((step, i) => (
-          <li key={i}>{step || <em className="pr-placeholder">Step…</em>}</li>
+          <li key={i}>{step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}</li>
         ))}
       </ol>
     </div>
@@ -128,36 +161,36 @@ function PreviewInformation({ block }: { block: InformationBlock }) {
   return (
     <div className="pr-information">
       {block.heading && <div className="pr-information-heading">{block.heading}</div>}
-      <p className="pr-information-content">{block.content || <em className="pr-placeholder">Information text…</em>}</p>
+      <div className="pr-information-content">
+        {block.content ? <RichText html={block.content} /> : <em className="pr-placeholder">Information text…</em>}
+      </div>
     </div>
   )
 }
 
-function PreviewMatchThemUp({ block }: { block: MatchThemUpBlock }) {
+function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
   const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
   return (
     <div className="pr-match">
-      {block.heading && <p className="pr-activity-heading">{block.heading}</p>}
+      <div className="pr-question-stem" style={{ marginBottom: 8 }}>
+        <span className="pr-q-num">{num}.</span>
+        <span className="pr-q-text">
+          {block.heading || <em className="pr-placeholder">Match each term to its definition.</em>}
+        </span>
+      </div>
       <div className="pr-match-table">
         <div className="pr-match-col">
           {block.items.map((item, i) => (
             <div key={item.id} className="pr-match-cell pr-match-cell--left">
-              {item.left || <em className="pr-placeholder">Term {i + 1}…</em>}
+              {item.left ? <RichText html={item.left} /> : <em className="pr-placeholder">Term {i + 1}…</em>}
             </div>
           ))}
         </div>
-        <div className="pr-match-lines">
-          {block.items.map((_, i) => (
-            <div key={i} className="pr-match-dot-row">
-              <span className="pr-match-dot" />
-              <span className="pr-match-dot" />
-            </div>
-          ))}
-        </div>
+        <div className="pr-match-gap" />
         <div className="pr-match-col">
           {shuffledRight.map((right, i) => (
             <div key={i} className="pr-match-cell pr-match-cell--right">
-              {right || <em className="pr-placeholder">Definition {i + 1}…</em>}
+              {right ? <RichText html={right} /> : <em className="pr-placeholder">Definition {i + 1}…</em>}
             </div>
           ))}
         </div>
@@ -166,12 +199,17 @@ function PreviewMatchThemUp({ block }: { block: MatchThemUpBlock }) {
   )
 }
 
-function PreviewCloze({ block }: { block: ClozeBlock }) {
+function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
   const parts = clozeToDisplayParts(block.text)
   const words = seededShuffle(extractClozeWords(block.text), block.id)
   return (
     <div className="pr-cloze">
-      {block.heading && <p className="pr-activity-heading">{block.heading}</p>}
+      <div className="pr-question-stem" style={{ marginBottom: 8 }}>
+        <span className="pr-q-num">{num}.</span>
+        <span className="pr-q-text">
+          {block.heading || <em className="pr-placeholder">Fill in the blanks.</em>}
+        </span>
+      </div>
       {block.showWordBank && words.length > 0 && (
         <div className="pr-word-bank">
           {words.map((w, i) => (
@@ -184,7 +222,7 @@ function PreviewCloze({ block }: { block: ClozeBlock }) {
           ? <em className="pr-placeholder">Enter cloze text with [bracketed] words…</em>
           : parts.map((part, i) =>
               part.type === 'blank'
-                ? <span key={i} className="pr-cloze-blank">{' '.repeat(Math.max(part.value.length + 4, 8))}</span>
+                ? <span key={i} className="pr-cloze-blank">{'_'.repeat(Math.max(part.value.length + 4, 8))}</span>
                 : <span key={i}>{part.value}</span>
             )
         }
@@ -193,16 +231,21 @@ function PreviewCloze({ block }: { block: ClozeBlock }) {
   )
 }
 
-function PreviewOrderSteps({ block }: { block: OrderStepsBlock }) {
+function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
   const shuffled = seededShuffle(block.steps, block.id)
   return (
     <div className="pr-order-steps">
-      {block.heading && <p className="pr-activity-heading">{block.heading}</p>}
+      <div className="pr-question-stem" style={{ marginBottom: 8 }}>
+        <span className="pr-q-num">{num}.</span>
+        <span className="pr-q-text">
+          {block.heading || <em className="pr-placeholder">Number these steps in the correct order.</em>}
+        </span>
+      </div>
       <div className="pr-steps-list">
         {shuffled.map((step, i) => (
           <div key={i} className="pr-step-row">
             <span className="pr-step-box" />
-            <span>{step || <em className="pr-placeholder">Step…</em>}</span>
+            {step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}
           </div>
         ))}
       </div>
@@ -225,27 +268,33 @@ function PreviewSpacer({ block }: { block: SpacerBlock }) {
 }
 
 function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
+  const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
     case 'header':          return <PreviewHeader block={block} />
     case 'instructions':    return <PreviewInstructions block={block} />
-    case 'question':        return <PreviewQuestion block={block} num={getQuestionNumber(blocks, block.id)} />
-    case 'multiple_choice': return <PreviewMultipleChoice block={block} num={getQuestionNumber(blocks, block.id)} />
+    case 'question':        return <PreviewQuestion block={block} num={num} />
+    case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PreviewWorkedExample block={block} />
     case 'information':     return <PreviewInformation block={block} />
-    case 'match_them_up':   return <PreviewMatchThemUp block={block} />
-    case 'cloze':           return <PreviewCloze block={block} />
-    case 'order_steps':     return <PreviewOrderSteps block={block} />
+    case 'match_them_up':   return <PreviewMatchThemUp block={block} num={num} />
+    case 'cloze':           return <PreviewCloze block={block} num={num} />
+    case 'order_steps':     return <PreviewOrderSteps block={block} num={num} />
     case 'figure':          return <PreviewFigure block={block} />
     case 'spacer':          return <PreviewSpacer block={block} />
   }
 }
 
 export function WorksheetPreview({ worksheet }: { worksheet: Worksheet }) {
+  const pages = splitIntoPages(worksheet.blocks)
   return (
-    <div className="a4-page">
-      {worksheet.blocks.map(block => (
-        <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} />
+    <>
+      {pages.map((pageBlocks, pageIdx) => (
+        <div key={pageIdx} className="a4-page">
+          {pageBlocks.map(block => (
+            <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} />
+          ))}
+        </div>
       ))}
-    </div>
+    </>
   )
 }

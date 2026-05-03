@@ -30,7 +30,7 @@ export function ClozeEditor({ block, dispatch }: Props) {
       </Field>
       {words.length > 0 && (
         <p className="cloze-words-preview">
-          Word bank will contain: <strong>{words.join(', ')}</strong>
+          Word bank: <strong>{words.join(', ')}</strong>
         </p>
       )}
       <CheckRow

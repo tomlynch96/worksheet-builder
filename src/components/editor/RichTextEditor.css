@@ -1,0 +1,40 @@
+/* ── Editor field wrapper ─────────────────────────────── */
+.rte-wrap {
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.rte-wrap:focus-within { border-color: var(--ui-accent); }
+
+/* ── Editor content area ──────────────────────────────── */
+.rte-content { padding: 6px 8px; }
+
+.rte-content .tiptap {
+  outline: none;
+  font-size: 13px;
+  color: var(--ui-text);
+  line-height: 1.5;
+}
+
+.rte-content--single .tiptap { white-space: nowrap; overflow: hidden; }
+.rte-content--multi .tiptap { min-height: 48px; }
+
+.rte-content .tiptap p { margin: 0; }
+.rte-content .tiptap p + p { margin-top: 4px; }
+
+.rte-content .tiptap:empty::before,
+.rte-content .tiptap p:first-child:empty::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  pointer-events: none;
+}
+
+/* KaTeX / MathML inline math nodes */
+.math-node {
+  display: inline;
+  cursor: default;
+  background: #f0f4ff;
+  border-radius: 3px;
+  padding: 0 2px;
+}

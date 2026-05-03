@@ -1,0 +1,128 @@
+/* ── Global rich text toolbar ─────────────────────────── */
+.rtebar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 10px;
+  background: #fff;
+  border-bottom: 1px solid #e2e0ea;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  min-height: 38px;
+}
+
+.rtebar-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.rtebar-sep {
+  width: 1px;
+  height: 18px;
+  background: #e2e0ea;
+  margin: 0 4px;
+}
+
+.rtebar-btn {
+  min-width: 28px;
+  height: 26px;
+  border: 1px solid transparent;
+  background: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.rtebar-btn:hover:not(:disabled) { background: #f0eeff; border-color: #c4b5fd; color: #4f46e5; }
+.rtebar-btn--on { background: #ede9fe; border-color: #a78bfa; color: #4f46e5; }
+.rtebar-btn:disabled { opacity: 0.35; cursor: default; }
+
+.rtebar-btn--bold      { font-weight: 800; }
+.rtebar-btn--italic    { font-style: italic; }
+.rtebar-btn--underline { text-decoration: underline; }
+
+.rtebar-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  font-style: italic;
+  margin-left: 6px;
+}
+
+/* ── Popovers ─────────────────────────────────────────── */
+.rtebar-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  background: #fff;
+  border: 1px solid #e2e0ea;
+  border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  padding: 10px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rtebar-popover-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.rtebar-math-input {
+  padding: 5px 8px;
+  border: 1px solid #e2e0ea;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.rtebar-math-input:focus { border-color: #4f46e5; }
+
+.rtebar-math-insert {
+  align-self: flex-end;
+  padding: 5px 12px;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.rtebar-math-insert:hover { background: #4338ca; }
+
+.rtebar-symbols-popover {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.rtebar-sym-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #e2e0ea;
+  background: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rtebar-sym-btn:hover { background: #ede9fe; border-color: #a78bfa; }

@@ -6,6 +6,7 @@ export type WorksheetAction =
   | { type: 'UPDATE_BLOCK'; id: string; updates: Partial<Block> }
   | { type: 'DELETE_BLOCK'; id: string }
   | { type: 'MOVE_BLOCK'; id: string; direction: 'up' | 'down' }
+  | { type: 'LOAD_PRESET'; worksheet: Worksheet }
 
 function reducer(state: Worksheet, action: WorksheetAction): Worksheet {
   switch (action.type) {
@@ -37,6 +38,8 @@ function reducer(state: Worksheet, action: WorksheetAction): Worksheet {
       ;[blocks[idx], blocks[newIdx]] = [blocks[newIdx], blocks[idx]]
       return { ...state, blocks }
     }
+    case 'LOAD_PRESET':
+      return { ...action.worksheet, id: crypto.randomUUID() }
   }
 }
 

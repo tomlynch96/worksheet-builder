@@ -1,6 +1,7 @@
 import type { MatchThemUpBlock, MatchItem } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
+import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: MatchThemUpBlock
@@ -36,8 +37,12 @@ export function MatchThemUpEditor({ block, dispatch }: Props) {
       </div>
       {block.items.map((item, i) => (
         <div key={item.id} className="match-row">
-          <input value={item.left} onChange={e => updateItem(i, { left: e.target.value })} placeholder="Term…" />
-          <input value={item.right} onChange={e => updateItem(i, { right: e.target.value })} placeholder="Definition…" />
+          <div style={{ flex: 1 }}>
+            <RichTextEditor value={item.left} onChange={left => updateItem(i, { left })} placeholder="Term…"  />
+          </div>
+          <div style={{ flex: 1 }}>
+            <RichTextEditor value={item.right} onChange={right => updateItem(i, { right })} placeholder="Definition…"  />
+          </div>
           <button type="button" className="ep-list-remove" onClick={() => removeItem(i)}>×</button>
         </div>
       ))}

@@ -3,10 +3,12 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .editor-blocks {
   flex: 1;
+  overflow-y: auto;
   padding: 12px 12px 4px;
   display: flex;
   flex-direction: column;
@@ -14,9 +16,8 @@
 }
 
 .editor-footer {
+  flex-shrink: 0;
   padding: 10px 12px 14px;
-  position: sticky;
-  bottom: 0;
   background: #f8f7fb;
   border-top: 1px solid var(--ui-border);
 }
@@ -27,7 +28,6 @@
   border-radius: 7px;
   background: #fff;
   border-left: 3px solid var(--block-color, #9ca3af);
-  overflow: hidden;
   transition: box-shadow 0.15s;
 }
 
