@@ -1,4 +1,7 @@
-import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Font } from '@react-pdf/renderer'
+import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
+
+Font.register({ family: 'KaTeX-Math', src: katexMathItalicUrl })
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
