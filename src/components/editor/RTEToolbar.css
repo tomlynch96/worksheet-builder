@@ -60,7 +60,8 @@
 .rtebar-popover {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
+  left: auto;
+  right: 0;
   z-index: 200;
   background: #fff;
   border: 1px solid #e2e0ea;
@@ -108,6 +109,8 @@
 
 .rtebar-chem-popover {
   min-width: 280px;
+  left: auto;
+  right: 0;
 }
 
 .rtebar-chem-live-preview {
