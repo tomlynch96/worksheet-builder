@@ -91,6 +91,8 @@
 .editor-block-body {
   border-top: 1px solid var(--ui-border);
   background: #fafafa;
+  max-height: 480px;
+  overflow-y: auto;
 }
 
 /* ── Shared editor styles used by block editors ─────────── */

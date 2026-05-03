@@ -34,7 +34,7 @@ export function WorkedExampleEditor({ block, dispatch }: Props) {
                 value={step}
                 onChange={val => updateStep(i, val)}
                 placeholder={`Step ${i + 1}…`}
-                multiline={false}
+                
               />
             </div>
             <button type="button" className="ep-list-remove" onClick={() => removeStep(i)}>×</button>

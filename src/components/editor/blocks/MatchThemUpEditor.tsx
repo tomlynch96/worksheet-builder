@@ -38,10 +38,10 @@ export function MatchThemUpEditor({ block, dispatch }: Props) {
       {block.items.map((item, i) => (
         <div key={item.id} className="match-row">
           <div style={{ flex: 1 }}>
-            <RichTextEditor value={item.left} onChange={left => updateItem(i, { left })} placeholder="Term…" multiline={false} />
+            <RichTextEditor value={item.left} onChange={left => updateItem(i, { left })} placeholder="Term…"  />
           </div>
           <div style={{ flex: 1 }}>
-            <RichTextEditor value={item.right} onChange={right => updateItem(i, { right })} placeholder="Definition…" multiline={false} />
+            <RichTextEditor value={item.right} onChange={right => updateItem(i, { right })} placeholder="Definition…"  />
           </div>
           <button type="button" className="ep-list-remove" onClick={() => removeItem(i)}>×</button>
         </div>

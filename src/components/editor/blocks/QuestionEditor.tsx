@@ -37,7 +37,7 @@ export function QuestionEditor({ block, dispatch }: Props) {
           value={block.stem}
           onChange={stem => update({ stem })}
           placeholder="Question stem…"
-          multiline={false}
+          
         />
       </Field>
       {block.parts.length === 0 && (
@@ -64,7 +64,7 @@ export function QuestionEditor({ block, dispatch }: Props) {
                   value={part.stem}
                   onChange={stem => updatePart(i, { stem })}
                   placeholder="Sub-question stem…"
-                  multiline={false}
+                  
                 />
               </Field>
               <Row>

@@ -37,7 +37,7 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
           value={block.stem}
           onChange={stem => update({ stem })}
           placeholder="Question stem…"
-          multiline={false}
+          
         />
       </Field>
       <Field label="Marks">
@@ -59,7 +59,7 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
                 value={opt}
                 onChange={val => updateOption(i, val)}
                 placeholder={`Option ${LABELS[i] ?? i + 1}`}
-                multiline={false}
+                
               />
             </div>
             <button type="button" className="ep-list-remove" onClick={() => removeOption(i)}>×</button>

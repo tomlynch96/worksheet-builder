@@ -96,10 +96,12 @@ const s = StyleSheet.create({
 })
 
 // ── Helper ────────────────────────────────────────────────
+const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
+
 function getQuestionNumber(blocks: Block[], id: string): number {
   let n = 0
   for (const b of blocks) {
-    if (b.type === 'question' || b.type === 'multiple_choice') n++
+    if (NUMBERED_TYPES.has(b.type)) n++
     if (b.id === id) return n
   }
   return n
@@ -229,11 +231,14 @@ function PDFInformation({ block }: { block: InformationBlock }) {
   )
 }
 
-function PDFMatchThemUp({ block }: { block: MatchThemUpBlock }) {
+function PDFMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
   const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
   return (
     <View style={s.match}>
-      {block.heading ? <Text style={s.activityHeading}>{block.heading}</Text> : null}
+      <View style={s.questionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={s.qText}>{block.heading || 'Match each term to its definition.'}</Text>
+      </View>
       <View style={s.matchTable}>
         <View style={s.matchCol}>
           {block.items.map((item) => (
@@ -262,12 +267,15 @@ function PDFMatchThemUp({ block }: { block: MatchThemUpBlock }) {
   )
 }
 
-function PDFCloze({ block }: { block: ClozeBlock }) {
+function PDFCloze({ block, num }: { block: ClozeBlock; num: number }) {
   const parts = clozeToDisplayParts(block.text)
   const words = seededShuffle(extractClozeWords(block.text), block.id)
   return (
     <View style={s.cloze}>
-      {block.heading ? <Text style={s.activityHeading}>{block.heading}</Text> : null}
+      <View style={s.questionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={s.qText}>{block.heading || 'Fill in the blanks.'}</Text>
+      </View>
       {block.showWordBank && words.length > 0 && (
         <View style={s.wordBank}>
           {words.map((w, i) => <Text key={i} style={s.wordBankWord}>{w}</Text>)}
@@ -284,11 +292,14 @@ function PDFCloze({ block }: { block: ClozeBlock }) {
   )
 }
 
-function PDFOrderSteps({ block }: { block: OrderStepsBlock }) {
+function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
   const shuffled = seededShuffle(block.steps, block.id)
   return (
     <View style={s.orderSteps}>
-      {block.heading ? <Text style={s.activityHeading}>{block.heading}</Text> : null}
+      <View style={s.questionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={s.qText}>{block.heading || 'Number these steps in the correct order.'}</Text>
+      </View>
       {shuffled.map((step, i) => (
         <View key={i} style={s.stepRow}>
           <View style={s.stepBox} />
@@ -314,16 +325,17 @@ function PDFSpacer({ block }: { block: SpacerBlock }) {
 }
 
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
+  const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
     case 'header':          return <PDFHeader block={block} />
     case 'instructions':    return <PDFInstructions block={block} />
-    case 'question':        return <PDFQuestion block={block} num={getQuestionNumber(blocks, block.id)} />
-    case 'multiple_choice': return <PDFMultipleChoice block={block} num={getQuestionNumber(blocks, block.id)} />
+    case 'question':        return <PDFQuestion block={block} num={num} />
+    case 'multiple_choice': return <PDFMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PDFWorkedExample block={block} />
     case 'information':     return <PDFInformation block={block} />
-    case 'match_them_up':   return <PDFMatchThemUp block={block} />
-    case 'cloze':           return <PDFCloze block={block} />
-    case 'order_steps':     return <PDFOrderSteps block={block} />
+    case 'match_them_up':   return <PDFMatchThemUp block={block} num={num} />
+    case 'cloze':           return <PDFCloze block={block} num={num} />
+    case 'order_steps':     return <PDFOrderSteps block={block} num={num} />
     case 'figure':          return <PDFFigure block={block} />
     case 'spacer':          return <PDFSpacer block={block} />
   }

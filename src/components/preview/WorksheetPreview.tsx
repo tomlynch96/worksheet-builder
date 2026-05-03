@@ -1,23 +1,40 @@
+import katex from 'katex'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages } from '../../utils/pagination'
 import './WorksheetPreview.css'
 
+const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
+
 function getQuestionNumber(blocks: Block[], id: string): number {
   let n = 0
   for (const b of blocks) {
-    if (b.type === 'question' || b.type === 'multiple_choice') n++
+    if (NUMBERED_TYPES.has(b.type)) n++
     if (b.id === id) return n
   }
   return n
 }
 
-// Render rich HTML or plain text safely
+// Post-process Tiptap HTML: replace empty math spans with rendered MathML
+function withMath(html: string): string {
+  if (!html || !html.includes('data-type="math"')) return html
+  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html')
+  doc.querySelectorAll('[data-type="math"]').forEach(el => {
+    const latex = el.getAttribute('data-latex') || ''
+    el.innerHTML = katex.renderToString(latex, {
+      throwOnError: false,
+      displayMode: false,
+      output: 'mathml',
+    })
+  })
+  return (doc.body.firstElementChild as HTMLElement).innerHTML
+}
+
+// Render rich HTML (with math) or plain text safely
 function RichText({ html, className }: { html: string; className?: string }) {
   if (!html || html === '<p></p>') return <span className="pr-placeholder">—</span>
-  // If it contains HTML tags, render as HTML; otherwise as plain text
   if (html.includes('<')) {
-    return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />
+    return <span className={className} dangerouslySetInnerHTML={{ __html: withMath(html) }} />
   }
   return <span className={className}>{html}</span>
 }
@@ -151,11 +168,16 @@ function PreviewInformation({ block }: { block: InformationBlock }) {
   )
 }
 
-function PreviewMatchThemUp({ block }: { block: MatchThemUpBlock }) {
+function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
   const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
   return (
     <div className="pr-match">
-      {block.heading && <p className="pr-activity-heading">{block.heading}</p>}
+      <div className="pr-question-stem" style={{ marginBottom: 8 }}>
+        <span className="pr-q-num">{num}.</span>
+        <span className="pr-q-text">
+          {block.heading || <em className="pr-placeholder">Match each term to its definition.</em>}
+        </span>
+      </div>
       <div className="pr-match-table">
         <div className="pr-match-col">
           {block.items.map((item, i) => (
@@ -184,12 +206,17 @@ function PreviewMatchThemUp({ block }: { block: MatchThemUpBlock }) {
   )
 }
 
-function PreviewCloze({ block }: { block: ClozeBlock }) {
+function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
   const parts = clozeToDisplayParts(block.text)
   const words = seededShuffle(extractClozeWords(block.text), block.id)
   return (
     <div className="pr-cloze">
-      {block.heading && <p className="pr-activity-heading">{block.heading}</p>}
+      <div className="pr-question-stem" style={{ marginBottom: 8 }}>
+        <span className="pr-q-num">{num}.</span>
+        <span className="pr-q-text">
+          {block.heading || <em className="pr-placeholder">Fill in the blanks.</em>}
+        </span>
+      </div>
       {block.showWordBank && words.length > 0 && (
         <div className="pr-word-bank">
           {words.map((w, i) => (
@@ -211,11 +238,16 @@ function PreviewCloze({ block }: { block: ClozeBlock }) {
   )
 }
 
-function PreviewOrderSteps({ block }: { block: OrderStepsBlock }) {
+function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
   const shuffled = seededShuffle(block.steps, block.id)
   return (
     <div className="pr-order-steps">
-      {block.heading && <p className="pr-activity-heading">{block.heading}</p>}
+      <div className="pr-question-stem" style={{ marginBottom: 8 }}>
+        <span className="pr-q-num">{num}.</span>
+        <span className="pr-q-text">
+          {block.heading || <em className="pr-placeholder">Number these steps in the correct order.</em>}
+        </span>
+      </div>
       <div className="pr-steps-list">
         {shuffled.map((step, i) => (
           <div key={i} className="pr-step-row">
@@ -243,16 +275,17 @@ function PreviewSpacer({ block }: { block: SpacerBlock }) {
 }
 
 function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
+  const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
     case 'header':          return <PreviewHeader block={block} />
     case 'instructions':    return <PreviewInstructions block={block} />
-    case 'question':        return <PreviewQuestion block={block} num={getQuestionNumber(blocks, block.id)} />
-    case 'multiple_choice': return <PreviewMultipleChoice block={block} num={getQuestionNumber(blocks, block.id)} />
+    case 'question':        return <PreviewQuestion block={block} num={num} />
+    case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PreviewWorkedExample block={block} />
     case 'information':     return <PreviewInformation block={block} />
-    case 'match_them_up':   return <PreviewMatchThemUp block={block} />
-    case 'cloze':           return <PreviewCloze block={block} />
-    case 'order_steps':     return <PreviewOrderSteps block={block} />
+    case 'match_them_up':   return <PreviewMatchThemUp block={block} num={num} />
+    case 'cloze':           return <PreviewCloze block={block} num={num} />
+    case 'order_steps':     return <PreviewOrderSteps block={block} num={num} />
     case 'figure':          return <PreviewFigure block={block} />
     case 'spacer':          return <PreviewSpacer block={block} />
   }
