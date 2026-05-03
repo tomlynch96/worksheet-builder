@@ -5,6 +5,7 @@ import Superscript from '@tiptap/extension-superscript'
 import Subscript from '@tiptap/extension-subscript'
 import Underline from '@tiptap/extension-underline'
 import { MathInline } from './MathInline'
+import { ChemInline } from './ChemInline'
 import { useActiveEditor } from './ActiveEditorContext'
 import './RichTextEditor.css'
 
@@ -29,6 +30,7 @@ export function RichTextEditor({ value, onChange, placeholder, multiline = true 
       Subscript,
       Underline,
       MathInline,
+      ChemInline,
     ],
     content: value || '',
     onUpdate({ editor }) {

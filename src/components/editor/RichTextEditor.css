@@ -38,3 +38,9 @@
   border-radius: 3px;
   padding: 0 2px;
 }
+
+/* Selected chem node highlight */
+.chem-selected {
+  outline: 2px solid #3b82f6;
+  border-radius: 3px;
+}
