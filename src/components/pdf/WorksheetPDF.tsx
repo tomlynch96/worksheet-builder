@@ -1,9 +1,20 @@
 import { Document, Page, View, Text, StyleSheet, Font } from '@react-pdf/renderer'
 import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
 import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
+import katexMainBoldUrl from 'katex/dist/fonts/KaTeX_Main-Bold.ttf?url'
+import katexMainItalicUrl from 'katex/dist/fonts/KaTeX_Main-Italic.ttf?url'
+import katexMainBoldItalicUrl from 'katex/dist/fonts/KaTeX_Main-BoldItalic.ttf?url'
 
 Font.register({ family: 'KaTeX-Math', src: katexMathItalicUrl })
-Font.register({ family: 'KaTeX-Main', src: katexMainRegularUrl })
+Font.register({
+  family: 'KaTeX-Main',
+  fonts: [
+    { src: katexMainRegularUrl },
+    { src: katexMainItalicUrl, fontStyle: 'italic' },
+    { src: katexMainBoldUrl, fontWeight: 'bold' },
+    { src: katexMainBoldItalicUrl, fontWeight: 'bold', fontStyle: 'italic' },
+  ],
+})
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'

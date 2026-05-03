@@ -150,7 +150,27 @@ function nodesToPdf(nodes: NodeList, style: any, key = ''): ReactElement[] {
 
     if (node.nodeType === 3) {
       const text = node.textContent ?? ''
-      if (text) out.push(<Text key={k} style={style}>{text}</Text>)
+      if (!text) return
+      // Split into Latin-1 and non-Latin-1 runs; Helvetica only covers U+0000–U+00FF
+      const segs: Array<{ text: string; unicode: boolean }> = []
+      let pos = 0
+      while (pos < text.length) {
+        const unicode = text.charCodeAt(pos) > 0xFF
+        let seg = ''
+        while (pos < text.length && (text.charCodeAt(pos) > 0xFF) === unicode) seg += text[pos++]
+        segs.push({ text: seg, unicode })
+      }
+      if (segs.length === 1 && !segs[0].unicode) {
+        out.push(<Text key={k} style={style}>{text}</Text>)
+      } else {
+        out.push(
+          <Text key={k} style={style}>
+            {segs.map((seg, si) => (
+              <Text key={si} style={seg.unicode ? { ...style, fontFamily: 'KaTeX-Main' } : style}>{seg.text}</Text>
+            ))}
+          </Text>
+        )
+      }
       return
     }
     if (node.nodeType !== 1) return
