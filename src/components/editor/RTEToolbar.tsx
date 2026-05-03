@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useActiveEditor } from './ActiveEditorContext'
+import katex from 'katex'
+import 'katex/contrib/mhchem'
 import './RTEToolbar.css'
+
+function chemPreviewHtml(chem: string): string {
+  if (!chem.trim()) return ''
+  return katex.renderToString(`\\ce{${chem}}`, { throwOnError: false, displayMode: false, output: 'mathml' })
+}
 
 const SCIENCE_SYMBOLS = [
   'λ', 'μ', 'σ', 'θ', 'φ', 'ω', 'α', 'β', 'γ', 'δ', 'Δ', 'Ω',
@@ -146,6 +153,12 @@ export function RTEToolbar() {
               placeholder="e.g. H2O  or  2H2 + O2 -> 2H2O"
               autoFocus
             />
+            {chemInput && (
+              <span
+                className="rtebar-chem-live-preview"
+                dangerouslySetInnerHTML={{ __html: chemPreviewHtml(chemInput) }}
+              />
+            )}
             <div className="rtebar-chem-examples">
               {CHEM_EXAMPLES.map(ex => (
                 <button

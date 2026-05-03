@@ -110,6 +110,16 @@
   min-width: 280px;
 }
 
+.rtebar-chem-live-preview {
+  display: block;
+  font-size: 13px;
+  min-height: 22px;
+  padding: 4px 8px;
+  background: #f8faff;
+  border: 1px solid #e2e0ea;
+  border-radius: 4px;
+}
+
 .rtebar-chem-examples {
   display: flex;
   flex-wrap: wrap;
