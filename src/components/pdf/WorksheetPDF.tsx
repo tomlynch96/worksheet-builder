@@ -5,13 +5,13 @@ import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
 Font.register({ family: 'KaTeX-Math', src: katexMathItalicUrl })
 Font.register({ family: 'KaTeX-Main', src: katexMainRegularUrl })
 
-// Liberation Sans: full Unicode coverage (Greek, math symbols, etc.)
+// DejaVu Sans: comprehensive Unicode coverage (Greek, arrows, math operators, etc.)
 Font.register({
   family: 'UniSans',
   fonts: [
-    { src: '/fonts/LiberationSans-Regular.ttf' },
+    { src: '/fonts/DejaVuSans.ttf' },
     { src: '/fonts/LiberationSans-Italic.ttf', fontStyle: 'italic' },
-    { src: '/fonts/LiberationSans-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/DejaVuSans-Bold.ttf', fontWeight: 'bold' },
     { src: '/fonts/LiberationSans-BoldItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 })
