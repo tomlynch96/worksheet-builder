@@ -9,6 +9,7 @@
   flex-wrap: wrap;
   flex-shrink: 0;
   min-height: 38px;
+  position: relative;
 }
 
 .rtebar-group {

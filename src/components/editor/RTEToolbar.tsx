@@ -126,7 +126,7 @@ export function RTEToolbar() {
       <span className="rtebar-sep" />
 
       {/* LaTeX equation */}
-      <span className="rtebar-group" style={{ position: 'relative' }}>
+      <span className="rtebar-group">
         <button
           type="button"
           className={`rtebar-btn${showMath ? ' rtebar-btn--on' : ''}`}
@@ -151,7 +151,7 @@ export function RTEToolbar() {
       </span>
 
       {/* Chemistry notation */}
-      <span className="rtebar-group" style={{ position: 'relative' }}>
+      <span className="rtebar-group">
         <button
           type="button"
           className={`rtebar-btn${showChem || isChemActive ? ' rtebar-btn--on' : ''}`}
@@ -203,7 +203,7 @@ export function RTEToolbar() {
       </span>
 
       {/* Symbol picker */}
-      <span className="rtebar-group" style={{ position: 'relative' }}>
+      <span className="rtebar-group">
         <button
           type="button"
           className={`rtebar-btn${showSymbols ? ' rtebar-btn--on' : ''}`}
