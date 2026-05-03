@@ -186,14 +186,7 @@ function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: numb
             </div>
           ))}
         </div>
-        <div className="pr-match-lines">
-          {block.items.map((_, i) => (
-            <div key={i} className="pr-match-dot-row">
-              <span className="pr-match-dot" />
-              <span className="pr-match-dot" />
-            </div>
-          ))}
-        </div>
+        <div className="pr-match-gap" />
         <div className="pr-match-col">
           {shuffledRight.map((right, i) => (
             <div key={i} className="pr-match-cell pr-match-cell--right">

@@ -116,7 +116,7 @@ function nodesToPdf(nodes: NodeList, style: any, key = ''): ReactElement[] {
       case 'span':
         if (el.getAttribute('data-type') === 'math') {
           const latex = el.getAttribute('data-latex') || ''
-          out.push(<Text key={k} style={style}>{latexToUnicode(latex)}</Text>)
+          out.push(<Text key={k} style={{ ...style, fontFamily: 'Helvetica-Oblique' }}>{latexToUnicode(latex)}</Text>)
         } else {
           out.push(...nodesToPdf(el.childNodes, style, k))
         }

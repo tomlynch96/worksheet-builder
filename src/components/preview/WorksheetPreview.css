@@ -25,7 +25,7 @@
   font-weight: normal;
 }
 
-/* Rich text from Tiptap wraps content in <p>; strip margins everywhere in preview */
+/* Rich text from Tiptap wraps content in <p>; reset margins, keep block flow */
 .pr-q-text p,
 .pr-information-content p,
 .pr-worked-steps li p,
@@ -33,17 +33,15 @@
 .pr-match-cell p,
 .pr-step-row p {
   margin: 0;
-  display: inline;
-}
-/* Multiline information content: keep block flow but no margin */
-.pr-information-content > span > p,
-.pr-information-content > p {
   display: block;
-  margin: 0;
 }
-.pr-information-content > span > p + p,
-.pr-information-content > p + p {
-  margin-top: 4px;
+.pr-q-text p + p,
+.pr-information-content p + p,
+.pr-worked-steps li p + p,
+.pr-mc-option p + p,
+.pr-match-cell p + p,
+.pr-step-row p + p {
+  margin-top: 3px;
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -296,27 +294,9 @@
 .pr-match-cell--left  { background: #f8faff; }
 .pr-match-cell--right { background: #fff; }
 
-.pr-match-lines {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding: 0 12px;
-  gap: 6px;
-}
-
-.pr-match-dot-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 30px;
-}
-
-.pr-match-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.5px solid #374151;
-  background: #fff;
+.pr-match-gap {
+  width: 16px;
+  flex-shrink: 0;
 }
 
 /* ── Cloze ───────────────────────────────────────────────── */

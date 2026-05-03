@@ -247,14 +247,7 @@ function PDFMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }
             </View>
           ))}
         </View>
-        <View style={s.matchLines}>
-          {block.items.map((_, i) => (
-            <View key={i} style={s.matchDotRow}>
-              <View style={s.matchDot} />
-              <View style={s.matchDot} />
-            </View>
-          ))}
-        </View>
+        <View style={{ width: 14 }} />
         <View style={s.matchCol}>
           {shuffledRight.map((right, i) => (
             <View key={i} style={s.matchCell}>
