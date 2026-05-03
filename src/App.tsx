@@ -63,7 +63,11 @@ export default function App() {
         </aside>
 
         <main className="panel-preview">
-          <WorksheetPreview worksheet={worksheet} />
+          <WorksheetPreview
+            worksheet={worksheet}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
         </main>
       </div>
     </div>
