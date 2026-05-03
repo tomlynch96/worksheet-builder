@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useActiveEditor } from './ActiveEditorContext'
 import katex from 'katex'
 import 'katex/contrib/mhchem'
+import { PHYSICS_EQUATIONS } from '../../data/physicsEquations'
+import { CHEM_DATABASE } from '../../data/chemDatabase'
 import './RTEToolbar.css'
 
 function chemPreviewHtml(chem: string): string {
@@ -31,6 +33,8 @@ export function RTEToolbar() {
   const [showSymbols, setShowSymbols] = useState(false)
   const [mathInput, setMathInput] = useState('')
   const [chemInput, setChemInput] = useState('')
+  const [mathSuggestions, setMathSuggestions] = useState<typeof PHYSICS_EQUATIONS>([])
+  const [chemSuggestions, setChemSuggestions] = useState<typeof CHEM_DATABASE>([])
 
   useEffect(() => {
     if (!editor) return
@@ -63,13 +67,33 @@ export function RTEToolbar() {
     )
   }
 
+  function onMathInputChange(val: string) {
+    setMathInput(val)
+    if (!val.trim()) { setMathSuggestions([]); return }
+    const q = val.toLowerCase()
+    setMathSuggestions(
+      PHYSICS_EQUATIONS.filter(eq =>
+        eq.name.toLowerCase().includes(q) || eq.latex.toLowerCase().includes(q)
+      ).slice(0, 7)
+    )
+  }
+
+  function onChemInputChange(val: string) {
+    setChemInput(val)
+    if (!val.trim()) { setChemSuggestions([]); return }
+    const q = val.toLowerCase()
+    setChemSuggestions(
+      CHEM_DATABASE.filter(e =>
+        e.name.toLowerCase().includes(q) || e.formula.toLowerCase().includes(q)
+      ).slice(0, 7)
+    )
+  }
+
   function insertMath() {
     if (!mathInput.trim() || !editor) return
-    editor.chain().focus().insertContent({
-      type: 'mathInline',
-      attrs: { latex: mathInput.trim() },
-    }).run()
+    editor.chain().focus().insertContent({ type: 'mathInline', attrs: { latex: mathInput.trim() } }).run()
     setMathInput('')
+    setMathSuggestions([])
     setShowMath(false)
   }
 
@@ -81,6 +105,7 @@ export function RTEToolbar() {
     } else {
       setChemInput('')
     }
+    setChemSuggestions([])
     setShowChem(v => !v)
     setShowMath(false)
     setShowSymbols(false)
@@ -91,12 +116,10 @@ export function RTEToolbar() {
     if (isChemActive) {
       editor.chain().focus().updateAttributes('chemInline', { chem: chemInput.trim() }).run()
     } else {
-      editor.chain().focus().insertContent({
-        type: 'chemInline',
-        attrs: { chem: chemInput.trim() },
-      }).run()
+      editor.chain().focus().insertContent({ type: 'chemInline', attrs: { chem: chemInput.trim() } }).run()
     }
     setChemInput('')
+    setChemSuggestions([])
     setShowChem(false)
   }
 
@@ -109,6 +132,8 @@ export function RTEToolbar() {
     setShowMath(false)
     setShowChem(false)
     setShowSymbols(false)
+    setMathSuggestions([])
+    setChemSuggestions([])
   }
 
   return (
@@ -140,11 +165,27 @@ export function RTEToolbar() {
             <input
               className="rtebar-math-input"
               value={mathInput}
-              onChange={e => setMathInput(e.target.value)}
+              onChange={e => onMathInputChange(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && insertMath()}
               placeholder="e.g. E=mc^2  or  \frac{v}{f}"
               autoFocus
             />
+            {mathSuggestions.length > 0 && (
+              <div className="rtebar-suggestions">
+                {mathSuggestions.map((eq, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="rtebar-suggestion"
+                    onMouseDown={e => { e.preventDefault(); setMathInput(eq.latex); setMathSuggestions([]) }}
+                  >
+                    <span className="rtebar-suggestion-name">{eq.name}</span>
+                    <span className="rtebar-suggestion-meta">{eq.topic} · {eq.level}</span>
+                    <span className="rtebar-suggestion-latex">{eq.latex}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <button type="button" className="rtebar-math-insert" onClick={insertMath}>Insert</button>
           </div>
         )}
@@ -167,11 +208,27 @@ export function RTEToolbar() {
             <input
               className="rtebar-math-input"
               value={chemInput}
-              onChange={e => setChemInput(e.target.value)}
+              onChange={e => onChemInputChange(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && insertChem()}
               placeholder="e.g. H2O  or  2H2 + O2 -> 2H2O"
               autoFocus
             />
+            {chemSuggestions.length > 0 && (
+              <div className="rtebar-suggestions">
+                {chemSuggestions.map((entry, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="rtebar-suggestion"
+                    onMouseDown={e => { e.preventDefault(); setChemInput(entry.formula); setChemSuggestions([]) }}
+                  >
+                    <span className="rtebar-suggestion-name">{entry.name}</span>
+                    <span className="rtebar-suggestion-meta">{entry.type}{entry.topic ? ` · ${entry.topic}` : ''}</span>
+                    <span className="rtebar-suggestion-formula">{entry.formula}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {chemInput && (
               <span
                 className="rtebar-chem-live-preview"
