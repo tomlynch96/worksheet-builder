@@ -166,7 +166,7 @@ function nodesToPdf(nodes: NodeList, style: any, key = ''): ReactElement[] {
         out.push(
           <Text key={k} style={style}>
             {segs.map((seg, si) => (
-              <Text key={si} style={seg.unicode ? { ...style, fontFamily: 'KaTeX-Main' } : style}>{seg.text}</Text>
+              <Text key={si} style={seg.unicode ? { ...style, fontFamily: 'UniSans' } : style}>{seg.text}</Text>
             ))}
           </Text>
         )

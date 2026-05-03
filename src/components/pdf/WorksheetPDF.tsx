@@ -1,18 +1,18 @@
 import { Document, Page, View, Text, StyleSheet, Font } from '@react-pdf/renderer'
 import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
 import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
-import katexMainBoldUrl from 'katex/dist/fonts/KaTeX_Main-Bold.ttf?url'
-import katexMainItalicUrl from 'katex/dist/fonts/KaTeX_Main-Italic.ttf?url'
-import katexMainBoldItalicUrl from 'katex/dist/fonts/KaTeX_Main-BoldItalic.ttf?url'
 
 Font.register({ family: 'KaTeX-Math', src: katexMathItalicUrl })
+Font.register({ family: 'KaTeX-Main', src: katexMainRegularUrl })
+
+// Liberation Sans: full Unicode coverage (Greek, math symbols, etc.)
 Font.register({
-  family: 'KaTeX-Main',
+  family: 'UniSans',
   fonts: [
-    { src: katexMainRegularUrl },
-    { src: katexMainItalicUrl, fontStyle: 'italic' },
-    { src: katexMainBoldUrl, fontWeight: 'bold' },
-    { src: katexMainBoldItalicUrl, fontWeight: 'bold', fontStyle: 'italic' },
+    { src: '/fonts/LiberationSans-Regular.ttf' },
+    { src: '/fonts/LiberationSans-Italic.ttf', fontStyle: 'italic' },
+    { src: '/fonts/LiberationSans-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/LiberationSans-BoldItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 })
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
