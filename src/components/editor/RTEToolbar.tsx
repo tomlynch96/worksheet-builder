@@ -7,14 +7,24 @@ const SCIENCE_SYMBOLS = [
   '→', '⇌', '×', '÷', '±', '≈', '≠', '≤', '≥', '°', '∞',
 ]
 
+const CHEM_EXAMPLES = [
+  { label: 'Water', value: 'H2O' },
+  { label: 'Carbon dioxide', value: 'CO2' },
+  { label: 'Sulfuric acid', value: 'H2SO4' },
+  { label: 'Combustion', value: 'CH4 + 2O2 -> CO2 + 2H2O' },
+  { label: 'Equilibrium', value: 'N2 + 3H2 <=> 2NH3' },
+  { label: 'Ionic', value: 'H^+ + OH^- -> H2O' },
+]
+
 export function RTEToolbar() {
   const { editor } = useActiveEditor()
   const [, setTick] = useState(0)
   const [showMath, setShowMath] = useState(false)
+  const [showChem, setShowChem] = useState(false)
   const [showSymbols, setShowSymbols] = useState(false)
   const [mathInput, setMathInput] = useState('')
+  const [chemInput, setChemInput] = useState('')
 
-  // Re-render when selection or marks change so isActive stays accurate
   useEffect(() => {
     if (!editor) return
     const update = () => setTick(t => t + 1)
@@ -26,12 +36,7 @@ export function RTEToolbar() {
     }
   }, [editor])
 
-  function btn(
-    label: string,
-    mark: string,
-    action: () => void,
-    className = '',
-  ) {
+  function btn(label: string, mark: string, action: () => void, className = '') {
     const on = editor?.isActive(mark) ?? false
     return (
       <button
@@ -61,8 +66,24 @@ export function RTEToolbar() {
     setShowMath(false)
   }
 
+  function insertChem() {
+    if (!chemInput.trim() || !editor) return
+    editor.chain().focus().insertContent({
+      type: 'chemInline',
+      attrs: { chem: chemInput.trim() },
+    }).run()
+    setChemInput('')
+    setShowChem(false)
+  }
+
   function insertSymbol(sym: string) {
     editor?.chain().focus().insertContent(sym).run()
+    setShowSymbols(false)
+  }
+
+  function closeAll() {
+    setShowMath(false)
+    setShowChem(false)
     setShowSymbols(false)
   }
 
@@ -79,13 +100,15 @@ export function RTEToolbar() {
         {btn('Subscript',   'subscript',   () => editor?.chain().focus().toggleSubscript().run())}
       </span>
       <span className="rtebar-sep" />
+
+      {/* LaTeX equation */}
       <span className="rtebar-group" style={{ position: 'relative' }}>
         <button
           type="button"
           className={`rtebar-btn${showMath ? ' rtebar-btn--on' : ''}`}
           title="Insert equation (LaTeX)"
           disabled={!editor}
-          onMouseDown={e => { e.preventDefault(); setShowMath(v => !v); setShowSymbols(false) }}
+          onMouseDown={e => { e.preventDefault(); setShowMath(v => !v); setShowChem(false); setShowSymbols(false) }}
         >Σ</button>
         {showMath && (
           <div className="rtebar-popover">
@@ -102,13 +125,57 @@ export function RTEToolbar() {
           </div>
         )}
       </span>
+
+      {/* Chemistry notation */}
+      <span className="rtebar-group" style={{ position: 'relative' }}>
+        <button
+          type="button"
+          className={`rtebar-btn${showChem ? ' rtebar-btn--on' : ''}`}
+          title="Insert chemical formula or equation"
+          disabled={!editor}
+          onMouseDown={e => { e.preventDefault(); setShowChem(v => !v); setShowMath(false); setShowSymbols(false) }}
+        >⚗</button>
+        {showChem && (
+          <div className="rtebar-popover rtebar-chem-popover">
+            <span className="rtebar-popover-label">Chemical formula / equation</span>
+            <input
+              className="rtebar-math-input"
+              value={chemInput}
+              onChange={e => setChemInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && insertChem()}
+              placeholder="e.g. H2O  or  2H2 + O2 -> 2H2O"
+              autoFocus
+            />
+            <div className="rtebar-chem-examples">
+              {CHEM_EXAMPLES.map(ex => (
+                <button
+                  key={ex.value}
+                  type="button"
+                  className="rtebar-chem-example"
+                  onMouseDown={e => { e.preventDefault(); setChemInput(ex.value) }}
+                  title={ex.value}
+                >{ex.label}</button>
+              ))}
+            </div>
+            <div className="rtebar-chem-hints">
+              <span><code>-&gt;</code> one-way</span>
+              <span><code>&lt;=&gt;</code> reversible</span>
+              <span><code>H2O</code> subscripts</span>
+              <span><code>Ca^2+</code> charges</span>
+            </div>
+            <button type="button" className="rtebar-math-insert" onClick={insertChem}>Insert</button>
+          </div>
+        )}
+      </span>
+
+      {/* Symbol picker */}
       <span className="rtebar-group" style={{ position: 'relative' }}>
         <button
           type="button"
           className={`rtebar-btn${showSymbols ? ' rtebar-btn--on' : ''}`}
           title="Insert symbol"
           disabled={!editor}
-          onMouseDown={e => { e.preventDefault(); setShowSymbols(v => !v); setShowMath(false) }}
+          onMouseDown={e => { e.preventDefault(); setShowSymbols(v => !v); closeAll(); setShowSymbols(true) }}
         >Ω</button>
         {showSymbols && (
           <div className="rtebar-popover rtebar-symbols-popover">
@@ -123,6 +190,7 @@ export function RTEToolbar() {
           </div>
         )}
       </span>
+
       {!editor && (
         <span className="rtebar-hint">Click a text field to start editing</span>
       )}

@@ -1,4 +1,5 @@
 import katex from 'katex'
+import 'katex/contrib/mhchem'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages } from '../../utils/pagination'
@@ -17,11 +18,19 @@ function getQuestionNumber(blocks: Block[], id: string): number {
 
 // Post-process Tiptap HTML: replace empty math spans with rendered MathML
 function withMath(html: string): string {
-  if (!html || !html.includes('data-type="math"')) return html
+  if (!html || (!html.includes('data-type="math"') && !html.includes('data-type="chem"'))) return html
   const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html')
   doc.querySelectorAll('[data-type="math"]').forEach(el => {
     const latex = el.getAttribute('data-latex') || ''
     el.innerHTML = katex.renderToString(latex, {
+      throwOnError: false,
+      displayMode: false,
+      output: 'mathml',
+    })
+  })
+  doc.querySelectorAll('[data-type="chem"]').forEach(el => {
+    const chem = el.getAttribute('data-chem') || ''
+    el.innerHTML = katex.renderToString(`\\ce{${chem}}`, {
       throwOnError: false,
       displayMode: false,
       output: 'mathml',

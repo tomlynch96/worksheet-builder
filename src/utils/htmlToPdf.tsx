@@ -36,6 +36,28 @@ const OPS: Record<string, string> = {
   infty:'∞', propto:'∝', sim:'∼', equiv:'≡', degree:'°',
 }
 
+// ── Chemistry notation → Unicode converter ────────────────
+// Converts mhchem-style notation (e.g. "2H2 + O2 -> 2H2O") to Unicode.
+
+export function chemToUnicode(chem: string): string {
+  let s = chem.trim()
+  // Arrows
+  s = s.replace(/<=>|<->/g, '⇌').replace(/->/g, '→')
+  // Explicit LaTeX-style superscripts: ^{...} and ^x (for charges typed as H^+, Ca^2+)
+  s = s.replace(/\^\{([^}]*)\}/g, (_, n) => toSup(n))
+  s = s.replace(/\^([0-9a-zA-Z+\-])/g, (_, c) => toSup(c))
+  // Multi-digit charges: digits followed by +/- at end of formula token
+  s = s.replace(/(\d+)([+-])(?=[\s,)→⇌]|$)/g, (_, n, sign) =>
+    toSup(n) + (sign === '+' ? '⁺' : '⁻'))
+  // Single charge: +/- immediately after a letter or digit at end of token
+  s = s.replace(/([A-Za-z\d])([+-])(?=[\s,)→⇌]|$)/g, (_, pre, sign) =>
+    pre + (sign === '+' ? '⁺' : '⁻'))
+  // Subscript digits: digits immediately following a letter (element symbol)
+  s = s.replace(/([A-Za-z])(\d+)/g, (_, letter, digits) =>
+    letter + toSub(digits))
+  return s
+}
+
 export function latexToUnicode(latex: string): string {
   let s = latex
   // Named replacements first (longest match wins by iterating all)
@@ -117,6 +139,9 @@ function nodesToPdf(nodes: NodeList, style: any, key = ''): ReactElement[] {
         if (el.getAttribute('data-type') === 'math') {
           const latex = el.getAttribute('data-latex') || ''
           out.push(<Text key={k} style={{ ...style, fontFamily: 'KaTeX-Math' }}>{latexToUnicode(latex)}</Text>)
+        } else if (el.getAttribute('data-type') === 'chem') {
+          const chem = el.getAttribute('data-chem') || ''
+          out.push(<Text key={k} style={{ ...style, fontFamily: 'KaTeX-Math' }}>{chemToUnicode(chem)}</Text>)
         } else {
           out.push(...nodesToPdf(el.childNodes, style, k))
         }
