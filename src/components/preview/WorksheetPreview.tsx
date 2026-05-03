@@ -284,15 +284,34 @@ function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
   }
 }
 
-export function WorksheetPreview({ worksheet }: { worksheet: Worksheet }) {
+interface WorksheetPreviewProps {
+  worksheet: Worksheet
+  selectedId?: string | null
+  onSelect?: (id: string) => void
+}
+
+export function WorksheetPreview({ worksheet, selectedId, onSelect }: WorksheetPreviewProps) {
   const pages = splitIntoPages(worksheet.blocks)
   return (
     <>
       {pages.map((pageBlocks, pageIdx) => (
         <div key={pageIdx} className="a4-page">
-          {pageBlocks.map(block => (
-            <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} />
-          ))}
+          {pageBlocks.map(block => {
+            const isSelected = block.id === selectedId
+            if (onSelect) {
+              return (
+                <div
+                  key={block.id}
+                  className={`preview-block-wrap ${isSelected ? 'preview-block-wrap--selected' : ''}`}
+                  onClick={() => onSelect(block.id)}
+                  title="Click to edit"
+                >
+                  <PreviewBlock block={block} blocks={worksheet.blocks} />
+                </div>
+              )
+            }
+            return <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} />
+          })}
         </div>
       ))}
     </>

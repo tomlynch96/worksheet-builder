@@ -43,59 +43,61 @@ interface Props {
 
 export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const { blocks } = worksheet
+  const selectedBlock = blocks.find(b => b.id === selectedId) ?? null
+  const selectedIdx = selectedBlock ? blocks.indexOf(selectedBlock) : -1
 
   return (
     <ActiveEditorProvider>
-      <RTEToolbar />
+      {selectedBlock && <RTEToolbar />}
       <div className="editor">
-        <div className="editor-blocks">
-          {blocks.map((block, idx) => {
-            const isSelected = block.id === selectedId
-            const color = BLOCK_COLORS[block.type]
-            const isFirst = idx === 0
-            const isLast = idx === blocks.length - 1
-
-            return (
-              <div
-                key={block.id}
-                className={`editor-block ${isSelected ? 'editor-block--selected' : ''}`}
-                style={{ '--block-color': color } as React.CSSProperties}
+        {selectedBlock ? (
+          <>
+            <div
+              className="editor-focused-header"
+              style={{ '--block-color': BLOCK_COLORS[selectedBlock.type] } as React.CSSProperties}
+            >
+              <button
+                type="button"
+                className="editor-back-btn"
+                onClick={() => onSelect(null)}
+                aria-label="Close editor"
               >
-                <div className="editor-block-header" onClick={() => onSelect(isSelected ? null : block.id)}>
-                  <span className="editor-block-type">{BLOCK_LABELS[block.type]}</span>
-                  <div className="editor-block-controls">
-                    <button
-                      type="button"
-                      className="ctrl-btn"
-                      disabled={isFirst}
-                      onClick={e => { e.stopPropagation(); dispatch({ type: 'MOVE_BLOCK', id: block.id, direction: 'up' }) }}
-                      aria-label="Move up"
-                    >↑</button>
-                    <button
-                      type="button"
-                      className="ctrl-btn"
-                      disabled={isLast}
-                      onClick={e => { e.stopPropagation(); dispatch({ type: 'MOVE_BLOCK', id: block.id, direction: 'down' }) }}
-                      aria-label="Move down"
-                    >↓</button>
-                    <button
-                      type="button"
-                      className="ctrl-btn ctrl-btn--danger"
-                      onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BLOCK', id: block.id }); onSelect(null) }}
-                      aria-label="Delete block"
-                    >×</button>
-                  </div>
-                </div>
-
-                {isSelected && (
-                  <div className="editor-block-body">
-                    <BlockEditor block={block} dispatch={dispatch} />
-                  </div>
-                )}
+                ← Back
+              </button>
+              <span className="editor-focused-type">{BLOCK_LABELS[selectedBlock.type]}</span>
+              <div className="editor-focused-controls">
+                <button
+                  type="button"
+                  className="ctrl-btn"
+                  disabled={selectedIdx === 0}
+                  onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'up' })}
+                  aria-label="Move up"
+                >↑</button>
+                <button
+                  type="button"
+                  className="ctrl-btn"
+                  disabled={selectedIdx === blocks.length - 1}
+                  onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'down' })}
+                  aria-label="Move down"
+                >↓</button>
+                <button
+                  type="button"
+                  className="ctrl-btn ctrl-btn--danger"
+                  onClick={() => { dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id }); onSelect(null) }}
+                  aria-label="Delete block"
+                >×</button>
               </div>
-            )
-          })}
-        </div>
+            </div>
+            <div className="editor-focused-body">
+              <BlockEditor block={selectedBlock} dispatch={dispatch} />
+            </div>
+          </>
+        ) : (
+          <div className="editor-empty">
+            <div className="editor-empty-icon">↗</div>
+            <p className="editor-empty-text">Click any block in the preview to edit it</p>
+          </div>
+        )}
 
         <div className="editor-footer">
           <AddBlockMenu dispatch={dispatch} onAdded={id => onSelect(id)} />
