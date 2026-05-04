@@ -2,6 +2,8 @@ import type { Worksheet } from '../types/worksheet'
 
 function id() { return crypto.randomUUID() }
 
+const _rateTableId = id()
+
 export interface Preset {
   label: string
   description: string
@@ -296,135 +298,132 @@ export const PRESETS: Preset[] = [
       ],
     },
   },
-  ...(() => {
-    const rateTableId = id()
-    return [{
-      label: 'Rates of Reaction',
-      description: 'AQA Higher — full-skills worksheet with data table, bar chart, cloze, order steps, and exam questions',
-      worksheet: {
-        id: id(),
-        blocks: [
-          {
-            id: id(), type: 'header',
-            title: 'Rates of Reaction',
-            topic: 'Chemistry — Chemical Changes',
-            examBoard: 'AQA', tier: 'higher',
-            showName: true, showDate: true, showClass: true,
+  {
+    label: 'Rates of Reaction',
+    description: 'AQA Higher — full-skills worksheet with data table, bar chart, cloze, order steps, and exam questions',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Rates of Reaction',
+          topic: 'Chemistry — Chemical Changes',
+          examBoard: 'AQA' as const, tier: 'higher' as const,
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions.',
+            'Show working for all calculations.',
+            'The marks for each question are shown in brackets.',
+          ],
+        },
+        {
+          id: id(), type: 'information' as const,
+          heading: 'Key concept — collision theory',
+          content: '<p>A chemical reaction occurs when reacting particles collide with <strong>sufficient energy</strong> (the activation energy). The rate of reaction increases when collisions are more <strong>frequent</strong> or more <strong>energetic</strong>.</p><p>Rate of reaction = <strong>quantity of product formed ÷ time</strong> (or quantity of reactant used ÷ time)</p>',
+        },
+        {
+          id: id(), type: 'multiple_choice' as const,
+          stem: '<p>Which change would <strong>not</strong> increase the rate of a reaction between marble chips and hydrochloric acid?</p>',
+          marks: 1,
+          options: [
+            '<p>Increasing the temperature</p>',
+            '<p>Using powdered marble instead of chips</p>',
+            '<p>Using a more concentrated acid</p>',
+            '<p>Using a larger volume of acid at the same concentration</p>',
+          ],
+          correctIndex: 3,
+        },
+        {
+          id: id(), type: 'cloze' as const,
+          heading: 'Fill in the blanks using the words in the box.',
+          text: 'Increasing the [temperature] gives particles more [kinetic] energy, so more collisions exceed the [activation] energy. Increasing the [concentration] of a solution means there are more particles in the same volume, so collisions are more [frequent].',
+          showWordBank: true,
+        },
+        {
+          id: id(), type: 'worked_example' as const,
+          title: 'Worked example — calculating rate of reaction',
+          steps: [
+            '<p>In an experiment, 48 cm³ of gas was collected in 120 seconds. Calculate the mean rate of reaction.</p>',
+            '<p>Rate = quantity of product ÷ time</p>',
+            '<p>Rate = 48 ÷ 120</p>',
+            '<p>Rate = <strong>0.4 cm³/s</strong></p>',
+          ],
+        },
+        {
+          id: _rateTableId,
+          type: 'data' as const,
+          heading: 'Table 1: Effect of temperature on rate of reaction (marble chips + HCl)',
+          columns: [
+            { label: 'Temperature', unit: '°C' },
+            { label: 'Time to collect 50 cm³ gas', unit: 's' },
+          ],
+          rows: [
+            ['20', '240'],
+            ['30', '120'],
+            ['40', '60'],
+            ['50', '30'],
+            ['60', '15'],
+          ],
+          display: 'table' as const,
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [], fitType: 'none' as const, linkedDataId: null,
           },
-          {
-            id: id(), type: 'instructions',
-            items: [
-              'Answer all questions.',
-              'Show working for all calculations.',
-              'The marks for each question are shown in brackets.',
-            ],
+        },
+        {
+          id: id(),
+          type: 'data' as const,
+          heading: 'Fig. 1: Effect of temperature on time taken',
+          columns: [
+            { label: 'Temperature', unit: '°C' },
+            { label: 'Time to collect 50 cm³ gas', unit: 's' },
+          ],
+          rows: [],
+          display: 'bar' as const,
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [], fitType: 'none' as const, linkedDataId: _rateTableId,
           },
-          {
-            id: id(), type: 'information',
-            heading: 'Key concept — collision theory',
-            content: '<p>A chemical reaction occurs when reacting particles collide with <strong>sufficient energy</strong> (the activation energy). The rate of reaction increases when collisions are more <strong>frequent</strong> or more <strong>energetic</strong>.</p><p>Rate of reaction = <strong>quantity of product formed ÷ time</strong> (or quantity of reactant used ÷ time)</p>',
-          },
-          {
-            id: id(), type: 'multiple_choice',
-            stem: '<p>Which change would <strong>not</strong> increase the rate of a reaction between marble chips and hydrochloric acid?</p>',
-            marks: 1,
-            options: [
-              '<p>Increasing the temperature</p>',
-              '<p>Using powdered marble instead of chips</p>',
-              '<p>Using a more concentrated acid</p>',
-              '<p>Using a larger volume of acid at the same concentration</p>',
-            ],
-            correctIndex: 3,
-          },
-          {
-            id: id(), type: 'cloze',
-            heading: 'Fill in the blanks using the words in the box.',
-            text: 'Increasing the [temperature] gives particles more [kinetic] energy, so more collisions exceed the [activation] energy. Increasing the [concentration] of a solution means there are more particles in the same volume, so collisions are more [frequent].',
-            showWordBank: true,
-          },
-          {
-            id: id(), type: 'worked_example',
-            title: 'Worked example — calculating rate of reaction',
-            steps: [
-              '<p>In an experiment, 48 cm³ of gas was collected in 120 seconds. Calculate the mean rate of reaction.</p>',
-              '<p>Rate = quantity of product ÷ time</p>',
-              '<p>Rate = 48 ÷ 120</p>',
-              '<p>Rate = <strong>0.4 cm³/s</strong></p>',
-            ],
-          },
-          {
-            id: rateTableId,
-            type: 'data',
-            heading: 'Table 1: Effect of temperature on rate of reaction (marble chips + HCl)',
-            columns: [
-              { label: 'Temperature', unit: '°C' },
-              { label: 'Time to collect 50 cm³ gas', unit: 's' },
-            ],
-            rows: [
-              ['20', '240'],
-              ['30', '120'],
-              ['40', '60'],
-              ['50', '30'],
-              ['60', '15'],
-            ],
-            display: 'table',
-            graph: {
-              xCol: 0, yCol: 1,
-              showXLabel: true, showYLabel: true,
-              showXScale: true, showYScale: true,
-              omitRows: [], fitType: 'none', linkedDataId: null,
-            },
-          },
-          {
-            id: id(),
-            type: 'data',
-            heading: 'Fig. 1: Effect of temperature on time taken',
-            columns: [
-              { label: 'Temperature', unit: '°C' },
-              { label: 'Time to collect 50 cm³ gas', unit: 's' },
-            ],
-            rows: [],
-            display: 'bar',
-            graph: {
-              xCol: 0, yCol: 1,
-              showXLabel: true, showYLabel: true,
-              showXScale: true, showYScale: true,
-              omitRows: [], fitType: 'none', linkedDataId: rateTableId,
-            },
-          },
-          {
-            id: id(), type: 'question',
-            stem: '<p>Use Table 1 and Fig. 1 to answer the following questions.</p>',
-            marks: 7, lines: 0,
-            parts: [
-              { id: id(), label: 'a', stem: '<p>Describe the relationship between temperature and the time taken to collect 50 cm³ of gas.</p>', marks: 2, lines: 3 },
-              { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3 },
-              { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5 },
-            ],
-          },
-          {
-            id: id(), type: 'match_them_up',
-            heading: 'Match each factor to how it increases the rate of reaction.',
-            items: [
-              { id: id(), left: 'Higher temperature', right: 'Particles have more energy; more collisions exceed activation energy' },
-              { id: id(), left: 'Higher concentration', right: 'More particles per unit volume; collisions are more frequent' },
-              { id: id(), left: 'Smaller particle size', right: 'Greater surface area exposed; more collisions per second' },
-              { id: id(), left: 'Adding a catalyst', right: 'Provides an alternative reaction pathway with lower activation energy' },
-            ],
-          },
-          {
-            id: id(), type: 'order_steps',
-            heading: 'Number these steps 1 to 5 to describe how to carry out a fair test of how temperature affects the rate of reaction between marble chips and dilute hydrochloric acid.',
-            steps: [
-              'Place the flask in a water bath and wait for the temperature to stabilise.',
-              'Add a measured mass of marble chips and immediately start the stopwatch.',
-              'Record the volume of gas collected every 10 seconds until no more gas is produced.',
-              'Repeat the experiment at four other temperatures, keeping all other variables the same.',
-              'Set up a gas syringe connected to a conical flask containing dilute hydrochloric acid.',
-            ],
-          },
-        ],
-      },
-    }]
-  })(),
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Use Table 1 and Fig. 1 to answer the following questions.</p>',
+          marks: 7, lines: 0,
+          parts: [
+            { id: id(), label: 'a', stem: '<p>Describe the relationship between temperature and the time taken to collect 50 cm³ of gas.</p>', marks: 2, lines: 3 },
+            { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3 },
+            { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5 },
+          ],
+        },
+        {
+          id: id(), type: 'match_them_up' as const,
+          heading: 'Match each factor to how it increases the rate of reaction.',
+          items: [
+            { id: id(), left: 'Higher temperature', right: 'Particles have more energy; more collisions exceed activation energy' },
+            { id: id(), left: 'Higher concentration', right: 'More particles per unit volume; collisions are more frequent' },
+            { id: id(), left: 'Smaller particle size', right: 'Greater surface area exposed; more collisions per second' },
+            { id: id(), left: 'Adding a catalyst', right: 'Provides an alternative reaction pathway with lower activation energy' },
+          ],
+        },
+        {
+          id: id(), type: 'order_steps' as const,
+          heading: 'Number these steps 1 to 5 to describe how to carry out a fair test of how temperature affects the rate of reaction between marble chips and dilute hydrochloric acid.',
+          steps: [
+            'Place the flask in a water bath and wait for the temperature to stabilise.',
+            'Add a measured mass of marble chips and immediately start the stopwatch.',
+            'Record the volume of gas collected every 10 seconds until no more gas is produced.',
+            'Repeat the experiment at four other temperatures, keeping all other variables the same.',
+            'Set up a gas syringe connected to a conical flask containing dilute hydrochloric acid.',
+          ],
+        },
+      ],
+    },
+  },
 ]
