@@ -44,6 +44,7 @@ export default function App() {
         </div>
 
         <PDFDownloadLink
+          key={worksheet.blocks.map(b => b.id).join(',')}
           document={<WorksheetPDF worksheet={worksheet} />}
           fileName="worksheet.pdf"
           className="btn-download"
