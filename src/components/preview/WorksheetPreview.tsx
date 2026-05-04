@@ -505,16 +505,26 @@ interface WorksheetPreviewProps {
 
 export function WorksheetPreview({ worksheet, selectedId, onSelect }: WorksheetPreviewProps) {
   const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
-  const blockRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
-  // After every render, read actual rendered heights from the hidden measurement
-  // container and update state. The comparison avoids infinite re-render loops.
+  // After every render, measure each block's consumed space (including margin-bottom)
+  // using offsetTop distances between siblings, which correctly capture collapsed margins.
   useLayoutEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const children = Array.from(container.children) as HTMLElement[]
     const next: Record<string, number> = {}
-    for (const block of worksheet.blocks) {
-      const el = blockRefs.current[block.id]
-      if (el) next[block.id] = el.offsetHeight
-    }
+    worksheet.blocks.forEach((block, i) => {
+      const el = children[i]
+      if (!el) return
+      if (i < children.length - 1) {
+        next[block.id] = children[i + 1].offsetTop - el.offsetTop
+      } else {
+        const inner = el.firstElementChild as HTMLElement | null
+        const mb = inner ? parseFloat(getComputedStyle(inner).marginBottom || '0') : 0
+        next[block.id] = el.offsetHeight + mb
+      }
+    })
     setMeasuredHeights(prev => {
       const unchanged = worksheet.blocks.every(b => prev[b.id] === next[b.id])
       return unchanged ? prev : next
@@ -527,8 +537,9 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect }: WorksheetP
   return (
     <>
       {/* Hidden container renders every block at the exact content width so
-          offsetHeight reflects real text-wrapped heights, not page-clipped heights. */}
+          heights reflect real text-wrapped sizes including collapsed margins. */}
       <div
+        ref={containerRef}
         aria-hidden
         style={{
           position: 'fixed',
@@ -544,7 +555,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect }: WorksheetP
         }}
       >
         {worksheet.blocks.map(block => (
-          <div key={block.id} ref={el => { blockRefs.current[block.id] = el }}>
+          <div key={block.id}>
             <PreviewBlock block={block} blocks={worksheet.blocks} />
           </div>
         ))}
