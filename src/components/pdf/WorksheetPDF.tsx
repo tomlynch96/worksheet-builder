@@ -21,7 +21,10 @@ import { htmlToPdf } from '../../utils/htmlToPdf'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
 
 // ── Styles ────────────────────────────────────────────────
-// react-pdf uses pt units. A4 page: 595 × 842 pt. Margin: 51pt (~18mm).
+// react-pdf uses pt. A4: 595×842pt, margins 51pt (~18mm).
+// All non-fontSize dimension values are set at 0.75× the preview's px values
+// so that 1pt × (96/72) = 1px equivalent — making PDF render identical to the
+// browser preview.
 
 const s = StyleSheet.create({
   page: {
@@ -37,78 +40,78 @@ const s = StyleSheet.create({
 
   // Header
   headerBadges: { flexDirection: 'row', gap: 5, marginBottom: 6 },
-  badge: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', padding: '2 6', borderRadius: 2 },
+  badge: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', padding: '2 5', borderRadius: 2 },
   badgeBoard: { backgroundColor: '#1e3a5f', color: '#fff' },
   badgeTier: { backgroundColor: '#e5e7eb', color: '#374151' },
   headerTitle: { fontFamily: 'Helvetica-Bold', fontSize: 18, marginBottom: 2, lineHeight: 1.2 },
-  headerTopic: { fontSize: 9.5, color: '#374151', marginBottom: 10 },
-  studentFields: { flexDirection: 'row', gap: 20, marginBottom: 10, flexWrap: 'wrap' },
+  headerTopic: { fontSize: 9.5, color: '#374151', marginBottom: 9 },
+  studentFields: { flexDirection: 'row', gap: 18, marginBottom: 9, flexWrap: 'wrap' },
   fieldLine: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, fontSize: 9.5 },
   fieldUnderline: { borderBottomWidth: 1, borderBottomColor: '#000', width: 120 },
-  fieldUnderlineShort: { width: 65 },
-  headerRule: { borderTopWidth: 2, borderTopColor: '#000', marginTop: 4, marginBottom: 16 },
+  fieldUnderlineShort: { width: 60 },
+  headerRule: { borderTopWidth: 2, borderTopColor: '#000', marginTop: 3, marginBottom: 14 },
 
   // Instructions
-  instructions: { borderWidth: 1, borderColor: '#d1d5db', padding: '7 10', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 14 },
+  instructions: { borderWidth: 1, borderColor: '#d1d5db', padding: '6 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 12 },
   instructionItem: { fontSize: 9.5, marginBottom: 2 },
 
   // Questions
-  question: { marginBottom: 18 },
+  question: { marginBottom: 15 },
   questionStem: { flexDirection: 'row', gap: 5, marginBottom: 5 },
-  qNum: { fontFamily: 'Helvetica-Bold', width: 18, flexShrink: 0 },
+  qNum: { fontFamily: 'Helvetica-Bold', width: 15, flexShrink: 0 },
   qText: { flex: 1 },
   marks: { fontSize: 9, color: '#374151', flexShrink: 0, marginLeft: 6 },
-  answerLines: { marginLeft: 23 },
-  answerLine: { borderBottomWidth: 1, borderBottomColor: '#9ca3af', height: 22, marginBottom: 0 },
+  answerLines: { marginLeft: 20 },
+  answerLine: { borderBottomWidth: 1, borderBottomColor: '#9ca3af', height: 21, marginBottom: 0 },
 
   // Sub-parts
-  parts: { marginLeft: 23 },
+  parts: { marginLeft: 20 },
   part: { marginBottom: 8 },
-  partStem: { flexDirection: 'row', gap: 5, marginBottom: 4 },
-  partLabel: { fontFamily: 'Helvetica-Bold', width: 20, flexShrink: 0 },
+  partStem: { flexDirection: 'row', gap: 5, marginBottom: 5 },
+  partLabel: { fontFamily: 'Helvetica-Bold', width: 17, flexShrink: 0 },
 
   // Multiple choice
-  mcOptions: { marginLeft: 23, marginTop: 3 },
+  mcOptions: { marginLeft: 20, marginTop: 3 },
   mcOption: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  mcLabel: { fontFamily: 'Helvetica-Bold', width: 16, flexShrink: 0 },
+  mcLabel: { fontFamily: 'Helvetica-Bold', width: 14, flexShrink: 0 },
 
   // Worked example
-  workedExample: { borderWidth: 2, borderColor: '#1e3a5f', borderRadius: 3, padding: '8 12', marginBottom: 16, backgroundColor: '#f8faff' },
+  workedExample: { borderWidth: 2, borderColor: '#1e3a5f', borderRadius: 3, padding: '8 11', marginBottom: 14, backgroundColor: '#f8faff' },
   workedTitle: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#1e3a5f', marginBottom: 6, textTransform: 'uppercase' },
-  workedStep: { fontSize: 10, marginBottom: 4, marginLeft: 10, flexDirection: 'row' },
+  workedStep: { fontSize: 10, marginBottom: 3, marginLeft: 8, flexDirection: 'row' },
 
   // Information
-  information: { borderLeftWidth: 4, borderLeftColor: '#b45309', backgroundColor: '#fffbeb', padding: '7 10', marginBottom: 16 },
-  infoHeading: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#b45309', marginBottom: 4, textTransform: 'uppercase' },
+  information: { borderLeftWidth: 4, borderLeftColor: '#b45309', backgroundColor: '#fffbeb', padding: '6 9', marginBottom: 14 },
+  infoHeading: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#b45309', marginBottom: 3, textTransform: 'uppercase' },
   infoContent: { fontSize: 10.5, lineHeight: 1.5 },
 
   // Activity heading
-  activityHeading: { fontSize: 10, fontStyle: 'italic', marginBottom: 7 },
+  activityHeading: { fontSize: 10, fontStyle: 'italic', marginBottom: 6 },
 
   // Match them up
-  match: { marginBottom: 16 },
+  match: { marginBottom: 14 },
   matchTable: { flexDirection: 'row' },
   matchCol: { flex: 1 },
-  matchCell: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 2, padding: '4 8', fontSize: 10, minHeight: 26, justifyContent: 'center', marginBottom: 5 },
+  matchCell: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 2, padding: '4 7', fontSize: 10, minHeight: 23, justifyContent: 'center', marginBottom: 5 },
   matchCellLeft: { backgroundColor: '#f8faff' },
-  matchLines: { width: 44, alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 8 },
-  matchDotRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 5, height: 26, alignItems: 'center' },
-  matchDot: { width: 7, height: 7, borderRadius: 4, borderWidth: 1.5, borderColor: '#374151', backgroundColor: '#fff' },
+  matchLines: { width: 33, alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 6 },
+  matchDotRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 5, height: 20, alignItems: 'center' },
+  matchDot: { width: 5, height: 5, borderRadius: 3, borderWidth: 1.5, borderColor: '#374151', backgroundColor: '#fff' },
 
   // Cloze
-  cloze: { marginBottom: 16 },
-  wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, borderWidth: 1, borderColor: '#d1d5db', padding: '7 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 9 },
-  wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '1 7', borderRadius: 2, backgroundColor: '#fff' },
+  cloze: { marginBottom: 14 },
+  wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, borderWidth: 1, borderColor: '#d1d5db', padding: '6 8', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 8 },
+  wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '2 6', borderRadius: 2, backgroundColor: '#fff' },
   clozeText: { fontSize: 10.5, lineHeight: 1.9 },
   clozeBlank: { fontSize: 10.5, color: '#000', letterSpacing: 1.5 },
 
   // Order steps
-  orderSteps: { marginBottom: 16 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 6, fontSize: 10.5 },
-  stepBox: { width: 20, height: 20, borderWidth: 1.5, borderColor: '#374151', borderRadius: 2, flexShrink: 0 },
+  orderSteps: { marginBottom: 14 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5, fontSize: 10.5 },
+  stepBox: { width: 17, height: 17, borderWidth: 1.5, borderColor: '#374151', borderRadius: 2, flexShrink: 0 },
 
   // Figure
-  figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 8, marginBottom: 16, backgroundColor: '#f9fafb' },
+  figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14, backgroundColor: '#f9fafb' },
   figureLabel: { fontSize: 9, color: '#6b7280', fontStyle: 'italic' },
 })
 
@@ -321,7 +324,7 @@ function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) 
 }
 
 function PDFFigure({ block }: { block: FigureBlock }) {
-  const heights: Record<FigureBlock['size'], number> = { small: 70, medium: 120, large: 180 }
+  const heights: Record<FigureBlock['size'], number> = { small: 60, medium: 105, large: 150 }
   return (
     <View style={[s.figure, { height: heights[block.size] }]}>
       <Text style={s.figureLabel}>{block.caption || 'Figure'}</Text>
