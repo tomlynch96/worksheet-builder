@@ -113,9 +113,13 @@ export interface GraphOptions {
   showYLabel: boolean
   showXScale: boolean
   showYScale: boolean
-  omitRows: number[]   // row indices to hide from graph (empty = show all)
-  showBestFit: boolean
+  omitRows: number[]
+  fitType: FitType
+  linkedDataId: string | null
 }
+
+export type FitType = 'none' | 'linear' | 'curve'
+export type DataDisplay = 'table' | 'graph' | 'bar'
 
 export interface DataBlock {
   id: string
@@ -123,7 +127,7 @@ export interface DataBlock {
   heading: string
   columns: DataColumn[]
   rows: string[][]
-  display: 'table' | 'graph'
+  display: DataDisplay
   graph: GraphOptions
 }
 

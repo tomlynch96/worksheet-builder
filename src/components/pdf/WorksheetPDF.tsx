@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet, Font, Svg, Line, G } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Font, Svg, Line, G, Path, Rect } from '@react-pdf/renderer'
 import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
 import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
 
@@ -18,7 +18,7 @@ Font.register({
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
-import { computeGraphLayout, toSvgCoords } from '../../utils/graphLayout'
+import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
 
 // ── Styles ────────────────────────────────────────────────
 // react-pdf uses pt units. A4 page: 595 × 842 pt. Margin: 51pt (~18mm).
@@ -409,15 +409,74 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
         {graph.showYScale && yTicks.map((t, i) => { const p = px(xMin, t.value); return <Text key={`ys${i}`} x={String(PDF_ML - 3)} y={String(p.y + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text> })}
         {graph.showXLabel && <Text x={String(PDF_ML + PDF_PW / 2)} y={String(PDF_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xCol.label}{xCol.unit ? ` (${xCol.unit})` : ''}</Text>}
         {graph.showYLabel && <Text x="8" y={String(PDF_MT + PDF_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_MT + PDF_PH / 2})`}>{yCol.label}{yCol.unit ? ` (${yCol.unit})` : ''}</Text>}
-        {graph.showBestFit && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" strokeDasharray="4 3" /> })()}
+        {graph.fitType === 'linear' && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" /> })()}
+        {graph.fitType === 'curve' && <Path d={catmullRomPath(points, layout, PDF_PW, PDF_PH, PDF_ML, PDF_MT)} stroke="#dc2626" strokeWidth="1.5" fill="none" />}
         {points.map((pt, i) => { const p = px(pt.x, pt.y); const d = 3.5; return <G key={i}><Line x1={String(p.x - d)} y1={String(p.y - d)} x2={String(p.x + d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /><Line x1={String(p.x + d)} y1={String(p.y - d)} x2={String(p.x - d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /></G> })}
       </Svg>
     </View>
   )
 }
 
-function PDFData({ block }: { block: DataBlock }) {
-  return block.display === 'graph' ? <PDFDataGraph block={block} /> : <PDFDataTable block={block} />
+const PDF_BAR_W = 440, PDF_BAR_H = 240
+const PDF_BAR_ML = 44, PDF_BAR_MR = 12, PDF_BAR_MT = 12, PDF_BAR_MB = 44
+const PDF_BAR_PW = PDF_BAR_W - PDF_BAR_ML - PDF_BAR_MR
+const PDF_BAR_PH = PDF_BAR_H - PDF_BAR_MT - PDF_BAR_MB
+
+function PDFDataBar({ block }: { block: DataBlock }) {
+  const { columns, graph, heading } = block
+  const layout = computeBarLayout(block.rows, graph.xCol, graph.yCol, graph.omitRows)
+  const { categories, yTicks, yMax } = layout
+  const xLabel = columns[graph.xCol], yLabel = columns[graph.yCol]
+  const visible = categories.filter(c => c.visible)
+  const barW = visible.length > 0 ? Math.min(32, (PDF_BAR_PW / visible.length) * 0.55) : 24
+  const gap = visible.length > 0 ? PDF_BAR_PW / visible.length : 36
+  const yMinorStep = yTicks.length > 1 ? (yTicks[1].value - yTicks[0].value) / 5 : 0
+  const yMinorLines: number[] = []
+  if (yMinorStep > 0) {
+    for (let v = 0; v <= yMax + yMinorStep * 0.01; v += yMinorStep) {
+      const r = Math.round(v * 1e9) / 1e9
+      if (!yTicks.some(t => Math.abs(t.value - r) < yMinorStep * 0.01)) yMinorLines.push(r)
+    }
+  }
+  function barY(val: number) { return PDF_BAR_MT + PDF_BAR_PH - (yMax > 0 ? (val / yMax) * PDF_BAR_PH : 0) }
+  return (
+    <View style={{ marginBottom: 14 }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+      <Svg width={PDF_BAR_W} height={PDF_BAR_H}>
+        {yMinorLines.map((v, i) => <Line key={`bym${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(v))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(v))} stroke="#e5e7eb" strokeWidth="0.5" />)}
+        {yTicks.map((t, i) => <Line key={`byM${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(t.value))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(t.value))} stroke="#d1d5db" strokeWidth="0.8" />)}
+        <Line x1={String(PDF_BAR_ML)} y1={String(PDF_BAR_MT)} x2={String(PDF_BAR_ML)} y2={String(PDF_BAR_MT + PDF_BAR_PH)} stroke="#374151" strokeWidth="1.5" />
+        <Line x1={String(PDF_BAR_ML)} y1={String(PDF_BAR_MT + PDF_BAR_PH)} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(PDF_BAR_MT + PDF_BAR_PH)} stroke="#374151" strokeWidth="1.5" />
+        {graph.showYScale && yTicks.map((t, i) => <Text key={`bys${i}`} x={String(PDF_BAR_ML - 3)} y={String(barY(t.value) + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text>)}
+        {visible.map((cat, i) => {
+          const cx = PDF_BAR_ML + gap * i + gap / 2
+          const h = yMax > 0 ? (cat.value / yMax) * PDF_BAR_PH : 0
+          const y = PDF_BAR_MT + PDF_BAR_PH - h
+          return (
+            <G key={i}>
+              <Rect x={String(cx - barW / 2)} y={String(y)} width={String(barW)} height={String(h)} fill="#3b82f6" opacity="0.8" />
+              {graph.showXScale && <Text x={String(cx)} y={String(PDF_BAR_MT + PDF_BAR_PH + 11)} style={{ fontSize: 7, textAnchor: 'middle' }}>{cat.label}</Text>}
+            </G>
+          )
+        })}
+        {graph.showXLabel && <Text x={String(PDF_BAR_ML + PDF_BAR_PW / 2)} y={String(PDF_BAR_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xLabel.label}{xLabel.unit ? ` (${xLabel.unit})` : ''}</Text>}
+        {graph.showYLabel && <Text x="8" y={String(PDF_BAR_MT + PDF_BAR_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_BAR_MT + PDF_BAR_PH / 2})`}>{yLabel.label}{yLabel.unit ? ` (${yLabel.unit})` : ''}</Text>}
+      </Svg>
+    </View>
+  )
+}
+
+function resolveDataBlock(block: DataBlock, blocks: Block[]): DataBlock {
+  if (!block.graph.linkedDataId) return block
+  const linked = blocks.find(b => b.type === 'data' && b.id === block.graph.linkedDataId) as DataBlock | undefined
+  return linked ? { ...block, columns: linked.columns, rows: linked.rows } : block
+}
+
+function PDFData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
+  const resolved = resolveDataBlock(block, blocks)
+  if (resolved.display === 'graph') return <PDFDataGraph block={resolved} />
+  if (resolved.display === 'bar') return <PDFDataBar block={resolved} />
+  return <PDFDataTable block={resolved} />
 }
 
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
@@ -434,7 +493,7 @@ function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
     case 'order_steps':     return <PDFOrderSteps block={block} num={num} />
     case 'figure':          return <PDFFigure block={block} />
     case 'spacer':          return <PDFSpacer block={block} />
-    case 'data':            return <PDFData block={block as DataBlock} />
+    case 'data':            return <PDFData block={block as DataBlock} blocks={blocks} />
   }
 }
 

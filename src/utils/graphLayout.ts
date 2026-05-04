@@ -92,3 +92,76 @@ export function toSvgCoords(
   const cy = plotH - ((val.y - layout.yMin) / (layout.yMax - layout.yMin)) * plotH
   return { cx, cy }
 }
+
+// Catmull-Rom spline through visible points, returned as an SVG path string.
+// ml/mt are the left/top margins to offset into the SVG viewport.
+export function catmullRomPath(
+  points: GraphPoint[],
+  layout: GraphLayout,
+  plotW: number,
+  plotH: number,
+  ml: number,
+  mt: number,
+): string {
+  const sorted = [...points].sort((a, b) => a.x - b.x)
+  if (sorted.length < 2) return ''
+  const pts = sorted.map(p => {
+    const { cx, cy } = toSvgCoords(p, layout, plotW, plotH)
+    return { x: cx + ml, y: cy + mt }
+  })
+  if (pts.length === 2) return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`
+  let d = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[Math.min(pts.length - 1, i + 2)]
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`
+  }
+  return d
+}
+
+// ── Bar chart layout ──────────────────────────────────────
+
+export interface BarCategory {
+  label: string
+  value: number
+  visible: boolean
+}
+
+export interface BarLayout {
+  categories: BarCategory[]
+  yTicks: Tick[]
+  yMin: number
+  yMax: number
+}
+
+export function computeBarLayout(
+  rows: string[][],
+  xCol: number,
+  yCol: number,
+  omitRows: number[],
+): BarLayout {
+  const omitSet = new Set(omitRows)
+  const allValues = rows.map(r => parseFloat(r[yCol] || '0')).filter(v => isFinite(v))
+  if (allValues.length === 0) return { categories: [], yTicks: [], yMin: 0, yMax: 10 }
+  const yMax_raw = Math.max(...allValues, 0)
+  const yStep = niceInterval(yMax_raw || 1)
+  const yMax = niceMax(yMax_raw, yStep)
+  const yMin = 0
+  const yTicks: Tick[] = []
+  for (let v = yMin; v <= yMax + yStep * 0.01; v += yStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    yTicks.push({ value: r, label: String(r) })
+  }
+  const categories: BarCategory[] = rows.map((r, i) => ({
+    label: r[xCol] ?? '',
+    value: parseFloat(r[yCol] || '0'),
+    visible: !omitSet.has(i),
+  }))
+  return { categories, yTicks, yMin, yMax }
+}

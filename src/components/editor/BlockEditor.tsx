@@ -15,10 +15,11 @@ import { DataEditor } from './blocks/DataEditor'
 
 interface Props {
   block: Block
+  blocks: Block[]
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-export function BlockEditor({ block, dispatch }: Props) {
+export function BlockEditor({ block, blocks, dispatch }: Props) {
   switch (block.type) {
     case 'header':          return <HeaderEditor block={block} dispatch={dispatch} />
     case 'instructions':    return <InstructionsEditor block={block} dispatch={dispatch} />
@@ -31,6 +32,6 @@ export function BlockEditor({ block, dispatch }: Props) {
     case 'order_steps':     return <OrderStepsEditor block={block} dispatch={dispatch} />
     case 'figure':          return <FigureEditor block={block} dispatch={dispatch} />
     case 'spacer':          return <SpacerEditor block={block} dispatch={dispatch} />
-    case 'data':            return <DataEditor block={block as DataBlock} dispatch={dispatch} />
+    case 'data':            return <DataEditor block={block as DataBlock} dispatch={dispatch} blocks={blocks} />
   }
 }

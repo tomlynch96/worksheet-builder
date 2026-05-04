@@ -3,7 +3,7 @@ import 'katex/contrib/mhchem'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages } from '../../utils/pagination'
-import { computeGraphLayout, toSvgCoords } from '../../utils/graphLayout'
+import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
 import './WorksheetPreview.css'
 
 const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
@@ -391,12 +391,15 @@ function PreviewDataGraph({ block }: { block: DataBlock }) {
             {yLabel.label}{yLabel.unit ? ` (${yLabel.unit})` : ''}
           </text>
         )}
-        {/* Best fit line */}
-        {graph.showBestFit && bestFitLine && (() => {
+        {/* Best fit */}
+        {graph.fitType === 'linear' && bestFitLine && (() => {
           const p1 = toS(bestFitLine.x1, bestFitLine.y1)
           const p2 = toS(bestFitLine.x2, bestFitLine.y2)
-          return <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy} stroke="#dc2626" strokeWidth="1.5" strokeDasharray="4 3" />
+          return <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy} stroke="#dc2626" strokeWidth="1.5" />
         })()}
+        {graph.fitType === 'curve' && (
+          <path d={catmullRomPath(points, layout, PLOT_W, PLOT_H, ML, MT)} fill="none" stroke="#dc2626" strokeWidth="1.5" />
+        )}
         {/* Data points (×) */}
         {points.map((p, i) => {
           const { cx, cy } = toS(p.x, p.y)
@@ -413,10 +416,66 @@ function PreviewDataGraph({ block }: { block: DataBlock }) {
   )
 }
 
-function PreviewData({ block }: { block: DataBlock }) {
-  return block.display === 'graph'
-    ? <PreviewDataGraph block={block} />
-    : <PreviewDataTable block={block} />
+const BAR_W = 440, BAR_H = 280
+const BAR_ML = 48, BAR_MR = 16, BAR_MT = 16, BAR_MB = 48
+const BAR_PW = BAR_W - BAR_ML - BAR_MR
+const BAR_PH = BAR_H - BAR_MT - BAR_MB
+
+function PreviewDataBar({ block }: { block: DataBlock }) {
+  const { columns, rows, graph, heading } = block
+  const layout = computeBarLayout(rows, graph.xCol, graph.yCol, graph.omitRows)
+  const { categories, yTicks, yMax } = layout
+  const xLabel = columns[graph.xCol], yLabel = columns[graph.yCol]
+  const visible = categories.filter(c => c.visible)
+  const barW = visible.length > 0 ? Math.min(40, (BAR_PW / visible.length) * 0.6) : 30
+  const gap = visible.length > 0 ? BAR_PW / visible.length : 40
+  const yMinorStep = yTicks.length > 1 ? (yTicks[1].value - yTicks[0].value) / 5 : 0
+  const yMinorLines: number[] = []
+  if (yMinorStep > 0) {
+    for (let v = 0; v <= yMax + yMinorStep * 0.01; v += yMinorStep) {
+      const r = Math.round(v * 1e9) / 1e9
+      if (!yTicks.some(t => Math.abs(t.value - r) < yMinorStep * 0.01)) yMinorLines.push(r)
+    }
+  }
+  function barY(val: number) { return BAR_MT + BAR_PH - (val / yMax) * BAR_PH }
+  return (
+    <div className="pr-data-graph">
+      {heading && <p className="pr-data-heading">{heading}</p>}
+      <svg width={BAR_W} height={BAR_H} className="pr-graph-svg">
+        {yMinorLines.map((v, i) => <line key={i} x1={BAR_ML} y1={barY(v)} x2={BAR_ML + BAR_PW} y2={barY(v)} stroke="#e5e7eb" strokeWidth="0.5" />)}
+        {yTicks.map((t, i) => <line key={i} x1={BAR_ML} y1={barY(t.value)} x2={BAR_ML + BAR_PW} y2={barY(t.value)} stroke="#d1d5db" strokeWidth="1" />)}
+        <line x1={BAR_ML} y1={BAR_MT} x2={BAR_ML} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
+        <line x1={BAR_ML} y1={BAR_MT + BAR_PH} x2={BAR_ML + BAR_PW} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
+        {graph.showYScale && yTicks.map((t, i) => <text key={i} x={BAR_ML - 4} y={barY(t.value) + 3} textAnchor="end" fontSize="9" fill="#374151">{t.label}</text>)}
+        {visible.map((cat, i) => {
+          const cx = BAR_ML + gap * i + gap / 2
+          const h = yMax > 0 ? (cat.value / yMax) * BAR_PH : 0
+          const y = BAR_MT + BAR_PH - h
+          return (
+            <g key={i}>
+              <rect x={cx - barW / 2} y={y} width={barW} height={h} fill="#3b82f6" opacity="0.8" />
+              {graph.showXScale && <text x={cx} y={BAR_MT + BAR_PH + 14} textAnchor="middle" fontSize="9" fill="#374151">{cat.label}</text>}
+            </g>
+          )
+        })}
+        {graph.showXLabel && <text x={BAR_ML + BAR_PW / 2} y={BAR_H - 3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937">{xLabel.label}{xLabel.unit ? ` (${xLabel.unit})` : ''}</text>}
+        {graph.showYLabel && <text x={10} y={BAR_MT + BAR_PH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937" transform={`rotate(-90, 10, ${BAR_MT + BAR_PH / 2})`}>{yLabel.label}{yLabel.unit ? ` (${yLabel.unit})` : ''}</text>}
+      </svg>
+    </div>
+  )
+}
+
+function resolveData(block: DataBlock, blocks: Block[]): DataBlock {
+  if (!block.graph.linkedDataId) return block
+  const linked = blocks.find(b => b.type === 'data' && b.id === block.graph.linkedDataId) as DataBlock | undefined
+  return linked ? { ...block, columns: linked.columns, rows: linked.rows } : block
+}
+
+function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
+  const resolved = resolveData(block, blocks)
+  if (resolved.display === 'graph') return <PreviewDataGraph block={resolved} />
+  if (resolved.display === 'bar') return <PreviewDataBar block={resolved} />
+  return <PreviewDataTable block={resolved} />
 }
 
 function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
@@ -433,7 +492,7 @@ function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
     case 'order_steps':     return <PreviewOrderSteps block={block} num={num} />
     case 'figure':          return <PreviewFigure block={block} />
     case 'spacer':          return <PreviewSpacer block={block} />
-    case 'data':            return <PreviewData block={block as DataBlock} />
+    case 'data':            return <PreviewData block={block as DataBlock} blocks={blocks} />
   }
 }
 

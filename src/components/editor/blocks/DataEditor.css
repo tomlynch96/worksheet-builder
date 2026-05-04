@@ -31,3 +31,7 @@
 .de-graph-checks { display: flex; flex-direction: column; gap: 5px; }
 .de-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #374151; cursor: pointer; }
 .de-check input { cursor: pointer; }
+.de-fit-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 3px; }
+.de-fit-row .de-label { margin: 0; }
+.de-hint { font-size: 10px; color: #6b7280; font-style: italic; margin: 0; }
+.de-cell-readonly { font-size: 12px; color: #6b7280; padding: 4px 6px; font-family: var(--mono, monospace); }

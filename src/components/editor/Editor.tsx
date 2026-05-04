@@ -91,7 +91,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
               </div>
             </div>
             <div className="editor-focused-body">
-              <BlockEditor block={selectedBlock} dispatch={dispatch} />
+              <BlockEditor block={selectedBlock} blocks={blocks} dispatch={dispatch} />
             </div>
           </>
         ) : (
