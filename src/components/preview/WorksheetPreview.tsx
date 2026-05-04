@@ -426,9 +426,9 @@ function PreviewDataBar({ block }: { block: DataBlock }) {
   const layout = computeBarLayout(rows, graph.xCol, graph.yCol, graph.omitRows)
   const { categories, yTicks, yMax } = layout
   const xLabel = columns[graph.xCol], yLabel = columns[graph.yCol]
-  const visible = categories.filter(c => c.visible)
-  const barW = visible.length > 0 ? Math.min(40, (BAR_PW / visible.length) * 0.6) : 30
-  const gap = visible.length > 0 ? BAR_PW / visible.length : 40
+  const total = categories.length
+  const barW = total > 0 ? Math.min(40, (BAR_PW / total) * 0.6) : 30
+  const gap = total > 0 ? BAR_PW / total : 40
   const yMinorStep = yTicks.length > 1 ? (yTicks[1].value - yTicks[0].value) / 5 : 0
   const yMinorLines: number[] = []
   if (yMinorStep > 0) {
@@ -447,13 +447,16 @@ function PreviewDataBar({ block }: { block: DataBlock }) {
         <line x1={BAR_ML} y1={BAR_MT} x2={BAR_ML} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
         <line x1={BAR_ML} y1={BAR_MT + BAR_PH} x2={BAR_ML + BAR_PW} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
         {graph.showYScale && yTicks.map((t, i) => <text key={i} x={BAR_ML - 4} y={barY(t.value) + 3} textAnchor="end" fontSize="9" fill="#374151">{t.label}</text>)}
-        {visible.map((cat, i) => {
+        {categories.map((cat, i) => {
           const cx = BAR_ML + gap * i + gap / 2
           const h = yMax > 0 ? (cat.value / yMax) * BAR_PH : 0
           const y = BAR_MT + BAR_PH - h
           return (
             <g key={i}>
-              <rect x={cx - barW / 2} y={y} width={barW} height={h} fill="#3b82f6" opacity="0.8" />
+              {cat.visible
+                ? <rect x={cx - barW / 2} y={y} width={barW} height={h} fill="#3b82f6" opacity="0.8" />
+                : <rect x={cx - barW / 2} y={BAR_MT} width={barW} height={BAR_PH} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 3" />
+              }
               {graph.showXScale && <text x={cx} y={BAR_MT + BAR_PH + 14} textAnchor="middle" fontSize="9" fill="#374151">{cat.label}</text>}
             </g>
           )

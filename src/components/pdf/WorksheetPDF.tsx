@@ -344,8 +344,8 @@ function PDFDataTable({ block }: { block: DataBlock }) {
       {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
       <View style={{ flexDirection: 'row', borderTopWidth: 1, borderLeftWidth: 1, borderColor: '#d1d5db' }}>
         {columns.map((col, c) => (
-          <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '4 6', backgroundColor: '#f3f4f6' }}>
-            <Text style={{ fontSize: 8.5, fontFamily: 'Helvetica-Bold', textAlign: 'center' }}>
+          <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5', backgroundColor: '#f3f4f6' }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', textAlign: 'center' }}>
               {col.label}{col.unit ? ` (${col.unit})` : ''}
             </Text>
           </View>
@@ -354,8 +354,8 @@ function PDFDataTable({ block }: { block: DataBlock }) {
       {rows.map((row, r) => (
         <View key={r} style={{ flexDirection: 'row', borderLeftWidth: 1, borderColor: '#d1d5db' }}>
           {row.map((cell, c) => (
-            <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '4 6' }}>
-              <Text style={{ fontSize: 9, textAlign: 'center' }}>{cell}</Text>
+            <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5' }}>
+              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{cell}</Text>
             </View>
           ))}
         </View>
@@ -427,9 +427,9 @@ function PDFDataBar({ block }: { block: DataBlock }) {
   const layout = computeBarLayout(block.rows, graph.xCol, graph.yCol, graph.omitRows)
   const { categories, yTicks, yMax } = layout
   const xLabel = columns[graph.xCol], yLabel = columns[graph.yCol]
-  const visible = categories.filter(c => c.visible)
-  const barW = visible.length > 0 ? Math.min(32, (PDF_BAR_PW / visible.length) * 0.55) : 24
-  const gap = visible.length > 0 ? PDF_BAR_PW / visible.length : 36
+  const total = categories.length
+  const barW = total > 0 ? Math.min(32, (PDF_BAR_PW / total) * 0.55) : 24
+  const gap = total > 0 ? PDF_BAR_PW / total : 36
   const yMinorStep = yTicks.length > 1 ? (yTicks[1].value - yTicks[0].value) / 5 : 0
   const yMinorLines: number[] = []
   if (yMinorStep > 0) {
@@ -448,13 +448,16 @@ function PDFDataBar({ block }: { block: DataBlock }) {
         <Line x1={String(PDF_BAR_ML)} y1={String(PDF_BAR_MT)} x2={String(PDF_BAR_ML)} y2={String(PDF_BAR_MT + PDF_BAR_PH)} stroke="#374151" strokeWidth="1.5" />
         <Line x1={String(PDF_BAR_ML)} y1={String(PDF_BAR_MT + PDF_BAR_PH)} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(PDF_BAR_MT + PDF_BAR_PH)} stroke="#374151" strokeWidth="1.5" />
         {graph.showYScale && yTicks.map((t, i) => <Text key={`bys${i}`} x={String(PDF_BAR_ML - 3)} y={String(barY(t.value) + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text>)}
-        {visible.map((cat, i) => {
+        {categories.map((cat, i) => {
           const cx = PDF_BAR_ML + gap * i + gap / 2
           const h = yMax > 0 ? (cat.value / yMax) * PDF_BAR_PH : 0
           const y = PDF_BAR_MT + PDF_BAR_PH - h
           return (
             <G key={i}>
-              <Rect x={String(cx - barW / 2)} y={String(y)} width={String(barW)} height={String(h)} fill="#3b82f6" opacity="0.8" />
+              {cat.visible
+                ? <Rect x={String(cx - barW / 2)} y={String(y)} width={String(barW)} height={String(h)} fill="#3b82f6" opacity="0.8" />
+                : <Rect x={String(cx - barW / 2)} y={String(PDF_BAR_MT)} width={String(barW)} height={String(PDF_BAR_PH)} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 3" />
+              }
               {graph.showXScale && <Text x={String(cx)} y={String(PDF_BAR_MT + PDF_BAR_PH + 11)} style={{ fontSize: 7, textAnchor: 'middle' }}>{cat.label}</Text>}
             </G>
           )
