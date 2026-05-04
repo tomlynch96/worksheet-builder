@@ -27,17 +27,21 @@ export function computeGraphLayout(
   omitRows: number[],
 ): GraphLayout {
   const omitSet = new Set(omitRows)
-  const raw: GraphPoint[] = rows
-    .filter((_, i) => !omitSet.has(i))
+
+  // Scale is always derived from ALL valid data points
+  const allPoints: GraphPoint[] = rows
     .map(r => ({ x: parseFloat(r[xCol] || '0'), y: parseFloat(r[yCol] || '0') }))
     .filter(p => isFinite(p.x) && isFinite(p.y))
 
-  if (raw.length < 2) {
-    return { xTicks: [], yTicks: [], xMin: 0, xMax: 10, yMin: 0, yMax: 10, points: raw }
+  // Only visible points are plotted / used for best-fit
+  const visiblePoints: GraphPoint[] = allPoints.filter((_, i) => !omitSet.has(i))
+
+  if (allPoints.length < 2) {
+    return { xTicks: [], yTicks: [], xMin: 0, xMax: 10, yMin: 0, yMax: 10, points: visiblePoints }
   }
 
-  const xs = raw.map(p => p.x)
-  const ys = raw.map(p => p.y)
+  const xs = allPoints.map(p => p.x)
+  const ys = allPoints.map(p => p.y)
   const xRange = Math.max(...xs) - Math.min(...xs) || 1
   const yRange = Math.max(...ys) - Math.min(...ys) || 1
 
@@ -60,7 +64,8 @@ export function computeGraphLayout(
     yTicks.push({ value: rounded, label: String(rounded) })
   }
 
-  // Linear regression for best fit
+  // Linear regression uses only visible (non-omitted) points
+  const raw = visiblePoints
   const n = raw.length
   const sumX = raw.reduce((a, p) => a + p.x, 0)
   const sumY = raw.reduce((a, p) => a + p.y, 0)
@@ -74,7 +79,7 @@ export function computeGraphLayout(
     bestFitLine = { x1: xMin, y1: m * xMin + b, x2: xMax, y2: m * xMax + b }
   }
 
-  return { xTicks, yTicks, xMin, xMax, yMin, yMax, points: raw, bestFitLine }
+  return { xTicks, yTicks, xMin, xMax, yMin, yMax, points: visiblePoints, bestFitLine }
 }
 
 export function toSvgCoords(
