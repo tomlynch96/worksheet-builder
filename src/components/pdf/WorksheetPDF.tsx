@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet, Font, Svg, Line, G, Path, Rect } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image, StyleSheet, Font, Svg, Line, G, Path, Rect } from '@react-pdf/renderer'
 import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
 import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
 
@@ -326,8 +326,14 @@ function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) 
 function PDFFigure({ block }: { block: FigureBlock }) {
   const heights: Record<FigureBlock['size'], number> = { small: 60, medium: 105, large: 150 }
   return (
-    <View style={[s.figure, { height: heights[block.size] }]}>
-      <Text style={s.figureLabel}>{block.caption || 'Figure'}</Text>
+    <View style={[s.figure, block.imageData ? {} : { height: heights[block.size] }]}>
+      {block.imageData && (
+        <Image
+          src={block.imageData}
+          style={{ maxWidth: '100%', objectFit: 'contain', marginBottom: block.caption ? 4 : 0 }}
+        />
+      )}
+      {block.caption ? <Text style={s.figureLabel}>{block.caption}</Text> : null}
     </View>
   )
 }

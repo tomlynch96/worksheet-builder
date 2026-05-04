@@ -118,3 +118,60 @@
   gap: 12px;
   padding: 12px 14px;
 }
+
+/* ── Figure paste zone ───────────────────────────────────── */
+.figure-paste-zone {
+  width: 100%;
+  min-height: 80px;
+  border: 2px dashed var(--ui-border);
+  border-radius: 6px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.figure-paste-zone:focus {
+  border-color: var(--ui-accent);
+  background: #ede9fe22;
+}
+.figure-paste-zone--has-image {
+  border-style: solid;
+  border-color: var(--ui-border);
+  background: #fff;
+  min-height: unset;
+}
+.figure-paste-hint {
+  font-size: 12px;
+  color: var(--ui-text-muted);
+  text-align: center;
+  padding: 8px;
+}
+.figure-paste-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: 4px;
+  margin: 6px auto;
+}
+.figure-paste-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.btn-secondary {
+  padding: 5px 12px;
+  font-size: 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--ui-text);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.btn-secondary:hover { background: #f3f4f6; }
+.btn-danger { color: #dc2626; border-color: #fca5a5; }
+.btn-danger:hover { background: #fee2e2; }

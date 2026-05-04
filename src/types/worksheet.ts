@@ -48,6 +48,7 @@ export interface FigureBlock {
   type: 'figure'
   caption: string
   size: 'small' | 'medium' | 'large'
+  imageData?: string
 }
 
 export interface SpacerBlock {

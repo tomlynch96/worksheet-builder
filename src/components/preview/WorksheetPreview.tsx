@@ -267,8 +267,12 @@ function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number
 function PreviewFigure({ block }: { block: FigureBlock }) {
   const heights: Record<FigureBlock['size'], number> = { small: 80, medium: 140, large: 200 }
   return (
-    <div className="pr-figure" style={{ height: heights[block.size] }}>
-      <span className="pr-figure-label">Figure: {block.caption || <em className="pr-placeholder">Add a caption…</em>}</span>
+    <div className="pr-figure" style={{ height: block.imageData ? undefined : heights[block.size] }}>
+      {block.imageData
+        ? <img src={block.imageData} alt={block.caption} className="pr-figure-image" />
+        : null}
+      {block.caption && <span className="pr-figure-label">{block.caption}</span>}
+      {!block.imageData && !block.caption && <span className="pr-figure-label pr-placeholder">Add a caption…</span>}
     </div>
   )
 }
