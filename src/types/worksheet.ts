@@ -101,6 +101,36 @@ export interface MultipleChoiceBlock {
   correctIndex: number
 }
 
+export interface DataColumn {
+  label: string
+  unit: string
+}
+
+export interface GraphOptions {
+  xCol: number
+  yCol: number
+  showXLabel: boolean
+  showYLabel: boolean
+  showXScale: boolean
+  showYScale: boolean
+  omitRows: number[]
+  fitType: FitType
+  linkedDataId: string | null
+}
+
+export type FitType = 'none' | 'linear' | 'curve'
+export type DataDisplay = 'table' | 'graph' | 'bar'
+
+export interface DataBlock {
+  id: string
+  type: 'data'
+  heading: string
+  columns: DataColumn[]
+  rows: string[][]
+  display: DataDisplay
+  graph: GraphOptions
+}
+
 export type Block =
   | HeaderBlock
   | InstructionsBlock
@@ -113,6 +143,7 @@ export type Block =
   | ClozeBlock
   | OrderStepsBlock
   | MultipleChoiceBlock
+  | DataBlock
 
 export type BlockType = Block['type']
 

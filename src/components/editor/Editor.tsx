@@ -18,6 +18,7 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   order_steps:     'Order the Steps',
   figure:          'Figure',
   spacer:          'Spacer',
+  data:            'Data / Graph',
 }
 
 const BLOCK_COLORS: Record<BlockType, string> = {
@@ -32,6 +33,7 @@ const BLOCK_COLORS: Record<BlockType, string> = {
   order_steps:     '#4338ca',
   figure:          '#475569',
   spacer:          '#9ca3af',
+  data:            '#0d9488',
 }
 
 interface Props {
@@ -89,7 +91,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
               </div>
             </div>
             <div className="editor-focused-body">
-              <BlockEditor block={selectedBlock} dispatch={dispatch} />
+              <BlockEditor block={selectedBlock} blocks={blocks} dispatch={dispatch} />
             </div>
           </>
         ) : (

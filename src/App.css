@@ -128,7 +128,7 @@
 
 /* ── Editor panel ─────────────────────────────────────── */
 .panel-editor {
-  width: 420px;
+  width: 480px;
   flex-shrink: 0;
   overflow: visible;
   background: #f8f7fb;

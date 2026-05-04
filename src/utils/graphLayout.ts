@@ -1,0 +1,167 @@
+export interface GraphPoint { x: number; y: number }
+export interface Tick { value: number; label: string }
+
+export interface GraphLayout {
+  xTicks: Tick[]
+  yTicks: Tick[]
+  xMin: number; xMax: number; yMin: number; yMax: number
+  points: GraphPoint[]
+  bestFitLine?: { x1: number; y1: number; x2: number; y2: number }
+}
+
+function niceInterval(range: number, targetTicks = 5): number {
+  const raw = range / targetTicks
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)))
+  const frac = raw / mag
+  const nice = frac < 1.5 ? 1 : frac < 3.5 ? 2 : frac < 7.5 ? 5 : 10
+  return nice * mag
+}
+
+function niceMin(val: number, step: number) { return Math.floor(val / step) * step }
+function niceMax(val: number, step: number) { return Math.ceil(val / step) * step }
+
+export function computeGraphLayout(
+  rows: string[][],
+  xCol: number,
+  yCol: number,
+  omitRows: number[],
+): GraphLayout {
+  const omitSet = new Set(omitRows)
+
+  // Scale is always derived from ALL valid data points
+  const allPoints: GraphPoint[] = rows
+    .map(r => ({ x: parseFloat(r[xCol] || '0'), y: parseFloat(r[yCol] || '0') }))
+    .filter(p => isFinite(p.x) && isFinite(p.y))
+
+  // Only visible points are plotted / used for best-fit
+  const visiblePoints: GraphPoint[] = allPoints.filter((_, i) => !omitSet.has(i))
+
+  if (allPoints.length < 2) {
+    return { xTicks: [], yTicks: [], xMin: 0, xMax: 10, yMin: 0, yMax: 10, points: visiblePoints }
+  }
+
+  const xs = allPoints.map(p => p.x)
+  const ys = allPoints.map(p => p.y)
+  const xRange = Math.max(...xs) - Math.min(...xs) || 1
+  const yRange = Math.max(...ys) - Math.min(...ys) || 1
+
+  const xStep = niceInterval(xRange)
+  const yStep = niceInterval(yRange)
+
+  const xMin = Math.min(0, niceMin(Math.min(...xs), xStep))
+  const xMax = niceMax(Math.max(...xs), xStep)
+  const yMin = Math.min(0, niceMin(Math.min(...ys), yStep))
+  const yMax = niceMax(Math.max(...ys), yStep)
+
+  const xTicks: Tick[] = []
+  for (let v = xMin; v <= xMax + xStep * 0.01; v += xStep) {
+    const rounded = Math.round(v * 1e9) / 1e9
+    xTicks.push({ value: rounded, label: String(rounded) })
+  }
+  const yTicks: Tick[] = []
+  for (let v = yMin; v <= yMax + yStep * 0.01; v += yStep) {
+    const rounded = Math.round(v * 1e9) / 1e9
+    yTicks.push({ value: rounded, label: String(rounded) })
+  }
+
+  // Linear regression uses only visible (non-omitted) points
+  const raw = visiblePoints
+  const n = raw.length
+  const sumX = raw.reduce((a, p) => a + p.x, 0)
+  const sumY = raw.reduce((a, p) => a + p.y, 0)
+  const sumXY = raw.reduce((a, p) => a + p.x * p.y, 0)
+  const sumXX = raw.reduce((a, p) => a + p.x * p.x, 0)
+  const denom = n * sumXX - sumX * sumX
+  let bestFitLine: GraphLayout['bestFitLine'] | undefined
+  if (Math.abs(denom) > 1e-10) {
+    const m = (n * sumXY - sumX * sumY) / denom
+    const b = (sumY - m * sumX) / n
+    bestFitLine = { x1: xMin, y1: m * xMin + b, x2: xMax, y2: m * xMax + b }
+  }
+
+  return { xTicks, yTicks, xMin, xMax, yMin, yMax, points: visiblePoints, bestFitLine }
+}
+
+export function toSvgCoords(
+  val: { x: number; y: number },
+  layout: GraphLayout,
+  plotW: number,
+  plotH: number,
+): { cx: number; cy: number } {
+  const cx = ((val.x - layout.xMin) / (layout.xMax - layout.xMin)) * plotW
+  const cy = plotH - ((val.y - layout.yMin) / (layout.yMax - layout.yMin)) * plotH
+  return { cx, cy }
+}
+
+// Catmull-Rom spline through visible points, returned as an SVG path string.
+// ml/mt are the left/top margins to offset into the SVG viewport.
+export function catmullRomPath(
+  points: GraphPoint[],
+  layout: GraphLayout,
+  plotW: number,
+  plotH: number,
+  ml: number,
+  mt: number,
+): string {
+  const sorted = [...points].sort((a, b) => a.x - b.x)
+  if (sorted.length < 2) return ''
+  const pts = sorted.map(p => {
+    const { cx, cy } = toSvgCoords(p, layout, plotW, plotH)
+    return { x: cx + ml, y: cy + mt }
+  })
+  if (pts.length === 2) return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`
+  let d = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[Math.min(pts.length - 1, i + 2)]
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`
+  }
+  return d
+}
+
+// ── Bar chart layout ──────────────────────────────────────
+
+export interface BarCategory {
+  label: string
+  value: number
+  visible: boolean
+}
+
+export interface BarLayout {
+  categories: BarCategory[]
+  yTicks: Tick[]
+  yMin: number
+  yMax: number
+}
+
+export function computeBarLayout(
+  rows: string[][],
+  xCol: number,
+  yCol: number,
+  omitRows: number[],
+): BarLayout {
+  const omitSet = new Set(omitRows)
+  const allValues = rows.map(r => parseFloat(r[yCol] || '0')).filter(v => isFinite(v))
+  if (allValues.length === 0) return { categories: [], yTicks: [], yMin: 0, yMax: 10 }
+  const yMax_raw = Math.max(...allValues, 0)
+  const yStep = niceInterval(yMax_raw || 1)
+  const yMax = niceMax(yMax_raw, yStep)
+  const yMin = 0
+  const yTicks: Tick[] = []
+  for (let v = yMin; v <= yMax + yStep * 0.01; v += yStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    yTicks.push({ value: r, label: String(r) })
+  }
+  const categories: BarCategory[] = rows.map((r, i) => ({
+    label: r[xCol] ?? '',
+    value: parseFloat(r[yCol] || '0'),
+    visible: !omitSet.has(i),
+  }))
+  return { categories, yTicks, yMin, yMax }
+}

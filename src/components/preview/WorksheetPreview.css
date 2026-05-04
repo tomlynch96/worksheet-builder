@@ -409,3 +409,11 @@
   color: #6b7280;
   font-style: italic;
 }
+
+.pr-data-heading { font-size: 10px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+.pr-data-table { margin-bottom: 12px; }
+.pr-table { border-collapse: collapse; width: 100%; font-size: 10px; }
+.pr-th { padding: 5px 8px; background: #f3f4f6; border: 1px solid #d1d5db; font-weight: 600; color: #374151; text-align: center; }
+.pr-td { padding: 4px 8px; border: 1px solid #d1d5db; color: #1f2937; text-align: center; min-width: 50px; }
+.pr-data-graph { margin-bottom: 12px; }
+.pr-graph-svg { display: block; overflow: visible; margin: 0 auto; }

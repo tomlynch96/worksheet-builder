@@ -176,3 +176,45 @@
   justify-content: center;
 }
 .rtebar-sym-btn:hover { background: #ede9fe; border-color: #a78bfa; }
+
+/* ── Autocomplete suggestions ─────────────────────────── */
+.rtebar-suggestions {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e2e0ea;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.rtebar-suggestion {
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.rtebar-suggestion:last-child { border-bottom: none; }
+.rtebar-suggestion:hover { background: #f5f3ff; }
+
+.rtebar-suggestion-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rtebar-suggestion-meta {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.rtebar-suggestion-latex,
+.rtebar-suggestion-formula {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  color: #4f46e5;
+}

@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet, Font } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Font, Svg, Line, G, Path, Rect } from '@react-pdf/renderer'
 import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
 import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
 
@@ -15,12 +15,16 @@ Font.register({
     { src: '/fonts/LiberationSans-BoldItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 })
-import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
+import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
+import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
 
 // ── Styles ────────────────────────────────────────────────
-// react-pdf uses pt units. A4 page: 595 × 842 pt. Margin: 51pt (~18mm).
+// react-pdf uses pt. A4: 595×842pt, margins 51pt (~18mm).
+// All non-fontSize dimension values are set at 0.75× the preview's px values
+// so that 1pt × (96/72) = 1px equivalent — making PDF render identical to the
+// browser preview.
 
 const s = StyleSheet.create({
   page: {
@@ -36,78 +40,78 @@ const s = StyleSheet.create({
 
   // Header
   headerBadges: { flexDirection: 'row', gap: 5, marginBottom: 6 },
-  badge: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', padding: '2 6', borderRadius: 2 },
+  badge: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', padding: '2 5', borderRadius: 2 },
   badgeBoard: { backgroundColor: '#1e3a5f', color: '#fff' },
   badgeTier: { backgroundColor: '#e5e7eb', color: '#374151' },
   headerTitle: { fontFamily: 'Helvetica-Bold', fontSize: 18, marginBottom: 2, lineHeight: 1.2 },
-  headerTopic: { fontSize: 9.5, color: '#374151', marginBottom: 10 },
-  studentFields: { flexDirection: 'row', gap: 20, marginBottom: 10, flexWrap: 'wrap' },
+  headerTopic: { fontSize: 9.5, color: '#374151', marginBottom: 9 },
+  studentFields: { flexDirection: 'row', gap: 18, marginBottom: 9, flexWrap: 'wrap' },
   fieldLine: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, fontSize: 9.5 },
   fieldUnderline: { borderBottomWidth: 1, borderBottomColor: '#000', width: 120 },
-  fieldUnderlineShort: { width: 65 },
-  headerRule: { borderTopWidth: 2, borderTopColor: '#000', marginTop: 4, marginBottom: 16 },
+  fieldUnderlineShort: { width: 60 },
+  headerRule: { borderTopWidth: 2, borderTopColor: '#000', marginTop: 3, marginBottom: 14 },
 
   // Instructions
-  instructions: { borderWidth: 1, borderColor: '#d1d5db', padding: '7 10', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 14 },
+  instructions: { borderWidth: 1, borderColor: '#d1d5db', padding: '6 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 12 },
   instructionItem: { fontSize: 9.5, marginBottom: 2 },
 
   // Questions
-  question: { marginBottom: 18 },
+  question: { marginBottom: 15 },
   questionStem: { flexDirection: 'row', gap: 5, marginBottom: 5 },
-  qNum: { fontFamily: 'Helvetica-Bold', width: 18, flexShrink: 0 },
+  qNum: { fontFamily: 'Helvetica-Bold', width: 15, flexShrink: 0 },
   qText: { flex: 1 },
   marks: { fontSize: 9, color: '#374151', flexShrink: 0, marginLeft: 6 },
-  answerLines: { marginLeft: 23 },
-  answerLine: { borderBottomWidth: 1, borderBottomColor: '#9ca3af', height: 22, marginBottom: 0 },
+  answerLines: { marginLeft: 20 },
+  answerLine: { borderBottomWidth: 1, borderBottomColor: '#9ca3af', height: 21, marginBottom: 0 },
 
   // Sub-parts
-  parts: { marginLeft: 23 },
+  parts: { marginLeft: 20 },
   part: { marginBottom: 8 },
-  partStem: { flexDirection: 'row', gap: 5, marginBottom: 4 },
-  partLabel: { fontFamily: 'Helvetica-Bold', width: 20, flexShrink: 0 },
+  partStem: { flexDirection: 'row', gap: 5, marginBottom: 5 },
+  partLabel: { fontFamily: 'Helvetica-Bold', width: 17, flexShrink: 0 },
 
   // Multiple choice
-  mcOptions: { marginLeft: 23, marginTop: 3 },
+  mcOptions: { marginLeft: 20, marginTop: 3 },
   mcOption: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  mcLabel: { fontFamily: 'Helvetica-Bold', width: 16, flexShrink: 0 },
+  mcLabel: { fontFamily: 'Helvetica-Bold', width: 14, flexShrink: 0 },
 
   // Worked example
-  workedExample: { borderWidth: 2, borderColor: '#1e3a5f', borderRadius: 3, padding: '8 12', marginBottom: 16, backgroundColor: '#f8faff' },
+  workedExample: { borderWidth: 2, borderColor: '#1e3a5f', borderRadius: 3, padding: '8 11', marginBottom: 14, backgroundColor: '#f8faff' },
   workedTitle: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#1e3a5f', marginBottom: 6, textTransform: 'uppercase' },
-  workedStep: { fontSize: 10, marginBottom: 4, marginLeft: 10, flexDirection: 'row' },
+  workedStep: { fontSize: 10, marginBottom: 3, marginLeft: 8, flexDirection: 'row' },
 
   // Information
-  information: { borderLeftWidth: 4, borderLeftColor: '#b45309', backgroundColor: '#fffbeb', padding: '7 10', marginBottom: 16 },
-  infoHeading: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#b45309', marginBottom: 4, textTransform: 'uppercase' },
+  information: { borderLeftWidth: 4, borderLeftColor: '#b45309', backgroundColor: '#fffbeb', padding: '6 9', marginBottom: 14 },
+  infoHeading: { fontFamily: 'Helvetica-Bold', fontSize: 9.5, color: '#b45309', marginBottom: 3, textTransform: 'uppercase' },
   infoContent: { fontSize: 10.5, lineHeight: 1.5 },
 
   // Activity heading
-  activityHeading: { fontSize: 10, fontStyle: 'italic', marginBottom: 7 },
+  activityHeading: { fontSize: 10, fontStyle: 'italic', marginBottom: 6 },
 
   // Match them up
-  match: { marginBottom: 16 },
+  match: { marginBottom: 14 },
   matchTable: { flexDirection: 'row' },
   matchCol: { flex: 1 },
-  matchCell: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 2, padding: '4 8', fontSize: 10, minHeight: 26, justifyContent: 'center', marginBottom: 5 },
+  matchCell: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 2, padding: '4 7', fontSize: 10, minHeight: 23, justifyContent: 'center', marginBottom: 5 },
   matchCellLeft: { backgroundColor: '#f8faff' },
-  matchLines: { width: 44, alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 8 },
-  matchDotRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 5, height: 26, alignItems: 'center' },
-  matchDot: { width: 7, height: 7, borderRadius: 4, borderWidth: 1.5, borderColor: '#374151', backgroundColor: '#fff' },
+  matchLines: { width: 33, alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 6 },
+  matchDotRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 5, height: 20, alignItems: 'center' },
+  matchDot: { width: 5, height: 5, borderRadius: 3, borderWidth: 1.5, borderColor: '#374151', backgroundColor: '#fff' },
 
   // Cloze
-  cloze: { marginBottom: 16 },
-  wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, borderWidth: 1, borderColor: '#d1d5db', padding: '7 9', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 9 },
-  wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '1 7', borderRadius: 2, backgroundColor: '#fff' },
+  cloze: { marginBottom: 14 },
+  wordBank: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, borderWidth: 1, borderColor: '#d1d5db', padding: '6 8', borderRadius: 3, backgroundColor: '#f9fafb', marginBottom: 8 },
+  wordBankWord: { fontSize: 10, borderWidth: 1, borderColor: '#9ca3af', padding: '2 6', borderRadius: 2, backgroundColor: '#fff' },
   clozeText: { fontSize: 10.5, lineHeight: 1.9 },
   clozeBlank: { fontSize: 10.5, color: '#000', letterSpacing: 1.5 },
 
   // Order steps
-  orderSteps: { marginBottom: 16 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 6, fontSize: 10.5 },
-  stepBox: { width: 20, height: 20, borderWidth: 1.5, borderColor: '#374151', borderRadius: 2, flexShrink: 0 },
+  orderSteps: { marginBottom: 14 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5, fontSize: 10.5 },
+  stepBox: { width: 17, height: 17, borderWidth: 1.5, borderColor: '#374151', borderRadius: 2, flexShrink: 0 },
 
   // Figure
-  figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 8, marginBottom: 16, backgroundColor: '#f9fafb' },
+  figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14, backgroundColor: '#f9fafb' },
   figureLabel: { fontSize: 9, color: '#6b7280', fontStyle: 'italic' },
 })
 
@@ -320,7 +324,7 @@ function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) 
 }
 
 function PDFFigure({ block }: { block: FigureBlock }) {
-  const heights: Record<FigureBlock['size'], number> = { small: 70, medium: 120, large: 180 }
+  const heights: Record<FigureBlock['size'], number> = { small: 60, medium: 105, large: 150 }
   return (
     <View style={[s.figure, { height: heights[block.size] }]}>
       <Text style={s.figureLabel}>{block.caption || 'Figure'}</Text>
@@ -331,6 +335,151 @@ function PDFFigure({ block }: { block: FigureBlock }) {
 function PDFSpacer({ block }: { block: SpacerBlock }) {
   const heights: Record<SpacerBlock['size'], number> = { small: 12, medium: 24, large: 42 }
   return <View style={{ height: heights[block.size] }} />
+}
+
+// ── Data block ────────────────────────────────────────────
+
+function PDFDataTable({ block }: { block: DataBlock }) {
+  const { columns, rows, heading } = block
+  const colW = Math.floor(493 / columns.length)
+  return (
+    <View style={{ marginBottom: 14 }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+      <View style={{ flexDirection: 'row', borderTopWidth: 1, borderLeftWidth: 1, borderColor: '#d1d5db' }}>
+        {columns.map((col, c) => (
+          <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5', backgroundColor: '#f3f4f6' }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', textAlign: 'center' }}>
+              {col.label}{col.unit ? ` (${col.unit})` : ''}
+            </Text>
+          </View>
+        ))}
+      </View>
+      {rows.map((row, r) => (
+        <View key={r} style={{ flexDirection: 'row', borderLeftWidth: 1, borderColor: '#d1d5db' }}>
+          {row.map((cell, c) => (
+            <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5' }}>
+              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{cell}</Text>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+const PDF_W = 440, PDF_H = 260
+const PDF_ML = 44, PDF_MR = 12, PDF_MT = 12, PDF_MB = 38
+const PDF_PW = PDF_W - PDF_ML - PDF_MR
+const PDF_PH = PDF_H - PDF_MT - PDF_MB
+
+function PDFDataGraph({ block }: { block: DataBlock }) {
+  const { columns, graph, heading } = block
+  const layout = computeGraphLayout(block.rows, graph.xCol, graph.yCol, graph.omitRows)
+  const { xTicks, yTicks, points, bestFitLine, xMin, xMax, yMin, yMax } = layout
+  const xCol = columns[graph.xCol]
+  const yCol = columns[graph.yCol]
+
+  function px(x: number, y: number) {
+    const p = toSvgCoords({ x, y }, layout, PDF_PW, PDF_PH)
+    return { x: p.cx + PDF_ML, y: p.cy + PDF_MT }
+  }
+
+  const xStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : (xMax - xMin || 1)
+  const yStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : (yMax - yMin || 1)
+  const xMinStep = xStep / 5, yMinStep = yStep / 5
+
+  const xMinor: number[] = [], yMinor: number[] = []
+  for (let v = xMin; v <= xMax + xMinStep * 0.01; v += xMinStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    if (!xTicks.some(t => Math.abs(t.value - r) < xMinStep * 0.01)) xMinor.push(r)
+  }
+  for (let v = yMin; v <= yMax + yMinStep * 0.01; v += yMinStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    if (!yTicks.some(t => Math.abs(t.value - r) < yMinStep * 0.01)) yMinor.push(r)
+  }
+
+  return (
+    <View style={{ marginBottom: 14, alignItems: 'center' }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, alignSelf: 'flex-start' }}>{heading}</Text> : null}
+      <Svg width={PDF_W} height={PDF_H}>
+        {xMinor.map((v, i) => { const p = px(v, yMin); return <Line key={`xm${i}`} x1={String(p.x)} y1={String(PDF_MT)} x2={String(p.x)} y2={String(PDF_MT + PDF_PH)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
+        {yMinor.map((v, i) => { const p = px(xMin, v); return <Line key={`ym${i}`} x1={String(PDF_ML)} y1={String(p.y)} x2={String(PDF_ML + PDF_PW)} y2={String(p.y)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
+        {xTicks.map((t, i) => { const p = px(t.value, yMin); return <Line key={`xM${i}`} x1={String(p.x)} y1={String(PDF_MT)} x2={String(p.x)} y2={String(PDF_MT + PDF_PH)} stroke="#d1d5db" strokeWidth="0.8" /> })}
+        {yTicks.map((t, i) => { const p = px(xMin, t.value); return <Line key={`yM${i}`} x1={String(PDF_ML)} y1={String(p.y)} x2={String(PDF_ML + PDF_PW)} y2={String(p.y)} stroke="#d1d5db" strokeWidth="0.8" /> })}
+        <Line x1={String(PDF_ML)} y1={String(PDF_MT)} x2={String(PDF_ML)} y2={String(PDF_MT + PDF_PH)} stroke="#374151" strokeWidth="1.5" />
+        <Line x1={String(PDF_ML)} y1={String(PDF_MT + PDF_PH)} x2={String(PDF_ML + PDF_PW)} y2={String(PDF_MT + PDF_PH)} stroke="#374151" strokeWidth="1.5" />
+        {graph.showXScale && xTicks.map((t, i) => { const p = px(t.value, yMin); return <Text key={`xs${i}`} x={String(p.x)} y={String(PDF_MT + PDF_PH + 11)} style={{ fontSize: 7, textAnchor: 'middle' }}>{t.label}</Text> })}
+        {graph.showYScale && yTicks.map((t, i) => { const p = px(xMin, t.value); return <Text key={`ys${i}`} x={String(PDF_ML - 3)} y={String(p.y + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text> })}
+        {graph.showXLabel && <Text x={String(PDF_ML + PDF_PW / 2)} y={String(PDF_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xCol.label}{xCol.unit ? ` (${xCol.unit})` : ''}</Text>}
+        {graph.showYLabel && <Text x="8" y={String(PDF_MT + PDF_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_MT + PDF_PH / 2})`}>{yCol.label}{yCol.unit ? ` (${yCol.unit})` : ''}</Text>}
+        {graph.fitType === 'linear' && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" /> })()}
+        {graph.fitType === 'curve' && <Path d={catmullRomPath(points, layout, PDF_PW, PDF_PH, PDF_ML, PDF_MT)} stroke="#dc2626" strokeWidth="1.5" fill="none" />}
+        {points.map((pt, i) => { const p = px(pt.x, pt.y); const d = 3.5; return <G key={i}><Line x1={String(p.x - d)} y1={String(p.y - d)} x2={String(p.x + d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /><Line x1={String(p.x + d)} y1={String(p.y - d)} x2={String(p.x - d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /></G> })}
+      </Svg>
+    </View>
+  )
+}
+
+const PDF_BAR_W = 440, PDF_BAR_H = 240
+const PDF_BAR_ML = 44, PDF_BAR_MR = 12, PDF_BAR_MT = 12, PDF_BAR_MB = 44
+const PDF_BAR_PW = PDF_BAR_W - PDF_BAR_ML - PDF_BAR_MR
+const PDF_BAR_PH = PDF_BAR_H - PDF_BAR_MT - PDF_BAR_MB
+
+function PDFDataBar({ block }: { block: DataBlock }) {
+  const { columns, graph, heading } = block
+  const layout = computeBarLayout(block.rows, graph.xCol, graph.yCol, graph.omitRows)
+  const { categories, yTicks, yMax } = layout
+  const xLabel = columns[graph.xCol], yLabel = columns[graph.yCol]
+  const total = categories.length
+  const barW = total > 0 ? Math.min(32, (PDF_BAR_PW / total) * 0.55) : 24
+  const gap = total > 0 ? PDF_BAR_PW / total : 36
+  const yMinorStep = yTicks.length > 1 ? (yTicks[1].value - yTicks[0].value) / 5 : 0
+  const yMinorLines: number[] = []
+  if (yMinorStep > 0) {
+    for (let v = 0; v <= yMax + yMinorStep * 0.01; v += yMinorStep) {
+      const r = Math.round(v * 1e9) / 1e9
+      if (!yTicks.some(t => Math.abs(t.value - r) < yMinorStep * 0.01)) yMinorLines.push(r)
+    }
+  }
+  function barY(val: number) { return PDF_BAR_MT + PDF_BAR_PH - (yMax > 0 ? (val / yMax) * PDF_BAR_PH : 0) }
+  return (
+    <View style={{ marginBottom: 14, alignItems: 'center' }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, alignSelf: 'flex-start' }}>{heading}</Text> : null}
+      <Svg width={PDF_BAR_W} height={PDF_BAR_H}>
+        {yMinorLines.map((v, i) => <Line key={`bym${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(v))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(v))} stroke="#e5e7eb" strokeWidth="0.5" />)}
+        {yTicks.map((t, i) => <Line key={`byM${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(t.value))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(t.value))} stroke="#d1d5db" strokeWidth="0.8" />)}
+        <Line x1={String(PDF_BAR_ML)} y1={String(PDF_BAR_MT)} x2={String(PDF_BAR_ML)} y2={String(PDF_BAR_MT + PDF_BAR_PH)} stroke="#374151" strokeWidth="1.5" />
+        <Line x1={String(PDF_BAR_ML)} y1={String(PDF_BAR_MT + PDF_BAR_PH)} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(PDF_BAR_MT + PDF_BAR_PH)} stroke="#374151" strokeWidth="1.5" />
+        {graph.showYScale && yTicks.map((t, i) => <Text key={`bys${i}`} x={String(PDF_BAR_ML - 3)} y={String(barY(t.value) + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text>)}
+        {categories.map((cat, i) => {
+          const cx = PDF_BAR_ML + gap * i + gap / 2
+          const h = yMax > 0 ? (cat.value / yMax) * PDF_BAR_PH : 0
+          const y = PDF_BAR_MT + PDF_BAR_PH - h
+          return (
+            <G key={i}>
+              {cat.visible && <Rect x={String(cx - barW / 2)} y={String(y)} width={String(barW)} height={String(h)} fill="#3b82f6" opacity="0.8" />}
+              {graph.showXScale && <Text x={String(cx)} y={String(PDF_BAR_MT + PDF_BAR_PH + 11)} style={{ fontSize: 7, textAnchor: 'middle' }}>{cat.label}</Text>}
+            </G>
+          )
+        })}
+        {graph.showXLabel && <Text x={String(PDF_BAR_ML + PDF_BAR_PW / 2)} y={String(PDF_BAR_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xLabel.label}{xLabel.unit ? ` (${xLabel.unit})` : ''}</Text>}
+        {graph.showYLabel && <Text x="8" y={String(PDF_BAR_MT + PDF_BAR_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_BAR_MT + PDF_BAR_PH / 2})`}>{yLabel.label}{yLabel.unit ? ` (${yLabel.unit})` : ''}</Text>}
+      </Svg>
+    </View>
+  )
+}
+
+function resolveDataBlock(block: DataBlock, blocks: Block[]): DataBlock {
+  if (!block.graph.linkedDataId) return block
+  const linked = blocks.find(b => b.type === 'data' && b.id === block.graph.linkedDataId) as DataBlock | undefined
+  return linked ? { ...block, columns: linked.columns, rows: linked.rows } : block
+}
+
+function PDFData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
+  const resolved = resolveDataBlock(block, blocks)
+  if (resolved.display === 'graph') return <PDFDataGraph block={resolved} />
+  if (resolved.display === 'bar') return <PDFDataBar block={resolved} />
+  return <PDFDataTable block={resolved} />
 }
 
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
@@ -347,6 +496,7 @@ function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
     case 'order_steps':     return <PDFOrderSteps block={block} num={num} />
     case 'figure':          return <PDFFigure block={block} />
     case 'spacer':          return <PDFSpacer block={block} />
+    case 'data':            return <PDFData block={block as DataBlock} blocks={blocks} />
   }
 }
 
