@@ -22,19 +22,18 @@ export function estimateBlockHeight(block: Block): number {
   }
 }
 
-export function splitIntoPages(blocks: Block[]): Block[][] {
+export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => number): Block[][] {
+  const h = heightOf ?? estimateBlockHeight
   const pages: Block[][] = [[]]
   let used = 0
-
   for (const block of blocks) {
-    const h = estimateBlockHeight(block)
-    if (used + h > PAGE_CONTENT_HEIGHT && pages[pages.length - 1].length > 0) {
+    const blockH = h(block)
+    if (used + blockH > PAGE_CONTENT_HEIGHT && pages[pages.length - 1].length > 0) {
       pages.push([])
       used = 0
     }
     pages[pages.length - 1].push(block)
-    used += h
+    used += blockH
   }
-
   return pages
 }

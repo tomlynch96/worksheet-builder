@@ -1,8 +1,9 @@
 import katex from 'katex'
 import 'katex/contrib/mhchem'
+import { useRef, useLayoutEffect, useState } from 'react'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
-import { splitIntoPages } from '../../utils/pagination'
+import { splitIntoPages, estimateBlockHeight } from '../../utils/pagination'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
 import './WorksheetPreview.css'
 
@@ -503,9 +504,52 @@ interface WorksheetPreviewProps {
 }
 
 export function WorksheetPreview({ worksheet, selectedId, onSelect }: WorksheetPreviewProps) {
-  const pages = splitIntoPages(worksheet.blocks)
+  const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
+  const blockRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // After every render, read actual rendered heights from the hidden measurement
+  // container and update state. The comparison avoids infinite re-render loops.
+  useLayoutEffect(() => {
+    const next: Record<string, number> = {}
+    for (const block of worksheet.blocks) {
+      const el = blockRefs.current[block.id]
+      if (el) next[block.id] = el.offsetHeight
+    }
+    setMeasuredHeights(prev => {
+      const unchanged = worksheet.blocks.every(b => prev[b.id] === next[b.id])
+      return unchanged ? prev : next
+    })
+  })
+
+  const heightOf = (block: Block) => measuredHeights[block.id] ?? estimateBlockHeight(block)
+  const pages = splitIntoPages(worksheet.blocks, heightOf)
+
   return (
     <>
+      {/* Hidden container renders every block at the exact content width so
+          offsetHeight reflects real text-wrapped heights, not page-clipped heights. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: 658,
+          visibility: 'hidden',
+          pointerEvents: 'none',
+          fontFamily: 'Arial, "Helvetica Neue", sans-serif',
+          fontSize: '11pt',
+          lineHeight: 1.45,
+          color: '#000',
+        }}
+      >
+        {worksheet.blocks.map(block => (
+          <div key={block.id} ref={el => { blockRefs.current[block.id] = el }}>
+            <PreviewBlock block={block} blocks={worksheet.blocks} />
+          </div>
+        ))}
+      </div>
+
       {pages.map((pageBlocks, pageIdx) => (
         <div key={pageIdx} className="a4-page">
           {pageBlocks.map(block => {
