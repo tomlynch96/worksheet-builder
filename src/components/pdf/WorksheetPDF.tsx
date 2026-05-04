@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet, Font } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Font, Svg, Line, G } from '@react-pdf/renderer'
 import katexMathItalicUrl from 'katex/dist/fonts/KaTeX_Math-Italic.ttf?url'
 import katexMainRegularUrl from 'katex/dist/fonts/KaTeX_Main-Regular.ttf?url'
 
@@ -15,9 +15,10 @@ Font.register({
     { src: '/fonts/LiberationSans-BoldItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 })
-import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
+import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
+import { computeGraphLayout, toSvgCoords } from '../../utils/graphLayout'
 
 // ── Styles ────────────────────────────────────────────────
 // react-pdf uses pt units. A4 page: 595 × 842 pt. Margin: 51pt (~18mm).
@@ -333,6 +334,92 @@ function PDFSpacer({ block }: { block: SpacerBlock }) {
   return <View style={{ height: heights[block.size] }} />
 }
 
+// ── Data block ────────────────────────────────────────────
+
+function PDFDataTable({ block }: { block: DataBlock }) {
+  const { columns, rows, heading } = block
+  const colW = Math.floor(493 / columns.length)
+  return (
+    <View style={{ marginBottom: 14 }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+      <View style={{ flexDirection: 'row', borderTopWidth: 1, borderLeftWidth: 1, borderColor: '#d1d5db' }}>
+        {columns.map((col, c) => (
+          <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '4 6', backgroundColor: '#f3f4f6' }}>
+            <Text style={{ fontSize: 8.5, fontFamily: 'Helvetica-Bold', textAlign: 'center' }}>
+              {col.label}{col.unit ? ` (${col.unit})` : ''}
+            </Text>
+          </View>
+        ))}
+      </View>
+      {rows.map((row, r) => (
+        <View key={r} style={{ flexDirection: 'row', borderLeftWidth: 1, borderColor: '#d1d5db' }}>
+          {row.map((cell, c) => (
+            <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '4 6' }}>
+              <Text style={{ fontSize: 9, textAlign: 'center' }}>{cell}</Text>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+const PDF_W = 440, PDF_H = 260
+const PDF_ML = 44, PDF_MR = 12, PDF_MT = 12, PDF_MB = 38
+const PDF_PW = PDF_W - PDF_ML - PDF_MR
+const PDF_PH = PDF_H - PDF_MT - PDF_MB
+
+function PDFDataGraph({ block }: { block: DataBlock }) {
+  const { columns, graph, heading } = block
+  const layout = computeGraphLayout(block.rows, graph.xCol, graph.yCol, graph.omitRows)
+  const { xTicks, yTicks, points, bestFitLine, xMin, xMax, yMin, yMax } = layout
+  const xCol = columns[graph.xCol]
+  const yCol = columns[graph.yCol]
+
+  function px(x: number, y: number) {
+    const p = toSvgCoords({ x, y }, layout, PDF_PW, PDF_PH)
+    return { x: p.cx + PDF_ML, y: p.cy + PDF_MT }
+  }
+
+  const xStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : (xMax - xMin || 1)
+  const yStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : (yMax - yMin || 1)
+  const xMinStep = xStep / 5, yMinStep = yStep / 5
+
+  const xMinor: number[] = [], yMinor: number[] = []
+  for (let v = xMin; v <= xMax + xMinStep * 0.01; v += xMinStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    if (!xTicks.some(t => Math.abs(t.value - r) < xMinStep * 0.01)) xMinor.push(r)
+  }
+  for (let v = yMin; v <= yMax + yMinStep * 0.01; v += yMinStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    if (!yTicks.some(t => Math.abs(t.value - r) < yMinStep * 0.01)) yMinor.push(r)
+  }
+
+  return (
+    <View style={{ marginBottom: 14 }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+      <Svg width={PDF_W} height={PDF_H}>
+        {xMinor.map((v, i) => { const p = px(v, yMin); return <Line key={`xm${i}`} x1={String(p.x)} y1={String(PDF_MT)} x2={String(p.x)} y2={String(PDF_MT + PDF_PH)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
+        {yMinor.map((v, i) => { const p = px(xMin, v); return <Line key={`ym${i}`} x1={String(PDF_ML)} y1={String(p.y)} x2={String(PDF_ML + PDF_PW)} y2={String(p.y)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
+        {xTicks.map((t, i) => { const p = px(t.value, yMin); return <Line key={`xM${i}`} x1={String(p.x)} y1={String(PDF_MT)} x2={String(p.x)} y2={String(PDF_MT + PDF_PH)} stroke="#d1d5db" strokeWidth="0.8" /> })}
+        {yTicks.map((t, i) => { const p = px(xMin, t.value); return <Line key={`yM${i}`} x1={String(PDF_ML)} y1={String(p.y)} x2={String(PDF_ML + PDF_PW)} y2={String(p.y)} stroke="#d1d5db" strokeWidth="0.8" /> })}
+        <Line x1={String(PDF_ML)} y1={String(PDF_MT)} x2={String(PDF_ML)} y2={String(PDF_MT + PDF_PH)} stroke="#374151" strokeWidth="1.5" />
+        <Line x1={String(PDF_ML)} y1={String(PDF_MT + PDF_PH)} x2={String(PDF_ML + PDF_PW)} y2={String(PDF_MT + PDF_PH)} stroke="#374151" strokeWidth="1.5" />
+        {graph.showXScale && xTicks.map((t, i) => { const p = px(t.value, yMin); return <Text key={`xs${i}`} x={String(p.x)} y={String(PDF_MT + PDF_PH + 11)} style={{ fontSize: 7, textAnchor: 'middle' }}>{t.label}</Text> })}
+        {graph.showYScale && yTicks.map((t, i) => { const p = px(xMin, t.value); return <Text key={`ys${i}`} x={String(PDF_ML - 3)} y={String(p.y + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text> })}
+        {graph.showXLabel && <Text x={String(PDF_ML + PDF_PW / 2)} y={String(PDF_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xCol.label}{xCol.unit ? ` (${xCol.unit})` : ''}</Text>}
+        {graph.showYLabel && <Text x="8" y={String(PDF_MT + PDF_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_MT + PDF_PH / 2})`}>{yCol.label}{yCol.unit ? ` (${yCol.unit})` : ''}</Text>}
+        {graph.showBestFit && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" strokeDasharray="4 3" /> })()}
+        {points.map((pt, i) => { const p = px(pt.x, pt.y); const d = 3.5; return <G key={i}><Line x1={String(p.x - d)} y1={String(p.y - d)} x2={String(p.x + d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /><Line x1={String(p.x + d)} y1={String(p.y - d)} x2={String(p.x - d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /></G> })}
+      </Svg>
+    </View>
+  )
+}
+
+function PDFData({ block }: { block: DataBlock }) {
+  return block.display === 'graph' ? <PDFDataGraph block={block} /> : <PDFDataTable block={block} />
+}
+
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
@@ -347,6 +434,7 @@ function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
     case 'order_steps':     return <PDFOrderSteps block={block} num={num} />
     case 'figure':          return <PDFFigure block={block} />
     case 'spacer':          return <PDFSpacer block={block} />
+    case 'data':            return <PDFData block={block as DataBlock} />
   }
 }
 

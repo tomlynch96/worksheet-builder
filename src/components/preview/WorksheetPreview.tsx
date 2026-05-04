@@ -1,8 +1,9 @@
 import katex from 'katex'
 import 'katex/contrib/mhchem'
-import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock } from '../../types/worksheet'
+import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages } from '../../utils/pagination'
+import { computeGraphLayout, toSvgCoords } from '../../utils/graphLayout'
 import './WorksheetPreview.css'
 
 const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
@@ -276,6 +277,148 @@ function PreviewSpacer({ block }: { block: SpacerBlock }) {
   return <div style={{ height: heights[block.size] }} />
 }
 
+function PreviewDataTable({ block }: { block: DataBlock }) {
+  const { columns, rows, heading } = block
+  return (
+    <div className="pr-data-table">
+      {heading && <p className="pr-data-heading">{heading}</p>}
+      <table className="pr-table">
+        <thead>
+          <tr>
+            {columns.map((col, c) => (
+              <th key={c} className="pr-th">
+                {col.label}{col.unit ? ` (${col.unit})` : ''}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, r) => (
+            <tr key={r}>
+              {row.map((cell, c) => <td key={c} className="pr-td">{cell}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+const SVG_W = 440, SVG_H = 300
+const ML = 48, MR = 16, MT = 16, MB = 44  // margins
+const PLOT_W = SVG_W - ML - MR
+const PLOT_H = SVG_H - MT - MB
+
+function PreviewDataGraph({ block }: { block: DataBlock }) {
+  const { columns, rows, graph, heading } = block
+  const layout = computeGraphLayout(rows, graph.xCol, graph.yCol, graph.omitRows)
+  const xLabel = columns[graph.xCol]
+  const yLabel = columns[graph.yCol]
+
+  function toS(x: number, y: number) {
+    const p = toSvgCoords({ x, y }, layout, PLOT_W, PLOT_H)
+    return { cx: p.cx + ML, cy: p.cy + MT }
+  }
+
+  const { xTicks, yTicks, points, bestFitLine, xMin, xMax, yMin, yMax } = layout
+  const xMajorStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : (xMax - xMin)
+  const yMajorStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : (yMax - yMin)
+  const xMinorStep = xMajorStep / 5
+  const yMinorStep = yMajorStep / 5
+
+  const xMinorLines: number[] = []
+  for (let v = xMin; v <= xMax + xMinorStep * 0.01; v += xMinorStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    if (!xTicks.some(t => Math.abs(t.value - r) < xMinorStep * 0.01)) xMinorLines.push(r)
+  }
+  const yMinorLines: number[] = []
+  for (let v = yMin; v <= yMax + yMinorStep * 0.01; v += yMinorStep) {
+    const r = Math.round(v * 1e9) / 1e9
+    if (!yTicks.some(t => Math.abs(t.value - r) < yMinorStep * 0.01)) yMinorLines.push(r)
+  }
+
+  return (
+    <div className="pr-data-graph">
+      {heading && <p className="pr-data-heading">{heading}</p>}
+      <svg width={SVG_W} height={SVG_H} className="pr-graph-svg">
+        {/* Minor gridlines */}
+        {xMinorLines.map((v, i) => {
+          const { cx } = toS(v, yMin)
+          return <line key={i} x1={cx} y1={MT} x2={cx} y2={MT + PLOT_H} stroke="#e5e7eb" strokeWidth="0.5" />
+        })}
+        {yMinorLines.map((v, i) => {
+          const { cy } = toS(xMin, v)
+          return <line key={i} x1={ML} y1={cy} x2={ML + PLOT_W} y2={cy} stroke="#e5e7eb" strokeWidth="0.5" />
+        })}
+        {/* Major gridlines */}
+        {xTicks.map((t, i) => {
+          const { cx } = toS(t.value, yMin)
+          return <line key={i} x1={cx} y1={MT} x2={cx} y2={MT + PLOT_H} stroke="#d1d5db" strokeWidth="1" />
+        })}
+        {yTicks.map((t, i) => {
+          const { cy } = toS(xMin, t.value)
+          return <line key={i} x1={ML} y1={cy} x2={ML + PLOT_W} y2={cy} stroke="#d1d5db" strokeWidth="1" />
+        })}
+        {/* Axes */}
+        <line x1={ML} y1={MT} x2={ML} y2={MT + PLOT_H} stroke="#374151" strokeWidth="1.5" />
+        <line x1={ML} y1={MT + PLOT_H} x2={ML + PLOT_W} y2={MT + PLOT_H} stroke="#374151" strokeWidth="1.5" />
+        {/* X scale */}
+        {graph.showXScale && xTicks.map((t, i) => {
+          const { cx } = toS(t.value, yMin)
+          return <text key={i} x={cx} y={MT + PLOT_H + 14} textAnchor="middle" fontSize="9" fill="#374151">{t.label}</text>
+        })}
+        {/* Y scale */}
+        {graph.showYScale && yTicks.map((t, i) => {
+          const { cy } = toS(xMin, t.value)
+          return <text key={i} x={ML - 4} y={cy + 3} textAnchor="end" fontSize="9" fill="#374151">{t.label}</text>
+        })}
+        {/* Axis labels */}
+        {graph.showXLabel && (
+          <text x={ML + PLOT_W / 2} y={SVG_H - 3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937">
+            {xLabel.label}{xLabel.unit ? ` (${xLabel.unit})` : ''}
+          </text>
+        )}
+        {graph.showYLabel && (
+          <text
+            x={10}
+            y={MT + PLOT_H / 2}
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="600"
+            fill="#1f2937"
+            transform={`rotate(-90, 10, ${MT + PLOT_H / 2})`}
+          >
+            {yLabel.label}{yLabel.unit ? ` (${yLabel.unit})` : ''}
+          </text>
+        )}
+        {/* Best fit line */}
+        {graph.showBestFit && bestFitLine && (() => {
+          const p1 = toS(bestFitLine.x1, bestFitLine.y1)
+          const p2 = toS(bestFitLine.x2, bestFitLine.y2)
+          return <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy} stroke="#dc2626" strokeWidth="1.5" strokeDasharray="4 3" />
+        })()}
+        {/* Data points (×) */}
+        {points.map((p, i) => {
+          const { cx, cy } = toS(p.x, p.y)
+          const d = 4
+          return (
+            <g key={i}>
+              <line x1={cx - d} y1={cy - d} x2={cx + d} y2={cy + d} stroke="#1e3a5f" strokeWidth="1.5" />
+              <line x1={cx + d} y1={cy - d} x2={cx - d} y2={cy + d} stroke="#1e3a5f" strokeWidth="1.5" />
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+function PreviewData({ block }: { block: DataBlock }) {
+  return block.display === 'graph'
+    ? <PreviewDataGraph block={block} />
+    : <PreviewDataTable block={block} />
+}
+
 function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
@@ -290,6 +433,7 @@ function PreviewBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
     case 'order_steps':     return <PreviewOrderSteps block={block} num={num} />
     case 'figure':          return <PreviewFigure block={block} />
     case 'spacer':          return <PreviewSpacer block={block} />
+    case 'data':            return <PreviewData block={block as DataBlock} />
   }
 }
 

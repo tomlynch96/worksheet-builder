@@ -18,6 +18,7 @@ export function estimateBlockHeight(block: Block): number {
     case 'order_steps': return 56 + block.steps.length * 34
     case 'figure': return ({ small: 96, medium: 158, large: 218 } as Record<FigureBlock['size'], number>)[block.size]
     case 'spacer': return ({ small: 16, medium: 32, large: 56 } as Record<SpacerBlock['size'], number>)[block.size]
+    case 'data': return block.display === 'graph' ? 320 : 60 + block.rows.length * 26
   }
 }
 

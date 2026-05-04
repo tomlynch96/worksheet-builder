@@ -101,6 +101,32 @@ export interface MultipleChoiceBlock {
   correctIndex: number
 }
 
+export interface DataColumn {
+  label: string
+  unit: string
+}
+
+export interface GraphOptions {
+  xCol: number
+  yCol: number
+  showXLabel: boolean
+  showYLabel: boolean
+  showXScale: boolean
+  showYScale: boolean
+  omitRows: number[]   // row indices to hide from graph (empty = show all)
+  showBestFit: boolean
+}
+
+export interface DataBlock {
+  id: string
+  type: 'data'
+  heading: string
+  columns: DataColumn[]
+  rows: string[][]
+  display: 'table' | 'graph'
+  graph: GraphOptions
+}
+
 export type Block =
   | HeaderBlock
   | InstructionsBlock
@@ -113,6 +139,7 @@ export type Block =
   | ClozeBlock
   | OrderStepsBlock
   | MultipleChoiceBlock
+  | DataBlock
 
 export type BlockType = Block['type']
 

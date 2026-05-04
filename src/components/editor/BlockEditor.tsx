@@ -1,4 +1,4 @@
-import type { Block } from '../../types/worksheet'
+import type { Block, DataBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { HeaderEditor } from './blocks/HeaderEditor'
 import { InstructionsEditor } from './blocks/InstructionsEditor'
@@ -11,6 +11,7 @@ import { ClozeEditor } from './blocks/ClozeEditor'
 import { OrderStepsEditor } from './blocks/OrderStepsEditor'
 import { FigureEditor } from './blocks/FigureEditor'
 import { SpacerEditor } from './blocks/SpacerEditor'
+import { DataEditor } from './blocks/DataEditor'
 
 interface Props {
   block: Block
@@ -30,5 +31,6 @@ export function BlockEditor({ block, dispatch }: Props) {
     case 'order_steps':     return <OrderStepsEditor block={block} dispatch={dispatch} />
     case 'figure':          return <FigureEditor block={block} dispatch={dispatch} />
     case 'spacer':          return <SpacerEditor block={block} dispatch={dispatch} />
+    case 'data':            return <DataEditor block={block as DataBlock} dispatch={dispatch} />
   }
 }

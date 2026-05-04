@@ -20,6 +20,7 @@ const BLOCK_OPTIONS: { type: BlockType; label: string; description: string; colo
   { type: 'figure',          label: 'Figure',           description: 'Diagram placeholder with caption',             color: '#475569' },
   { type: 'instructions',    label: 'Instructions',     description: 'Bulleted list of task instructions',           color: '#0369a1' },
   { type: 'spacer',          label: 'Spacer',           description: 'Blank vertical space',                         color: '#9ca3af' },
+  { type: 'data',            label: 'Data table / graph', description: 'Editable data table with optional graph view', color: '#0d9488' },
 ]
 
 function makeBlock(type: BlockType): Block {
@@ -51,6 +52,11 @@ function makeBlock(type: BlockType): Block {
       return { id, type, heading: 'Fill in the blanks using the words in the box.', text: '', showWordBank: true }
     case 'order_steps':
       return { id, type, heading: 'Number these steps 1 to … in the correct order.', steps: ['', '', ''] }
+    case 'data':
+      return { id, type: 'data', heading: 'Results', columns: [
+        { label: 'x', unit: '' }, { label: 'y', unit: '' }
+      ], rows: [['', ''], ['', ''], ['', ''], ['', '']], display: 'table',
+      graph: { xCol: 0, yCol: 1, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true, omitRows: [], showBestFit: false } }
   }
 }
 
