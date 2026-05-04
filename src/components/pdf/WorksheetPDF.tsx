@@ -396,8 +396,8 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
   }
 
   return (
-    <View style={{ marginBottom: 14 }}>
-      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+    <View style={{ marginBottom: 14, alignItems: 'center' }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, alignSelf: 'flex-start' }}>{heading}</Text> : null}
       <Svg width={PDF_W} height={PDF_H}>
         {xMinor.map((v, i) => { const p = px(v, yMin); return <Line key={`xm${i}`} x1={String(p.x)} y1={String(PDF_MT)} x2={String(p.x)} y2={String(PDF_MT + PDF_PH)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
         {yMinor.map((v, i) => { const p = px(xMin, v); return <Line key={`ym${i}`} x1={String(PDF_ML)} y1={String(p.y)} x2={String(PDF_ML + PDF_PW)} y2={String(p.y)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
@@ -440,8 +440,8 @@ function PDFDataBar({ block }: { block: DataBlock }) {
   }
   function barY(val: number) { return PDF_BAR_MT + PDF_BAR_PH - (yMax > 0 ? (val / yMax) * PDF_BAR_PH : 0) }
   return (
-    <View style={{ marginBottom: 14 }}>
-      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+    <View style={{ marginBottom: 14, alignItems: 'center' }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, alignSelf: 'flex-start' }}>{heading}</Text> : null}
       <Svg width={PDF_BAR_W} height={PDF_BAR_H}>
         {yMinorLines.map((v, i) => <Line key={`bym${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(v))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(v))} stroke="#e5e7eb" strokeWidth="0.5" />)}
         {yTicks.map((t, i) => <Line key={`byM${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(t.value))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(t.value))} stroke="#d1d5db" strokeWidth="0.8" />)}
@@ -454,10 +454,7 @@ function PDFDataBar({ block }: { block: DataBlock }) {
           const y = PDF_BAR_MT + PDF_BAR_PH - h
           return (
             <G key={i}>
-              {cat.visible
-                ? <Rect x={String(cx - barW / 2)} y={String(y)} width={String(barW)} height={String(h)} fill="#3b82f6" opacity="0.8" />
-                : <Rect x={String(cx - barW / 2)} y={String(PDF_BAR_MT)} width={String(barW)} height={String(PDF_BAR_PH)} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 3" />
-              }
+              {cat.visible && <Rect x={String(cx - barW / 2)} y={String(y)} width={String(barW)} height={String(h)} fill="#3b82f6" opacity="0.8" />}
               {graph.showXScale && <Text x={String(cx)} y={String(PDF_BAR_MT + PDF_BAR_PH + 11)} style={{ fontSize: 7, textAnchor: 'middle' }}>{cat.label}</Text>}
             </G>
           )

@@ -453,10 +453,7 @@ function PreviewDataBar({ block }: { block: DataBlock }) {
           const y = BAR_MT + BAR_PH - h
           return (
             <g key={i}>
-              {cat.visible
-                ? <rect x={cx - barW / 2} y={y} width={barW} height={h} fill="#3b82f6" opacity="0.8" />
-                : <rect x={cx - barW / 2} y={BAR_MT} width={barW} height={BAR_PH} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 3" />
-              }
+              {cat.visible && <rect x={cx - barW / 2} y={y} width={barW} height={h} fill="#3b82f6" opacity="0.8" />}
               {graph.showXScale && <text x={cx} y={BAR_MT + BAR_PH + 14} textAnchor="middle" fontSize="9" fill="#374151">{cat.label}</text>}
             </g>
           )
