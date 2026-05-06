@@ -81,6 +81,15 @@ export function QuestionEditor({ block, dispatch }: Props) {
       )}
 
       <button type="button" className="ep-list-add" onClick={addPart}>+ Add sub-part</button>
+
+      <div className="ms-divider" />
+      <Field label="Mark scheme answer">
+        <RichTextEditor
+          value={block.markScheme ?? ''}
+          onChange={markScheme => update({ markScheme })}
+          placeholder="Model answer / marking points…"
+        />
+      </Field>
     </div>
   )
 }

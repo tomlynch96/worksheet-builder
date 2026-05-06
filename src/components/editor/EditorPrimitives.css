@@ -119,6 +119,27 @@
   padding: 12px 14px;
 }
 
+/* ── Mark scheme divider ─────────────────────────────────── */
+.ms-divider {
+  border-top: 1px dashed #c4b5fd;
+  margin: 4px 0;
+  position: relative;
+}
+.ms-divider::before {
+  content: 'Mark Scheme';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f8f7fb;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #7c3aed;
+}
+
 /* ── Figure paste zone ───────────────────────────────────── */
 .figure-paste-zone {
   width: 100%;

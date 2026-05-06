@@ -12,6 +12,7 @@ export default function App() {
   const { worksheet, dispatch } = useWorksheet()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showPresets, setShowPresets] = useState(false)
+  const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const openRef = useRef<HTMLInputElement>(null)
 
   function loadPreset(idx: number) {
@@ -76,6 +77,16 @@ export default function App() {
         </div>
 
         <div className="topbar-actions">
+          <div className="mode-toggle">
+            <button
+              className={`mode-toggle-btn${mode === 'worksheet' ? ' mode-toggle-btn--active' : ''}`}
+              onClick={() => setMode('worksheet')}
+            >Worksheet</button>
+            <button
+              className={`mode-toggle-btn${mode === 'markscheme' ? ' mode-toggle-btn--active' : ''}`}
+              onClick={() => setMode('markscheme')}
+            >Mark Scheme</button>
+          </div>
           <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
             Open
           </button>
@@ -109,6 +120,7 @@ export default function App() {
             worksheet={worksheet}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            mode={mode}
           />
         </main>
       </div>

@@ -113,6 +113,26 @@ const s = StyleSheet.create({
   // Figure
   figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14, backgroundColor: '#f9fafb' },
   figureLabel: { fontSize: 9, color: '#6b7280', fontStyle: 'italic' },
+
+  // Mark scheme
+  msTitle: { fontFamily: 'Helvetica-Bold', fontSize: 15, color: '#1e3a5f', marginBottom: 4 },
+  msSubtitle: { fontSize: 10, color: '#374151', marginBottom: 3 },
+  msTitleRule: { borderTopWidth: 2, borderTopColor: '#1e3a5f', marginBottom: 18 },
+  msQuestion: { marginBottom: 14 },
+  msQuestionStem: { flexDirection: 'row', gap: 5, marginBottom: 4 },
+  msAnswer: { marginLeft: 20, borderLeftWidth: 3, borderLeftColor: '#16a34a', backgroundColor: '#f0fdf4', padding: '5 8', borderRadius: 2, marginTop: 4 },
+  msAnswerText: { fontSize: 10.5, color: '#14532d' },
+  msNoAnswer: { fontSize: 10, color: '#9ca3af', fontStyle: 'italic' },
+  msCorrectOption: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: '#f0fdf4', padding: '3 6', borderRadius: 2, marginLeft: 20, marginTop: 4 },
+  msCorrectLabel: { fontFamily: 'Helvetica-Bold', fontSize: 10, color: '#15803d', width: 14 },
+  msCorrectTick: { fontSize: 10, color: '#16a34a', fontFamily: 'Helvetica-Bold' },
+  msMatchRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
+  msMatchLeft: { flex: 1, borderWidth: 1, borderColor: '#d1d5db', padding: '4 7', borderRadius: 2, backgroundColor: '#f8faff', fontSize: 10 },
+  msMatchArrow: { fontSize: 10, color: '#16a34a', fontFamily: 'Helvetica-Bold' },
+  msMatchRight: { flex: 1, borderWidth: 1, borderColor: '#86efac', padding: '4 7', borderRadius: 2, backgroundColor: '#f0fdf4', fontSize: 10 },
+  msStepRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
+  msStepNum: { width: 17, height: 17, backgroundColor: '#16a34a', color: '#fff', fontSize: 9, fontFamily: 'Helvetica-Bold', borderRadius: 2, alignItems: 'center', justifyContent: 'center' },
+  msClozeText: { fontSize: 10.5, lineHeight: 1.9, marginLeft: 20, marginTop: 4 },
 })
 
 // ── Helper ────────────────────────────────────────────────
@@ -326,11 +346,11 @@ function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) 
 function PDFFigure({ block }: { block: FigureBlock }) {
   const heights: Record<FigureBlock['size'], number> = { small: 60, medium: 105, large: 150 }
   return (
-    <View style={[s.figure, block.imageData ? {} : { height: heights[block.size] }]}>
+    <View style={[s.figure, { height: heights[block.size] }]}>
       {block.imageData && (
         <Image
           src={block.imageData}
-          style={{ maxWidth: '100%', objectFit: 'contain', marginBottom: block.caption ? 4 : 0 }}
+          style={{ flex: 1, objectFit: 'contain', marginBottom: block.caption ? 4 : 0 }}
         />
       )}
       {block.caption ? <Text style={s.figureLabel}>{block.caption}</Text> : null}
@@ -506,6 +526,146 @@ function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
   }
 }
 
+// ── Mark scheme PDF renderers ────────────────────────────────────────────────
+
+function PDFMSQuestion({ block, num }: { block: QuestionBlock; num: number }) {
+  return (
+    <View style={s.msQuestion} wrap={false}>
+      <View style={s.msQuestionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <View style={s.qText}>{htmlToPdf(block.stem, {})}</View>
+        {block.marks > 0 && <Text style={s.marks}>[{block.marks}m]</Text>}
+      </View>
+      {block.parts.length > 0 && (
+        <View style={{ marginLeft: 15, marginBottom: 4 }}>
+          {block.parts.map(part => (
+            <View key={part.id} style={{ flexDirection: 'row', gap: 5, marginBottom: 3 }}>
+              <Text style={s.partLabel}>({part.label})</Text>
+              <View style={{ flex: 1 }}>{htmlToPdf(part.stem, { fontSize: 10 })}</View>
+              {part.marks > 0 && <Text style={s.marks}>[{part.marks}m]</Text>}
+            </View>
+          ))}
+        </View>
+      )}
+      <View style={s.msAnswer}>
+        {block.markScheme
+          ? <View style={s.msAnswerText}>{htmlToPdf(block.markScheme, { fontSize: 10.5, color: '#14532d' })}</View>
+          : <Text style={s.msNoAnswer}>No mark scheme added.</Text>
+        }
+      </View>
+    </View>
+  )
+}
+
+function PDFMSMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: number }) {
+  const LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
+  return (
+    <View style={s.msQuestion} wrap={false}>
+      <View style={s.msQuestionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <View style={s.qText}>{htmlToPdf(block.stem, {})}</View>
+        {block.marks > 0 && <Text style={s.marks}>[{block.marks}m]</Text>}
+      </View>
+      <View style={s.msCorrectOption}>
+        <Text style={s.msCorrectLabel}>{LABELS[block.correctIndex] ?? block.correctIndex + 1}</Text>
+        <View style={{ flex: 1 }}>{htmlToPdf(block.options[block.correctIndex] ?? '', { fontSize: 10 })}</View>
+        <Text style={s.msCorrectTick}>✓</Text>
+      </View>
+      {block.markScheme && (
+        <View style={[s.msAnswer, { marginTop: 4 }]}>
+          <View style={s.msAnswerText}>{htmlToPdf(block.markScheme, { fontSize: 10.5, color: '#14532d' })}</View>
+        </View>
+      )}
+    </View>
+  )
+}
+
+function PDFMSCloze({ block, num }: { block: ClozeBlock; num: number }) {
+  const parts = clozeToDisplayParts(block.text)
+  return (
+    <View style={s.msQuestion} wrap={false}>
+      <View style={s.msQuestionStem}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={{ flex: 1, fontSize: 10.5 }}>{block.heading || 'Fill in the blanks.'}</Text>
+      </View>
+      <Text style={s.msClozeText}>
+        {parts.map((part, i) =>
+          part.type === 'blank'
+            ? <Text key={i} style={{ fontFamily: 'Helvetica-Bold', color: '#15803d' }}>{part.value}</Text>
+            : <Text key={i}>{part.value}</Text>
+        )}
+      </Text>
+    </View>
+  )
+}
+
+function PDFMSMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
+  return (
+    <View style={s.msQuestion} wrap={false}>
+      <View style={[s.msQuestionStem, { marginBottom: 6 }]}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={{ flex: 1, fontSize: 10.5 }}>{block.heading || 'Match each term to its definition.'}</Text>
+      </View>
+      <View style={{ marginLeft: 15 }}>
+        {block.items.map(item => (
+          <View key={item.id} style={s.msMatchRow}>
+            <View style={s.msMatchLeft}>{htmlToPdf(item.left, { fontSize: 10 })}</View>
+            <Text style={s.msMatchArrow}>→</Text>
+            <View style={s.msMatchRight}>{htmlToPdf(item.right, { fontSize: 10 })}</View>
+          </View>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+function PDFMSOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
+  return (
+    <View style={s.msQuestion} wrap={false}>
+      <View style={[s.msQuestionStem, { marginBottom: 6 }]}>
+        <Text style={s.qNum}>{num}.</Text>
+        <Text style={{ flex: 1, fontSize: 10.5 }}>{block.heading || 'Number these steps in the correct order.'}</Text>
+      </View>
+      <View style={{ marginLeft: 15 }}>
+        {block.steps.map((step, i) => (
+          <View key={i} style={s.msStepRow}>
+            <View style={s.msStepNum}><Text style={{ fontSize: 9, color: '#fff', fontFamily: 'Helvetica-Bold' }}>{i + 1}</Text></View>
+            <View style={{ flex: 1 }}>{htmlToPdf(step, { fontSize: 10.5 })}</View>
+          </View>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
+  const header = worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined
+  const msBlocks = worksheet.blocks.filter(b =>
+    ['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'].includes(b.type)
+  )
+
+  return (
+    <>
+      <View style={{ marginBottom: 18 }}>
+        <Text style={s.msTitle}>Mark Scheme{header?.title ? ` — ${header.title}` : ''}</Text>
+        {header?.topic && <Text style={s.msSubtitle}>{header.topic}</Text>}
+        <View style={s.msTitleRule} />
+      </View>
+      {msBlocks.map(block => {
+        const num = getQuestionNumber(worksheet.blocks, block.id)
+        switch (block.type) {
+          case 'question':        return <PDFMSQuestion key={block.id} block={block as QuestionBlock} num={num} />
+          case 'multiple_choice': return <PDFMSMultipleChoice key={block.id} block={block as MultipleChoiceBlock} num={num} />
+          case 'cloze':           return <PDFMSCloze key={block.id} block={block as ClozeBlock} num={num} />
+          case 'match_them_up':   return <PDFMSMatchThemUp key={block.id} block={block as MatchThemUpBlock} num={num} />
+          case 'order_steps':     return <PDFMSOrderSteps key={block.id} block={block as OrderStepsBlock} num={num} />
+          default: return null
+        }
+      })}
+    </>
+  )
+}
+
 export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   return (
     <Document>
@@ -515,6 +675,9 @@ export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
             <PDFBlock block={block} blocks={worksheet.blocks} />
           </View>
         ))}
+      </Page>
+      <Page size="A4" style={s.page}>
+        <PDFMarkSchemeSection worksheet={worksheet} />
       </Page>
     </Document>
   )

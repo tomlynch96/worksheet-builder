@@ -70,6 +70,15 @@ export function MultipleChoiceEditor({ block, dispatch }: Props) {
         <button type="button" className="ep-list-add" onClick={addOption}>+ Add option</button>
       )}
       <p className="mc-hint">Select the radio button next to the correct answer.</p>
+
+      <div className="ms-divider" />
+      <Field label="Mark scheme notes">
+        <RichTextEditor
+          value={block.markScheme ?? ''}
+          onChange={markScheme => update({ markScheme })}
+          placeholder="Optional explanation / working…"
+        />
+      </Field>
     </div>
   )
 }

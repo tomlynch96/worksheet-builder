@@ -34,6 +34,7 @@ export interface QuestionBlock {
   marks: number
   lines: number
   parts: QuestionPart[]
+  markScheme?: string
 }
 
 export interface WorkedExampleBlock {
@@ -100,6 +101,7 @@ export interface MultipleChoiceBlock {
   marks: number
   options: string[]
   correctIndex: number
+  markScheme?: string
 }
 
 export interface DataColumn {
