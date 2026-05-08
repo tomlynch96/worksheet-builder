@@ -1,5 +1,6 @@
 import type { GalleryEntry } from '../hooks/useSavedWorksheets'
 import type { Worksheet } from '../types/worksheet'
+import { PRESETS } from '../data/presets'
 import './Gallery.css'
 
 const BLOCK_TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -43,6 +44,24 @@ function BlockChip({ type }: { type: string }) {
   )
 }
 
+function MiniPage({ worksheet, boardColor }: { worksheet: Worksheet; boardColor: string }) {
+  return (
+    <div className="gallery-minipage">
+      {worksheet.blocks.slice(0, 18).map((block, i) => (
+        <div
+          key={i}
+          className="gallery-miniblock"
+          style={{
+            background: block.type === 'header' ? boardColor : (BLOCK_TYPE_LABELS[block.type]?.color ?? '#9ca3af') + '33',
+            height: block.type === 'header' ? 10 : block.type === 'spacer' ? 4 : 6,
+            width: block.type === 'header' ? '100%' : block.type === 'spacer' ? '40%' : undefined,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function WorksheetThumbnail({
   entry,
   onOpen,
@@ -54,7 +73,6 @@ function WorksheetThumbnail({
 }) {
   const boardColor = BOARD_COLORS[entry.examBoard] ?? '#374151'
   const tierLabel = entry.tier === 'higher' ? 'Higher' : entry.tier === 'foundation' ? 'Foundation' : entry.tier === 'both' ? '' : entry.tier
-
   const blockTypes = entry.worksheet.blocks.map(b => b.type).filter(t => t !== 'header' && t !== 'instructions')
 
   return (
@@ -69,20 +87,7 @@ function WorksheetThumbnail({
       </div>
 
       <div className="gallery-card-preview">
-        {/* Mini A4 sheet mock */}
-        <div className="gallery-minipage">
-          {entry.worksheet.blocks.slice(0, 18).map((block, i) => (
-            <div
-              key={i}
-              className="gallery-miniblock"
-              style={{
-                background: block.type === 'header' ? boardColor : (BLOCK_TYPE_LABELS[block.type]?.color ?? '#9ca3af') + '33',
-                height: block.type === 'header' ? 10 : block.type === 'spacer' ? 4 : 6,
-                width: block.type === 'header' ? '100%' : block.type === 'spacer' ? '40%' : undefined,
-              }}
-            />
-          ))}
-        </div>
+        <MiniPage worksheet={entry.worksheet} boardColor={boardColor} />
       </div>
 
       <div className="gallery-card-chips">
@@ -108,15 +113,75 @@ function WorksheetThumbnail({
   )
 }
 
+function TemplateCard({ idx, onLoad }: { idx: number; onLoad: (idx: number) => void }) {
+  const preset = PRESETS[idx]
+  const worksheet = preset.worksheet
+  const header = worksheet.blocks.find(b => b.type === 'header') as { examBoard?: string; tier?: string } | undefined
+  const examBoard = header?.examBoard ?? ''
+  const tier = header?.tier ?? ''
+  const boardColor = BOARD_COLORS[examBoard] ?? '#374151'
+  const tierLabel = tier === 'higher' ? 'Higher' : tier === 'foundation' ? 'Foundation' : ''
+  const blockTypes = worksheet.blocks.map(b => b.type).filter(t => t !== 'header' && t !== 'instructions')
+  const questionTypes = new Set(['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'])
+  const questionCount = worksheet.blocks.filter(b => questionTypes.has(b.type)).length
+
+  return (
+    <div className="gallery-card gallery-card--template">
+      <div className="gallery-card-header" style={{ background: boardColor }}>
+        <div className="gallery-card-badges">
+          {examBoard && <span className="gallery-badge gallery-badge--board">{examBoard}</span>}
+          {tierLabel && <span className="gallery-badge gallery-badge--tier">{tierLabel}</span>}
+          <span className="gallery-badge gallery-badge--tpl">Template</span>
+        </div>
+        <div className="gallery-card-title">{preset.label}</div>
+        <div className="gallery-card-topic">{preset.description}</div>
+      </div>
+
+      <div className="gallery-card-preview">
+        <MiniPage worksheet={worksheet} boardColor={boardColor} />
+      </div>
+
+      <div className="gallery-card-chips">
+        {Array.from(new Set(blockTypes)).map(type => (
+          <BlockChip key={type} type={type} />
+        ))}
+      </div>
+
+      <div className="gallery-card-meta">
+        <span>{questionCount} question{questionCount !== 1 ? 's' : ''} · {worksheet.blocks.length} blocks</span>
+      </div>
+
+      <div className="gallery-card-actions">
+        <button className="gallery-btn gallery-btn--load" onClick={() => onLoad(idx)}>
+          Load template
+        </button>
+      </div>
+    </div>
+  )
+}
+
 interface GalleryProps {
   entries: GalleryEntry[]
   onOpen: (w: Worksheet) => void
   onDelete: (id: string) => void
+  onLoadPreset: (idx: number) => void
 }
 
-export function Gallery({ entries, onOpen, onDelete }: GalleryProps) {
+export function Gallery({ entries, onOpen, onDelete, onLoadPreset }: GalleryProps) {
   return (
     <div className="gallery">
+      <div className="gallery-header">
+        <h2 className="gallery-heading">Templates</h2>
+        <p className="gallery-subheading">Start from a ready-made worksheet — replaces current editor content.</p>
+      </div>
+      <div className="gallery-grid gallery-grid--templates">
+        {PRESETS.map((_, i) => (
+          <TemplateCard key={i} idx={i} onLoad={onLoadPreset} />
+        ))}
+      </div>
+
+      <div className="gallery-section-divider" />
+
       <div className="gallery-header">
         <h2 className="gallery-heading">Saved Worksheets</h2>
         <p className="gallery-subheading">

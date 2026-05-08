@@ -205,6 +205,7 @@ function PDFQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Blo
         )}
       </View>
       {block.attachedDataId && <PDFInlineData dataId={block.attachedDataId} blocks={blocks} />}
+      {block.attachedFigureId && <PDFInlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {!hasParts && <AnswerLinesPDF count={block.lines} />}
       {hasParts && (
         <View style={s.parts}>
@@ -218,6 +219,7 @@ function PDFQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Blo
                 )}
               </View>
               {part.attachedDataId && <PDFInlineData dataId={part.attachedDataId} blocks={blocks} />}
+              {part.attachedFigureId && <PDFInlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <AnswerLinesPDF count={part.lines} />
             </View>
           ))}
@@ -517,6 +519,12 @@ function PDFInlineData({ dataId, blocks, markScheme }: { dataId: string; blocks:
   return <View style={{ marginLeft: 15, marginTop: 4, marginBottom: 4 }}><PDFData block={block} blocks={blocks} /></View>
 }
 
+function PDFInlineFigure({ figureId, blocks }: { figureId: string; blocks: Block[] }) {
+  const found = blocks.find(b => b.id === figureId && b.type === 'figure') as FigureBlock | undefined
+  if (!found) return null
+  return <View style={{ marginLeft: 15, marginTop: 4, marginBottom: 4 }}><PDFFigure block={found} /></View>
+}
+
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
@@ -547,6 +555,7 @@ function PDFMSQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: B
         {!hasParts && block.marks > 0 && <Text style={s.marks}>[{block.marks}m]</Text>}
       </View>
       {block.attachedDataId && <PDFInlineData dataId={block.attachedDataId} blocks={blocks} markScheme />}
+      {block.attachedFigureId && <PDFInlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {hasParts ? (
         <View style={{ marginLeft: 15, marginBottom: 4 }}>
           {block.parts.map(part => (
@@ -557,6 +566,7 @@ function PDFMSQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: B
                 {part.marks > 0 && <Text style={s.marks}>[{part.marks}m]</Text>}
               </View>
               {part.attachedDataId && <PDFInlineData dataId={part.attachedDataId} blocks={blocks} markScheme />}
+              {part.attachedFigureId && <PDFInlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <View style={s.msAnswer}>
                 {part.markScheme
                   ? <View style={s.msAnswerText}>{htmlToPdf(part.markScheme, { fontSize: 10.5, color: '#14532d' })}</View>

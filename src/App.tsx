@@ -140,6 +140,7 @@ export default function App() {
             entries={entries}
             onOpen={handleOpenFromGallery}
             onDelete={removeFromGallery}
+            onLoadPreset={idx => { loadPreset(idx); setView('editor') }}
           />
         </div>
       ) : (

@@ -108,6 +108,7 @@ function PreviewQuestion({ block, blocks, num }: { block: QuestionBlock; blocks:
         )}
       </div>
       {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} />}
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {!hasParts && <AnswerLines count={block.lines} />}
       {hasParts && (
         <div className="pr-parts">
@@ -123,6 +124,7 @@ function PreviewQuestion({ block, blocks, num }: { block: QuestionBlock; blocks:
                 )}
               </div>
               {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} />}
+              {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <AnswerLines count={part.lines} />
             </div>
           ))}
@@ -492,6 +494,12 @@ function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Bl
   return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
 }
 
+function InlineFigure({ figureId, blocks }: { figureId: string; blocks: Block[] }) {
+  const found = blocks.find(b => b.id === figureId && b.type === 'figure') as FigureBlock | undefined
+  if (!found) return null
+  return <div className="pr-inline-data"><PreviewFigure block={found} /></div>
+}
+
 // ── Mark scheme variants ──────────────────────────────────────────────────────
 
 function MSAnswer({ html }: { html?: string }) {
@@ -516,6 +524,7 @@ function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; block
         )}
       </div>
       {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} markScheme />}
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {hasParts ? (
         <div className="pr-parts">
           {block.parts.map(part => (
@@ -530,6 +539,7 @@ function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; block
                 )}
               </div>
               {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} markScheme />}
+              {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <MSAnswer html={part.markScheme} />
             </div>
           ))}

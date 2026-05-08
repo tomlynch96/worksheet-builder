@@ -26,6 +26,7 @@ export interface QuestionPart {
   marks: number
   lines: number
   attachedDataId?: string
+  attachedFigureId?: string
   markScheme?: string
 }
 
@@ -37,6 +38,7 @@ export interface QuestionBlock {
   lines: number
   parts: QuestionPart[]
   attachedDataId?: string
+  attachedFigureId?: string
   markScheme?: string
 }
 

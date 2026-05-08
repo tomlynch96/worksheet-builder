@@ -48,10 +48,9 @@ export const PRESETS: Preset[] = [
           stem: '<p>A radio wave has a frequency of 100 MHz. Calculate its wavelength. Use the equation <em>v = fλ</em>.</p>',
           marks: 3, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Write down the values you know.</p>', marks: 1, lines: 2 },
-            { id: id(), label: 'b', stem: '<p>Calculate the wavelength. Give your answer in metres.</p>', marks: 2, lines: 3 },
+            { id: id(), label: 'a', stem: '<p>Write down the values you know.</p>', marks: 1, lines: 2, markScheme: '<p>v = 3 × 10<sup>8</sup> m/s; f = 100 MHz = 1 × 10<sup>8</sup> Hz <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the wavelength. Give your answer in metres.</p>', marks: 2, lines: 3, markScheme: '<p>Rearrange: λ = v ÷ f <strong>[1]</strong></p><p>λ = 3 × 10<sup>8</sup> ÷ 1 × 10<sup>8</sup> = <strong>3 m</strong> <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> v = 3 × 10<sup>8</sup> m/s; f = 100 MHz = 1 × 10<sup>8</sup> Hz <strong>[1]</strong></p><p><strong>(b)</strong> Rearrange: λ = v ÷ f <strong>[1]</strong></p><p>λ = 3 × 10<sup>8</sup> ÷ 1 × 10<sup>8</sup> = <strong>3 m</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'multiple_choice',
@@ -119,11 +118,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>An atom of calcium has the symbol <sup>40</sup>Ca. State the number of protons, neutrons, and electrons.</p>',
           marks: 3, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Number of protons</p>', marks: 1, lines: 2 },
-            { id: id(), label: 'b', stem: '<p>Number of neutrons</p>', marks: 1, lines: 2 },
-            { id: id(), label: 'c', stem: '<p>Number of electrons</p>', marks: 1, lines: 2 },
+            { id: id(), label: 'a', stem: '<p>Number of protons</p>', marks: 1, lines: 2, markScheme: '<p>20 protons <strong>[1]</strong> — equal to the atomic number of calcium</p>' },
+            { id: id(), label: 'b', stem: '<p>Number of neutrons</p>', marks: 1, lines: 2, markScheme: '<p>20 neutrons <strong>[1]</strong> — mass number (40) − atomic number (20) = 20</p>' },
+            { id: id(), label: 'c', stem: '<p>Number of electrons</p>', marks: 1, lines: 2, markScheme: '<p>20 electrons <strong>[1]</strong> — equal to the number of protons in a neutral atom</p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> 20 protons <strong>[1]</strong> — equal to the atomic number of calcium</p><p><strong>(b)</strong> 20 neutrons <strong>[1]</strong> — mass number (40) − atomic number (20) = 20</p><p><strong>(c)</strong> 20 electrons <strong>[1]</strong> — equal to the number of protons in a neutral atom</p>',
         },
         {
           id: id(), type: 'order_steps',
@@ -176,11 +174,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>A car of mass 1200 kg accelerates from rest to 20 m/s in 8 seconds.</p>',
           marks: 5, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Calculate the acceleration of the car.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'b', stem: '<p>Calculate the resultant force acting on the car.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'c', stem: '<p>State one assumption you made in part (b).</p>', marks: 1, lines: 2 },
+            { id: id(), label: 'a', stem: '<p>Calculate the acceleration of the car.</p>', marks: 2, lines: 3, markScheme: '<p>a = (v − u) ÷ t <strong>[1]</strong></p><p>a = (20 − 0) ÷ 8 = <strong>2.5 m/s²</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the resultant force acting on the car.</p>', marks: 2, lines: 3, markScheme: '<p>F = ma = 1200 × 2.5 <strong>[1]</strong></p><p>F = <strong>3000 N</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'c', stem: '<p>State one assumption you made in part (b).</p>', marks: 1, lines: 2, markScheme: '<p>Any one from: no friction / no air resistance / the acceleration is uniform / road is flat <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> a = (v − u) ÷ t <strong>[1]</strong></p><p>a = (20 − 0) ÷ 8 = <strong>2.5 m/s²</strong> <strong>[1]</strong></p><p><strong>(b)</strong> F = ma = 1200 × 2.5 <strong>[1]</strong></p><p>F = <strong>3000 N</strong> <strong>[1]</strong></p><p><strong>(c)</strong> Any one from: no friction / no air resistance / the acceleration is uniform / road is flat <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'multiple_choice',
@@ -283,11 +280,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>Two resistors are connected in series. Resistor A has a resistance of 4 Ω and resistor B has a resistance of 6 Ω. The supply voltage is 20 V.</p>',
           marks: 4, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Calculate the total resistance of the circuit.</p>', marks: 1, lines: 0 },
-            { id: id(), label: 'b', stem: '<p>Calculate the current flowing through the circuit.</p>', marks: 2, lines: 0 },
-            { id: id(), label: 'c', stem: '<p>Calculate the voltage across resistor A.</p>', marks: 1, lines: 0 },
+            { id: id(), label: 'a', stem: '<p>Calculate the total resistance of the circuit.</p>', marks: 1, lines: 0, markScheme: '<p>R<sub>total</sub> = 4 + 6 = <strong>10 Ω</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the current flowing through the circuit.</p>', marks: 2, lines: 0, markScheme: '<p>I = V ÷ R = 20 ÷ 10 <strong>[1]</strong> = <strong>2 A</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'c', stem: '<p>Calculate the voltage across resistor A.</p>', marks: 1, lines: 0, markScheme: '<p>V<sub>A</sub> = I × R<sub>A</sub> = 2 × 4 = <strong>8 V</strong> <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> R<sub>total</sub> = 4 + 6 = <strong>10 Ω</strong> <strong>[1]</strong></p><p><strong>(b)</strong> I = V ÷ R = 20 ÷ 10 <strong>[1]</strong> = <strong>2 A</strong> <strong>[1]</strong></p><p><strong>(c)</strong> V<sub>A</sub> = I × R<sub>A</sub> = 2 × 4 = <strong>8 V</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
@@ -300,10 +296,9 @@ export const PRESETS: Preset[] = [
           stem: '<p>At 20 °C, a filament lamp has a resistance of 5 Ω and draws a current of 0.4 A. When switched on fully, the resistance rises to 50 Ω.</p>',
           marks: 4, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Calculate the voltage across the lamp at 20 °C.</p>', marks: 2, lines: 0 },
-            { id: id(), label: 'b', stem: '<p>Calculate the current through the lamp at full operating resistance, assuming the same voltage.</p>', marks: 2, lines: 0 },
+            { id: id(), label: 'a', stem: '<p>Calculate the voltage across the lamp at 20 °C.</p>', marks: 2, lines: 0, markScheme: '<p>V = I × R = 0.4 × 5 <strong>[1]</strong> = <strong>2 V</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the current through the lamp at full operating resistance, assuming the same voltage.</p>', marks: 2, lines: 0, markScheme: '<p>I = V ÷ R = 2 ÷ 50 <strong>[1]</strong> = <strong>0.04 A</strong> <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> V = I × R = 0.4 × 5 <strong>[1]</strong> = <strong>2 V</strong> <strong>[1]</strong></p><p><strong>(b)</strong> I = V ÷ R = 2 ÷ 50 <strong>[1]</strong> = <strong>0.04 A</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
@@ -414,11 +409,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>Use Table 1 and Fig. 1 to answer the following questions.</p>',
           marks: 7, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Describe the relationship between temperature and the time taken to collect 50 cm³ of gas.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5 },
+            { id: id(), label: 'a', stem: '<p>Describe the relationship between temperature and the time taken to collect 50 cm³ of gas.</p>', marks: 2, lines: 3, markScheme: '<p>As temperature increases, the time taken decreases <strong>[1]</strong>; the relationship is inversely proportional / the time halves for every 10 °C rise in temperature <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3, markScheme: '<p>Rate = 50 ÷ 60 <strong>[1]</strong> = <strong>0.83 cm³/s</strong> (allow 0.8) <strong>[1]</strong></p>' },
+            { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5, markScheme: '<p>Higher temperature gives particles more kinetic energy <strong>[1]</strong>; more particles have energy greater than or equal to the activation energy <strong>[1]</strong>; so a greater proportion of collisions are successful per unit time, increasing the rate of reaction <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> As temperature increases, the time taken decreases <strong>[1]</strong>; the relationship is inversely proportional / the time halves for every 10 °C rise in temperature <strong>[1]</strong></p><p><strong>(b)</strong> Rate = 50 ÷ 60 <strong>[1]</strong> = <strong>0.83 cm³/s</strong> (allow 0.8) <strong>[1]</strong></p><p><strong>(c)</strong> Higher temperature gives particles more kinetic energy <strong>[1]</strong>; more particles have energy greater than or equal to the activation energy <strong>[1]</strong>; so a greater proportion of collisions are successful per unit time, increasing the rate of reaction <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'match_them_up' as const,

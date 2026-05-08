@@ -183,3 +183,29 @@
   background: #fee2e2;
   color: #dc2626;
 }
+
+.gallery-btn--load {
+  background: #eff6ff;
+  color: #1d4ed8;
+  flex: 1;
+}
+.gallery-btn--load:hover { background: #dbeafe; }
+
+/* ── Template badge ─────────────────────────────────────── */
+.gallery-badge--tpl {
+  background: rgba(255,255,255,0.9);
+  color: #374151;
+  font-size: 8px;
+}
+
+/* ── Template card subtle distinction ───────────────────── */
+.gallery-card--template {
+  border: 1px dashed rgba(0,0,0,0.12);
+}
+
+/* ── Section divider ────────────────────────────────────── */
+.gallery-section-divider {
+  border: none;
+  border-top: 1px solid #e2e0ea;
+  margin: 32px 0 28px;
+}
