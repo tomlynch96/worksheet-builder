@@ -14,7 +14,6 @@ export default function App() {
   const { worksheet, dispatch } = useWorksheet()
   const { entries, save: saveToGallery, remove: removeFromGallery } = useSavedWorksheets()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [showPresets, setShowPresets] = useState(false)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const [view, setView] = useState<'editor' | 'gallery'>('editor')
   const openRef = useRef<HTMLInputElement>(null)
@@ -22,7 +21,26 @@ export default function App() {
   function loadPreset(idx: number) {
     dispatch({ type: 'LOAD_PRESET', worksheet: PRESETS[idx].worksheet })
     setSelectedId(null)
-    setShowPresets(false)
+  }
+
+  function handleNew() {
+    const blank: Worksheet = {
+      id: crypto.randomUUID(),
+      blocks: [
+        {
+          id: crypto.randomUUID(), type: 'header',
+          title: '', topic: '', examBoard: 'AQA', tier: 'higher',
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: crypto.randomUUID(), type: 'instructions',
+          items: ['Answer all questions.', 'Write your answers in the spaces provided.', 'The marks for each question are shown in brackets.'],
+        },
+      ],
+    }
+    dispatch({ type: 'LOAD_PRESET', worksheet: blank })
+    setSelectedId(null)
+    setView('editor')
   }
 
   function handleSave() {
@@ -67,30 +85,6 @@ export default function App() {
       <header className="topbar">
         <span className="topbar-brand">Worksheet Builder</span>
 
-        <div className="topbar-presets">
-          {view === 'editor' && (
-            <>
-              <button className="btn-presets" onClick={() => setShowPresets(v => !v)}>
-                Templates ▾
-              </button>
-              {showPresets && (
-                <>
-                  <div className="presets-backdrop" onClick={() => setShowPresets(false)} />
-                  <div className="presets-dropdown">
-                    <p className="presets-hint">Load a template — replaces current content</p>
-                    {PRESETS.map((p, i) => (
-                      <button key={i} className="preset-option" onClick={() => loadPreset(i)}>
-                        <span className="preset-label">{p.label}</span>
-                        <span className="preset-desc">{p.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
-
         <div className="topbar-actions">
           {view === 'editor' && (
             <div className="mode-toggle">
@@ -104,6 +98,10 @@ export default function App() {
               >Mark Scheme</button>
             </div>
           )}
+
+          <button className="btn-topbar" onClick={handleNew} title="Start a blank worksheet">
+            New Worksheet
+          </button>
 
           <button
             className={`btn-topbar${view === 'gallery' ? ' btn-topbar--active' : ''}`}

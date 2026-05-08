@@ -258,7 +258,6 @@ function PDFWorkedExample({ block }: { block: WorkedExampleBlock }) {
       <Text style={s.workedTitle}>{block.title || 'Worked example'}</Text>
       {block.steps.map((step, i) => (
         <View key={i} style={s.workedStep}>
-          <Text>{i + 1}. </Text>
           {htmlToPdf(step, {})}
         </View>
       ))}

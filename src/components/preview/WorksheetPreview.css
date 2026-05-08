@@ -58,7 +58,7 @@
 /* Rich text from Tiptap wraps content in <p>; reset margins, keep block flow */
 .pr-q-text p,
 .pr-information-content p,
-.pr-worked-steps li p,
+.pr-worked-step p,
 .pr-mc-option p,
 .pr-match-cell p,
 .pr-step-row p {
@@ -67,7 +67,7 @@
 }
 .pr-q-text p + p,
 .pr-information-content p + p,
-.pr-worked-steps li p + p,
+.pr-worked-step p + p,
 .pr-mc-option p + p,
 .pr-match-cell p + p,
 .pr-step-row p + p {
@@ -258,10 +258,12 @@
 
 .pr-worked-steps {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 0;
   font-size: 10.5pt;
+  list-style: none;
 }
-.pr-worked-steps li + li { margin-top: 4px; }
+.pr-worked-step { margin-bottom: 4px; }
+.pr-worked-step + .pr-worked-step { margin-top: 0; }
 
 /* ── Information ─────────────────────────────────────────── */
 .pr-information {
