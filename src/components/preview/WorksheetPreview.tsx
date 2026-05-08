@@ -94,7 +94,7 @@ function PreviewInstructions({ block }: { block: InstructionsBlock }) {
   )
 }
 
-function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) {
+function PreviewQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Block[]; num: number }) {
   const hasParts = block.parts.length > 0
   return (
     <div className="pr-question">
@@ -107,6 +107,7 @@ function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) 
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
       </div>
+      {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} />}
       {!hasParts && <AnswerLines count={block.lines} />}
       {hasParts && (
         <div className="pr-parts">
@@ -121,6 +122,7 @@ function PreviewQuestion({ block, num }: { block: QuestionBlock; num: number }) 
                   <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
                 )}
               </div>
+              {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} />}
               <AnswerLines count={part.lines} />
             </div>
           ))}
@@ -483,6 +485,13 @@ function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
   return <PreviewDataTable block={resolved} />
 }
 
+function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
+  const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
+  if (!found) return null
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] } } : found
+  return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
+}
+
 // ── Mark scheme variants ──────────────────────────────────────────────────────
 
 function MSAnswer({ html }: { html?: string }) {
@@ -493,7 +502,7 @@ function MSAnswer({ html }: { html?: string }) {
   )
 }
 
-function PreviewQuestionMS({ block, num }: { block: QuestionBlock; num: number }) {
+function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; blocks: Block[]; num: number }) {
   const hasParts = block.parts.length > 0
   return (
     <div className="pr-question">
@@ -506,7 +515,8 @@ function PreviewQuestionMS({ block, num }: { block: QuestionBlock; num: number }
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
       </div>
-      {hasParts && (
+      {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} markScheme />}
+      {hasParts ? (
         <div className="pr-parts">
           {block.parts.map(part => (
             <div key={part.id} className="pr-part">
@@ -519,11 +529,14 @@ function PreviewQuestionMS({ block, num }: { block: QuestionBlock; num: number }
                   <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
                 )}
               </div>
+              {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} markScheme />}
+              <MSAnswer html={part.markScheme} />
             </div>
           ))}
         </div>
+      ) : (
+        <MSAnswer html={block.markScheme} />
       )}
-      <MSAnswer html={block.markScheme} />
     </div>
   )
 }
@@ -633,7 +646,7 @@ function PreviewBlock({ block, blocks, mode }: { block: Block; blocks: Block[]; 
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   if (mode === 'markscheme') {
     switch (block.type) {
-      case 'question':        return <PreviewQuestionMS block={block} num={num} />
+      case 'question':        return <PreviewQuestionMS block={block} blocks={blocks} num={num} />
       case 'multiple_choice': return <PreviewMultipleChoiceMS block={block} num={num} />
       case 'cloze':           return <PreviewClozeMS block={block} num={num} />
       case 'match_them_up':   return <PreviewMatchThemUpMS block={block} num={num} />
@@ -644,7 +657,7 @@ function PreviewBlock({ block, blocks, mode }: { block: Block; blocks: Block[]; 
   switch (block.type) {
     case 'header':          return <PreviewHeader block={block} />
     case 'instructions':    return <PreviewInstructions block={block} />
-    case 'question':        return <PreviewQuestion block={block} num={num} />
+    case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} />
     case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PreviewWorkedExample block={block} />
     case 'information':     return <PreviewInformation block={block} />

@@ -25,6 +25,8 @@ export interface QuestionPart {
   stem: string
   marks: number
   lines: number
+  attachedDataId?: string
+  markScheme?: string
 }
 
 export interface QuestionBlock {
@@ -34,6 +36,7 @@ export interface QuestionBlock {
   marks: number
   lines: number
   parts: QuestionPart[]
+  attachedDataId?: string
   markScheme?: string
 }
 

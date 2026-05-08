@@ -1,14 +1,31 @@
-import type { QuestionBlock, QuestionPart } from '../../../types/worksheet'
+import type { QuestionBlock, QuestionPart, Block, DataBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row } from '../EditorPrimitives'
 import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: QuestionBlock
+  blocks: Block[]
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-export function QuestionEditor({ block, dispatch }: Props) {
+function DataPicker({
+  value, blocks, onChange,
+}: { value?: string; blocks: Block[]; onChange: (id: string | undefined) => void }) {
+  const dataBlocks = blocks.filter(b => b.type === 'data') as DataBlock[]
+  return (
+    <select value={value ?? ''} onChange={e => onChange(e.target.value || undefined)}>
+      <option value="">None</option>
+      {dataBlocks.map((b, i) => (
+        <option key={b.id} value={b.id}>
+          {b.heading || `Data block ${i + 1}`}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+export function QuestionEditor({ block, blocks, dispatch }: Props) {
   function update(updates: Partial<QuestionBlock>) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
@@ -30,6 +47,8 @@ export function QuestionEditor({ block, dispatch }: Props) {
     update({ parts: block.parts.filter((_, i) => i !== idx) })
   }
 
+  const hasParts = block.parts.length > 0
+
   return (
     <div className="block-fields">
       <Field label="Question stem">
@@ -37,10 +56,14 @@ export function QuestionEditor({ block, dispatch }: Props) {
           value={block.stem}
           onChange={stem => update({ stem })}
           placeholder="Question stem…"
-          
         />
       </Field>
-      {block.parts.length === 0 && (
+
+      <Field label="Attached graph">
+        <DataPicker value={block.attachedDataId} blocks={blocks} onChange={id => update({ attachedDataId: id })} />
+      </Field>
+
+      {!hasParts && (
         <Row>
           <Field label="Marks">
             <input type="number" min={0} value={block.marks} onChange={e => update({ marks: +e.target.value })} />
@@ -51,7 +74,7 @@ export function QuestionEditor({ block, dispatch }: Props) {
         </Row>
       )}
 
-      {block.parts.length > 0 && (
+      {hasParts && (
         <div className="q-parts">
           {block.parts.map((part, i) => (
             <div key={part.id} className="q-part">
@@ -64,8 +87,10 @@ export function QuestionEditor({ block, dispatch }: Props) {
                   value={part.stem}
                   onChange={stem => updatePart(i, { stem })}
                   placeholder="Sub-question stem…"
-                  
                 />
+              </Field>
+              <Field label="Attached graph">
+                <DataPicker value={part.attachedDataId} blocks={blocks} onChange={id => updatePart(i, { attachedDataId: id })} />
               </Field>
               <Row>
                 <Field label="Marks">
@@ -75,6 +100,14 @@ export function QuestionEditor({ block, dispatch }: Props) {
                   <input type="number" min={1} max={20} value={part.lines} onChange={e => updatePart(i, { lines: +e.target.value })} />
                 </Field>
               </Row>
+              <div className="ms-divider" />
+              <Field label="Mark scheme answer">
+                <RichTextEditor
+                  value={part.markScheme ?? ''}
+                  onChange={markScheme => updatePart(i, { markScheme })}
+                  placeholder="Model answer for this part…"
+                />
+              </Field>
             </div>
           ))}
         </div>
@@ -82,14 +115,18 @@ export function QuestionEditor({ block, dispatch }: Props) {
 
       <button type="button" className="ep-list-add" onClick={addPart}>+ Add sub-part</button>
 
-      <div className="ms-divider" />
-      <Field label="Mark scheme answer">
-        <RichTextEditor
-          value={block.markScheme ?? ''}
-          onChange={markScheme => update({ markScheme })}
-          placeholder="Model answer / marking points…"
-        />
-      </Field>
+      {!hasParts && (
+        <>
+          <div className="ms-divider" />
+          <Field label="Mark scheme answer">
+            <RichTextEditor
+              value={block.markScheme ?? ''}
+              onChange={markScheme => update({ markScheme })}
+              placeholder="Model answer / marking points…"
+            />
+          </Field>
+        </>
+      )}
     </div>
   )
 }

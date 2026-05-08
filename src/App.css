@@ -147,7 +147,7 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.btn-topbar:hover {
+.btn-topbar:hover, .btn-topbar--active {
   background: #2d2d44;
   color: #fff;
 }

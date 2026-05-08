@@ -23,7 +23,7 @@ export function BlockEditor({ block, blocks, dispatch }: Props) {
   switch (block.type) {
     case 'header':          return <HeaderEditor block={block} dispatch={dispatch} />
     case 'instructions':    return <InstructionsEditor block={block} dispatch={dispatch} />
-    case 'question':        return <QuestionEditor block={block} dispatch={dispatch} />
+    case 'question':        return <QuestionEditor block={block} blocks={blocks} dispatch={dispatch} />
     case 'multiple_choice': return <MultipleChoiceEditor block={block} dispatch={dispatch} />
     case 'worked_example':  return <WorkedExampleEditor block={block} dispatch={dispatch} />
     case 'information':     return <InformationEditor block={block} dispatch={dispatch} />

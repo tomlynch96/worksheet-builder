@@ -1,18 +1,22 @@
 import { useState, useRef } from 'react'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { useWorksheet } from './hooks/useWorksheet'
+import { useSavedWorksheets } from './hooks/useSavedWorksheets'
 import { Editor } from './components/editor/Editor'
 import { WorksheetPreview } from './components/preview/WorksheetPreview'
 import { WorksheetPDF } from './components/pdf/WorksheetPDF'
+import { Gallery } from './pages/Gallery'
 import { PRESETS } from './data/presets'
 import type { Worksheet } from './types/worksheet'
 import './App.css'
 
 export default function App() {
   const { worksheet, dispatch } = useWorksheet()
+  const { entries, save: saveToGallery, remove: removeFromGallery } = useSavedWorksheets()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showPresets, setShowPresets] = useState(false)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
+  const [view, setView] = useState<'editor' | 'gallery'>('editor')
   const openRef = useRef<HTMLInputElement>(null)
 
   function loadPreset(idx: number) {
@@ -32,6 +36,7 @@ export default function App() {
     a.download = `${(title as string).toLowerCase().replace(/\s+/g, '-') || 'worksheet'}.json`
     a.click()
     URL.revokeObjectURL(url)
+    saveToGallery(worksheet)
   }
 
   function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
@@ -51,79 +56,113 @@ export default function App() {
     e.target.value = ''
   }
 
+  function handleOpenFromGallery(w: Worksheet) {
+    dispatch({ type: 'LOAD_WORKSHEET', worksheet: w })
+    setSelectedId(null)
+    setView('editor')
+  }
+
   return (
     <div className="app">
       <header className="topbar">
         <span className="topbar-brand">Worksheet Builder</span>
 
         <div className="topbar-presets">
-          <button className="btn-presets" onClick={() => setShowPresets(v => !v)}>
-            Templates ▾
-          </button>
-          {showPresets && (
+          {view === 'editor' && (
             <>
-              <div className="presets-backdrop" onClick={() => setShowPresets(false)} />
-              <div className="presets-dropdown">
-                <p className="presets-hint">Load a template — replaces current content</p>
-                {PRESETS.map((p, i) => (
-                  <button key={i} className="preset-option" onClick={() => loadPreset(i)}>
-                    <span className="preset-label">{p.label}</span>
-                    <span className="preset-desc">{p.description}</span>
-                  </button>
-                ))}
-              </div>
+              <button className="btn-presets" onClick={() => setShowPresets(v => !v)}>
+                Templates ▾
+              </button>
+              {showPresets && (
+                <>
+                  <div className="presets-backdrop" onClick={() => setShowPresets(false)} />
+                  <div className="presets-dropdown">
+                    <p className="presets-hint">Load a template — replaces current content</p>
+                    {PRESETS.map((p, i) => (
+                      <button key={i} className="preset-option" onClick={() => loadPreset(i)}>
+                        <span className="preset-label">{p.label}</span>
+                        <span className="preset-desc">{p.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
 
         <div className="topbar-actions">
-          <div className="mode-toggle">
-            <button
-              className={`mode-toggle-btn${mode === 'worksheet' ? ' mode-toggle-btn--active' : ''}`}
-              onClick={() => setMode('worksheet')}
-            >Worksheet</button>
-            <button
-              className={`mode-toggle-btn${mode === 'markscheme' ? ' mode-toggle-btn--active' : ''}`}
-              onClick={() => setMode('markscheme')}
-            >Mark Scheme</button>
-          </div>
-          <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
-            Open
-          </button>
-          <button className="btn-topbar" onClick={handleSave} title="Save worksheet as JSON file">
-            Save
-          </button>
-          <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
-          <PDFDownloadLink
-            key={worksheet.blocks.map(b => b.id).join(',')}
-            document={<WorksheetPDF worksheet={worksheet} />}
-            fileName="worksheet.pdf"
-            className="btn-download"
+          {view === 'editor' && (
+            <div className="mode-toggle">
+              <button
+                className={`mode-toggle-btn${mode === 'worksheet' ? ' mode-toggle-btn--active' : ''}`}
+                onClick={() => setMode('worksheet')}
+              >Worksheet</button>
+              <button
+                className={`mode-toggle-btn${mode === 'markscheme' ? ' mode-toggle-btn--active' : ''}`}
+                onClick={() => setMode('markscheme')}
+              >Mark Scheme</button>
+            </div>
+          )}
+
+          <button
+            className={`btn-topbar${view === 'gallery' ? ' btn-topbar--active' : ''}`}
+            onClick={() => setView(v => v === 'gallery' ? 'editor' : 'gallery')}
           >
-            {({ loading }) => (loading ? 'Preparing PDF…' : 'Download PDF')}
-          </PDFDownloadLink>
+            Saved Worksheets
+          </button>
+
+          {view === 'editor' && (
+            <>
+              <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
+                Open
+              </button>
+              <button className="btn-topbar" onClick={handleSave} title="Save worksheet as JSON and add to gallery">
+                Save
+              </button>
+              <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
+              <PDFDownloadLink
+                key={worksheet.blocks.map(b => b.id).join(',')}
+                document={<WorksheetPDF worksheet={worksheet} />}
+                fileName="worksheet.pdf"
+                className="btn-download"
+              >
+                {({ loading }) => (loading ? 'Preparing PDF…' : 'Download PDF')}
+              </PDFDownloadLink>
+            </>
+          )}
         </div>
       </header>
 
-      <div className="workspace">
-        <aside className="panel-editor">
-          <Editor
-            worksheet={worksheet}
-            dispatch={dispatch}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
+      {view === 'gallery' ? (
+        <div className="workspace">
+          <Gallery
+            entries={entries}
+            onOpen={handleOpenFromGallery}
+            onDelete={removeFromGallery}
           />
-        </aside>
+        </div>
+      ) : (
+        <div className="workspace">
+          <aside className="panel-editor">
+            <Editor
+              worksheet={worksheet}
+              dispatch={dispatch}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </aside>
 
-        <main className="panel-preview">
-          <WorksheetPreview
-            worksheet={worksheet}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            mode={mode}
-          />
-        </main>
-      </div>
+          <main className="panel-preview">
+            <WorksheetPreview
+              worksheet={worksheet}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              mode={mode}
+            />
+          </main>
+        </div>
+      )}
     </div>
   )
 }
