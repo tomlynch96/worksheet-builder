@@ -163,11 +163,11 @@ function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
   return (
     <div className="pr-worked-example">
       <div className="pr-worked-title">{block.title || 'Worked example'}</div>
-      <ol className="pr-worked-steps">
+      <div className="pr-worked-steps">
         {block.steps.map((step, i) => (
-          <li key={i}>{step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}</li>
+          <div key={i} className="pr-worked-step">{step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}</div>
         ))}
-      </ol>
+      </div>
     </div>
   )
 }
