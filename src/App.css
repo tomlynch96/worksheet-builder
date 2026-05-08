@@ -152,6 +152,15 @@
   color: #fff;
 }
 
+.btn-topbar--ai {
+  border-color: #6d28d9;
+  color: #c4b5fd;
+}
+.btn-topbar--ai:hover {
+  background: #2d1d4e;
+  color: #ddd6fe;
+}
+
 .btn-download {
   display: inline-flex;
   align-items: center;

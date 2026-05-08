@@ -7,6 +7,7 @@ import { WorksheetPreview } from './components/preview/WorksheetPreview'
 import { WorksheetPDF } from './components/pdf/WorksheetPDF'
 import { Gallery } from './pages/Gallery'
 import { PRESETS } from './data/presets'
+import { buildAIPrompt } from './utils/aiPrompt'
 import type { Worksheet } from './types/worksheet'
 import './App.css'
 
@@ -16,6 +17,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const [view, setView] = useState<'editor' | 'gallery'>('editor')
+  const [promptCopied, setPromptCopied] = useState(false)
   const openRef = useRef<HTMLInputElement>(null)
 
   function loadPreset(idx: number) {
@@ -80,6 +82,14 @@ export default function App() {
     setView('editor')
   }
 
+  function handleCopyPrompt() {
+    const prompt = buildAIPrompt(worksheet)
+    navigator.clipboard.writeText(prompt).then(() => {
+      setPromptCopied(true)
+      setTimeout(() => setPromptCopied(false), 2000)
+    })
+  }
+
   return (
     <div className="app">
       <header className="topbar">
@@ -119,6 +129,13 @@ export default function App() {
                 Save
               </button>
               <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
+              <button
+                className="btn-topbar btn-topbar--ai"
+                onClick={handleCopyPrompt}
+                title="Copy an AI prompt to generate a worksheet JSON you can load here"
+              >
+                {promptCopied ? 'Copied!' : 'Copy AI Prompt'}
+              </button>
               <PDFDownloadLink
                 key={worksheet.blocks.map(b => b.id).join(',')}
                 document={<WorksheetPDF worksheet={worksheet} />}

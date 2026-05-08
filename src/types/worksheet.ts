@@ -11,6 +11,8 @@ export interface HeaderBlock {
   showName: boolean
   showDate: boolean
   showClass: boolean
+  qualification?: string
+  specPoint?: string
 }
 
 export interface InstructionsBlock {
