@@ -687,9 +687,27 @@ interface WorksheetPreviewProps {
   mode?: 'worksheet' | 'markscheme'
 }
 
+function getAttachedBlockIds(blocks: Block[]): Set<string> {
+  const ids = new Set<string>()
+  for (const b of blocks) {
+    if (b.type === 'question') {
+      if (b.attachedDataId) ids.add(b.attachedDataId)
+      if (b.attachedFigureId) ids.add(b.attachedFigureId)
+      for (const p of b.parts) {
+        if (p.attachedDataId) ids.add(p.attachedDataId)
+        if (p.attachedFigureId) ids.add(p.attachedFigureId)
+      }
+    }
+  }
+  return ids
+}
+
 export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'worksheet' }: WorksheetPreviewProps) {
   const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
   const containerRef = useRef<HTMLDivElement | null>(null)
+
+  const attachedIds = getAttachedBlockIds(worksheet.blocks)
+  const renderableBlocks = worksheet.blocks.filter(b => !attachedIds.has(b.id))
 
   // After every render, measure each block's consumed space (including margin-bottom)
   // using offsetTop distances between siblings, which correctly capture collapsed margins.
@@ -698,7 +716,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
     if (!container) return
     const children = Array.from(container.children) as HTMLElement[]
     const next: Record<string, number> = {}
-    worksheet.blocks.forEach((block, i) => {
+    renderableBlocks.forEach((block, i) => {
       const el = children[i]
       if (!el) return
       if (i < children.length - 1) {
@@ -710,13 +728,13 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
       }
     })
     setMeasuredHeights(prev => {
-      const unchanged = worksheet.blocks.every(b => prev[b.id] === next[b.id])
+      const unchanged = renderableBlocks.every(b => prev[b.id] === next[b.id])
       return unchanged ? prev : next
     })
   })
 
   const heightOf = (block: Block) => measuredHeights[block.id] ?? estimateBlockHeight(block)
-  const pages = splitIntoPages(worksheet.blocks, heightOf)
+  const pages = splitIntoPages(renderableBlocks, heightOf)
 
   return (
     <>
@@ -738,7 +756,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
           color: '#000',
         }}
       >
-        {worksheet.blocks.map(block => (
+        {renderableBlocks.map(block => (
           <div key={block.id}>
             <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} />
           </div>

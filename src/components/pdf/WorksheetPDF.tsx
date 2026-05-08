@@ -697,11 +697,27 @@ function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
   )
 }
 
+function getPDFRenderableBlocks(worksheet: Worksheet) {
+  const attachedIds = new Set<string>()
+  for (const b of worksheet.blocks) {
+    if (b.type === 'question') {
+      if (b.attachedDataId) attachedIds.add(b.attachedDataId)
+      if (b.attachedFigureId) attachedIds.add(b.attachedFigureId)
+      for (const p of b.parts) {
+        if (p.attachedDataId) attachedIds.add(p.attachedDataId)
+        if (p.attachedFigureId) attachedIds.add(p.attachedFigureId)
+      }
+    }
+  }
+  return worksheet.blocks.filter(b => !attachedIds.has(b.id))
+}
+
 export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
+  const renderableBlocks = getPDFRenderableBlocks(worksheet)
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        {worksheet.blocks.map(block => (
+        {renderableBlocks.map(block => (
           <View key={block.id} wrap={false}>
             <PDFBlock block={block} blocks={worksheet.blocks} />
           </View>

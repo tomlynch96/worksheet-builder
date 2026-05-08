@@ -3,6 +3,8 @@ import type { Worksheet } from '../types/worksheet'
 function id() { return crypto.randomUUID() }
 
 const _rateTableId = id()
+const _springTableId = id()
+const _springGraphId = id()
 
 export interface Preset {
   label: string
@@ -433,6 +435,141 @@ export const PRESETS: Preset[] = [
             'Record the volume of gas collected every 10 seconds until no more gas is produced.',
             'Repeat the experiment at four other temperatures, keeping all other variables the same.',
             'Set up a gas syringe connected to a conical flask containing dilute hydrochloric acid.',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    label: 'Hooke\'s Law Investigation',
+    description: 'AQA Higher — graph-in-question: students plot on empty axes, mark scheme reveals plotted points + best fit',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Investigating Extension of a Spring',
+          topic: 'Physics — Forces',
+          examBoard: 'AQA' as const, tier: 'higher' as const,
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions.',
+            'Show your working where required.',
+            'The marks for each question are shown in brackets.',
+          ],
+        },
+        {
+          id: id(), type: 'information' as const,
+          heading: 'Key equation',
+          content: '<p><strong>Hooke\'s Law: F = k e</strong></p><p>F = force applied (N) &nbsp; k = spring constant (N/m) &nbsp; e = extension (m)</p><p>This relationship holds only up to the <strong>elastic limit</strong>. Beyond this point the spring is permanently deformed and no longer obeys Hooke\'s Law.</p>',
+        },
+        {
+          id: _springTableId,
+          type: 'data' as const,
+          heading: 'Table 1: Results from a spring extension experiment',
+          columns: [
+            { label: 'Force applied', unit: 'N' },
+            { label: 'Extension', unit: 'cm' },
+          ],
+          rows: [
+            ['0', '0.0'],
+            ['2', '1.0'],
+            ['4', '2.0'],
+            ['6', '3.0'],
+            ['8', '4.0'],
+            ['10', '5.0'],
+          ],
+          display: 'table' as const,
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [], fitType: 'none' as const, linkedDataId: null,
+          },
+        },
+        // Graph block — attached to question part (a); not rendered standalone
+        {
+          id: _springGraphId,
+          type: 'data' as const,
+          heading: '',
+          columns: [
+            { label: 'Force applied', unit: 'N' },
+            { label: 'Extension', unit: 'cm' },
+          ],
+          rows: [
+            ['0', '0.0'],
+            ['2', '1.0'],
+            ['4', '2.0'],
+            ['6', '3.0'],
+            ['8', '4.0'],
+            ['10', '5.0'],
+          ],
+          display: 'graph' as const,
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [0, 1, 2, 3, 4, 5],
+            fitType: 'linear' as const,
+            linkedDataId: null,
+          },
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>A student investigated how the extension of a spring depends on the applied force. The results are recorded in Table 1.</p>',
+          marks: 9, lines: 0,
+          parts: [
+            {
+              id: id(), label: 'a',
+              stem: '<p>Plot the data from Table 1 on the axes below. Draw a line of best fit through your plotted points.</p>',
+              marks: 4, lines: 0,
+              attachedDataId: _springGraphId,
+              markScheme: '<p>Award <strong>1 mark</strong> for each of:</p><p>• Axes correctly labelled with quantity and unit <strong>[1]</strong></p><p>• All five non-zero points plotted accurately (within half a small square) <strong>[2]</strong> — lose 1 mark for each incorrect point (min 0)</p><p>• Straight line of best fit drawn through the origin and the plotted points <strong>[1]</strong></p>',
+            },
+            {
+              id: id(), label: 'b',
+              stem: '<p>Use your graph to calculate the spring constant <em>k</em> of the spring. Give your answer in N/m.</p>',
+              marks: 3, lines: 4,
+              markScheme: '<p>Correct reading of gradient from graph, e.g. rise ÷ run = 10 ÷ 5 = 2 N/cm <strong>[1]</strong></p><p>Correct conversion: 2 N/cm = 200 N/m <strong>[1]</strong></p><p>k = <strong>200 N/m</strong> <strong>[1]</strong></p><p><em>Accept values in range 190–210 N/m if read from candidate\'s own line.</em></p>',
+            },
+            {
+              id: id(), label: 'c',
+              stem: '<p>Use your graph to predict the extension when a force of 12 N is applied. State one assumption you must make.</p>',
+              marks: 2, lines: 3,
+              markScheme: '<p>Extension = 6.0 cm (allow 5.8–6.2 cm) by extrapolating line of best fit <strong>[1]</strong></p><p>Assumption: the spring continues to obey Hooke\'s Law / has not reached its elastic limit / the relationship remains linear <strong>[1]</strong></p>',
+            },
+          ],
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Describe what happens to a spring when it is stretched beyond its elastic limit.</p>',
+          marks: 2, lines: 4, parts: [],
+          markScheme: '<p>Award <strong>1 mark</strong> for each of:</p><p>• The spring is permanently deformed / does not return to its original length when the force is removed <strong>[1]</strong></p><p>• The spring no longer obeys Hooke\'s Law / the extension is no longer proportional to the force <strong>[1]</strong></p>',
+        },
+        {
+          id: id(), type: 'multiple_choice' as const,
+          stem: '<p>A spring extends by 4 cm when a force of 8 N is applied. What is the spring constant in N/m?</p>',
+          marks: 1,
+          options: [
+            '<p>0.5 N/m</p>',
+            '<p>2 N/m</p>',
+            '<p>200 N/m</p>',
+            '<p>320 N/m</p>',
+          ],
+          correctIndex: 2,
+          markScheme: '<p><strong>C — 200 N/m</strong></p><p>k = F ÷ e = 8 ÷ 0.04 m = <strong>200 N/m</strong></p><p>Common error: using cm instead of m → k = 8 ÷ 4 = 2 (wrong unit). Always convert extension to metres before calculating k in N/m.</p>',
+        },
+        {
+          id: id(), type: 'worked_example' as const,
+          title: 'Worked example — calculating spring constant from a graph',
+          steps: [
+            '<p>Identify two widely-spaced points on the line of best fit (not data points).</p>',
+            '<p>Calculate the gradient: gradient = rise ÷ run = ΔF ÷ Δe</p>',
+            '<p>Example: rise = 10 − 0 = 10 N, run = 5 − 0 = 5 cm = 0.05 m</p>',
+            '<p>k = 10 ÷ 0.05 = <strong>200 N/m</strong></p>',
           ],
         },
       ],
