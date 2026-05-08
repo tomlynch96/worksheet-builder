@@ -427,6 +427,10 @@
 .pr-data-graph { margin-bottom: 12px; }
 .pr-graph-svg { display: block; overflow: visible; margin: 0 auto; }
 
+.pr-inline-data {
+  margin: 8px 0 8px 26px;
+}
+
 /* ── Mark scheme ─────────────────────────────────────────── */
 .pr-ms-page-banner {
   position: absolute;

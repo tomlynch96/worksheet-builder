@@ -3,6 +3,8 @@ import type { Worksheet } from '../types/worksheet'
 function id() { return crypto.randomUUID() }
 
 const _rateTableId = id()
+const _springTableId = id()
+const _springGraphId = id()
 
 export interface Preset {
   label: string
@@ -48,10 +50,9 @@ export const PRESETS: Preset[] = [
           stem: '<p>A radio wave has a frequency of 100 MHz. Calculate its wavelength. Use the equation <em>v = fλ</em>.</p>',
           marks: 3, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Write down the values you know.</p>', marks: 1, lines: 2 },
-            { id: id(), label: 'b', stem: '<p>Calculate the wavelength. Give your answer in metres.</p>', marks: 2, lines: 3 },
+            { id: id(), label: 'a', stem: '<p>Write down the values you know.</p>', marks: 1, lines: 2, markScheme: '<p>v = 3 × 10<sup>8</sup> m/s; f = 100 MHz = 1 × 10<sup>8</sup> Hz <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the wavelength. Give your answer in metres.</p>', marks: 2, lines: 3, markScheme: '<p>Rearrange: λ = v ÷ f <strong>[1]</strong></p><p>λ = 3 × 10<sup>8</sup> ÷ 1 × 10<sup>8</sup> = <strong>3 m</strong> <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> v = 3 × 10<sup>8</sup> m/s; f = 100 MHz = 1 × 10<sup>8</sup> Hz <strong>[1]</strong></p><p><strong>(b)</strong> Rearrange: λ = v ÷ f <strong>[1]</strong></p><p>λ = 3 × 10<sup>8</sup> ÷ 1 × 10<sup>8</sup> = <strong>3 m</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'multiple_choice',
@@ -119,11 +120,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>An atom of calcium has the symbol <sup>40</sup>Ca. State the number of protons, neutrons, and electrons.</p>',
           marks: 3, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Number of protons</p>', marks: 1, lines: 2 },
-            { id: id(), label: 'b', stem: '<p>Number of neutrons</p>', marks: 1, lines: 2 },
-            { id: id(), label: 'c', stem: '<p>Number of electrons</p>', marks: 1, lines: 2 },
+            { id: id(), label: 'a', stem: '<p>Number of protons</p>', marks: 1, lines: 2, markScheme: '<p>20 protons <strong>[1]</strong> — equal to the atomic number of calcium</p>' },
+            { id: id(), label: 'b', stem: '<p>Number of neutrons</p>', marks: 1, lines: 2, markScheme: '<p>20 neutrons <strong>[1]</strong> — mass number (40) − atomic number (20) = 20</p>' },
+            { id: id(), label: 'c', stem: '<p>Number of electrons</p>', marks: 1, lines: 2, markScheme: '<p>20 electrons <strong>[1]</strong> — equal to the number of protons in a neutral atom</p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> 20 protons <strong>[1]</strong> — equal to the atomic number of calcium</p><p><strong>(b)</strong> 20 neutrons <strong>[1]</strong> — mass number (40) − atomic number (20) = 20</p><p><strong>(c)</strong> 20 electrons <strong>[1]</strong> — equal to the number of protons in a neutral atom</p>',
         },
         {
           id: id(), type: 'order_steps',
@@ -176,11 +176,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>A car of mass 1200 kg accelerates from rest to 20 m/s in 8 seconds.</p>',
           marks: 5, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Calculate the acceleration of the car.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'b', stem: '<p>Calculate the resultant force acting on the car.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'c', stem: '<p>State one assumption you made in part (b).</p>', marks: 1, lines: 2 },
+            { id: id(), label: 'a', stem: '<p>Calculate the acceleration of the car.</p>', marks: 2, lines: 3, markScheme: '<p>a = (v − u) ÷ t <strong>[1]</strong></p><p>a = (20 − 0) ÷ 8 = <strong>2.5 m/s²</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the resultant force acting on the car.</p>', marks: 2, lines: 3, markScheme: '<p>F = ma = 1200 × 2.5 <strong>[1]</strong></p><p>F = <strong>3000 N</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'c', stem: '<p>State one assumption you made in part (b).</p>', marks: 1, lines: 2, markScheme: '<p>Any one from: no friction / no air resistance / the acceleration is uniform / road is flat <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> a = (v − u) ÷ t <strong>[1]</strong></p><p>a = (20 − 0) ÷ 8 = <strong>2.5 m/s²</strong> <strong>[1]</strong></p><p><strong>(b)</strong> F = ma = 1200 × 2.5 <strong>[1]</strong></p><p>F = <strong>3000 N</strong> <strong>[1]</strong></p><p><strong>(c)</strong> Any one from: no friction / no air resistance / the acceleration is uniform / road is flat <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'multiple_choice',
@@ -283,11 +282,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>Two resistors are connected in series. Resistor A has a resistance of 4 Ω and resistor B has a resistance of 6 Ω. The supply voltage is 20 V.</p>',
           marks: 4, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Calculate the total resistance of the circuit.</p>', marks: 1, lines: 0 },
-            { id: id(), label: 'b', stem: '<p>Calculate the current flowing through the circuit.</p>', marks: 2, lines: 0 },
-            { id: id(), label: 'c', stem: '<p>Calculate the voltage across resistor A.</p>', marks: 1, lines: 0 },
+            { id: id(), label: 'a', stem: '<p>Calculate the total resistance of the circuit.</p>', marks: 1, lines: 0, markScheme: '<p>R<sub>total</sub> = 4 + 6 = <strong>10 Ω</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the current flowing through the circuit.</p>', marks: 2, lines: 0, markScheme: '<p>I = V ÷ R = 20 ÷ 10 <strong>[1]</strong> = <strong>2 A</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'c', stem: '<p>Calculate the voltage across resistor A.</p>', marks: 1, lines: 0, markScheme: '<p>V<sub>A</sub> = I × R<sub>A</sub> = 2 × 4 = <strong>8 V</strong> <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> R<sub>total</sub> = 4 + 6 = <strong>10 Ω</strong> <strong>[1]</strong></p><p><strong>(b)</strong> I = V ÷ R = 20 ÷ 10 <strong>[1]</strong> = <strong>2 A</strong> <strong>[1]</strong></p><p><strong>(c)</strong> V<sub>A</sub> = I × R<sub>A</sub> = 2 × 4 = <strong>8 V</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
@@ -300,10 +298,9 @@ export const PRESETS: Preset[] = [
           stem: '<p>At 20 °C, a filament lamp has a resistance of 5 Ω and draws a current of 0.4 A. When switched on fully, the resistance rises to 50 Ω.</p>',
           marks: 4, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Calculate the voltage across the lamp at 20 °C.</p>', marks: 2, lines: 0 },
-            { id: id(), label: 'b', stem: '<p>Calculate the current through the lamp at full operating resistance, assuming the same voltage.</p>', marks: 2, lines: 0 },
+            { id: id(), label: 'a', stem: '<p>Calculate the voltage across the lamp at 20 °C.</p>', marks: 2, lines: 0, markScheme: '<p>V = I × R = 0.4 × 5 <strong>[1]</strong> = <strong>2 V</strong> <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the current through the lamp at full operating resistance, assuming the same voltage.</p>', marks: 2, lines: 0, markScheme: '<p>I = V ÷ R = 2 ÷ 50 <strong>[1]</strong> = <strong>0.04 A</strong> <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> V = I × R = 0.4 × 5 <strong>[1]</strong> = <strong>2 V</strong> <strong>[1]</strong></p><p><strong>(b)</strong> I = V ÷ R = 2 ÷ 50 <strong>[1]</strong> = <strong>0.04 A</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
@@ -414,11 +411,10 @@ export const PRESETS: Preset[] = [
           stem: '<p>Use Table 1 and Fig. 1 to answer the following questions.</p>',
           marks: 7, lines: 0,
           parts: [
-            { id: id(), label: 'a', stem: '<p>Describe the relationship between temperature and the time taken to collect 50 cm³ of gas.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3 },
-            { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5 },
+            { id: id(), label: 'a', stem: '<p>Describe the relationship between temperature and the time taken to collect 50 cm³ of gas.</p>', marks: 2, lines: 3, markScheme: '<p>As temperature increases, the time taken decreases <strong>[1]</strong>; the relationship is inversely proportional / the time halves for every 10 °C rise in temperature <strong>[1]</strong></p>' },
+            { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3, markScheme: '<p>Rate = 50 ÷ 60 <strong>[1]</strong> = <strong>0.83 cm³/s</strong> (allow 0.8) <strong>[1]</strong></p>' },
+            { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5, markScheme: '<p>Higher temperature gives particles more kinetic energy <strong>[1]</strong>; more particles have energy greater than or equal to the activation energy <strong>[1]</strong>; so a greater proportion of collisions are successful per unit time, increasing the rate of reaction <strong>[1]</strong></p>' },
           ],
-          markScheme: '<p><strong>(a)</strong> As temperature increases, the time taken decreases <strong>[1]</strong>; the relationship is inversely proportional / the time halves for every 10 °C rise in temperature <strong>[1]</strong></p><p><strong>(b)</strong> Rate = 50 ÷ 60 <strong>[1]</strong> = <strong>0.83 cm³/s</strong> (allow 0.8) <strong>[1]</strong></p><p><strong>(c)</strong> Higher temperature gives particles more kinetic energy <strong>[1]</strong>; more particles have energy greater than or equal to the activation energy <strong>[1]</strong>; so a greater proportion of collisions are successful per unit time, increasing the rate of reaction <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'match_them_up' as const,
@@ -439,6 +435,141 @@ export const PRESETS: Preset[] = [
             'Record the volume of gas collected every 10 seconds until no more gas is produced.',
             'Repeat the experiment at four other temperatures, keeping all other variables the same.',
             'Set up a gas syringe connected to a conical flask containing dilute hydrochloric acid.',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    label: 'Hooke\'s Law Investigation',
+    description: 'AQA Higher — graph-in-question: students plot on empty axes, mark scheme reveals plotted points + best fit',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Investigating Extension of a Spring',
+          topic: 'Physics — Forces',
+          examBoard: 'AQA' as const, tier: 'higher' as const,
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions.',
+            'Show your working where required.',
+            'The marks for each question are shown in brackets.',
+          ],
+        },
+        {
+          id: id(), type: 'information' as const,
+          heading: 'Key equation',
+          content: '<p><strong>Hooke\'s Law: F = k e</strong></p><p>F = force applied (N) &nbsp; k = spring constant (N/m) &nbsp; e = extension (m)</p><p>This relationship holds only up to the <strong>elastic limit</strong>. Beyond this point the spring is permanently deformed and no longer obeys Hooke\'s Law.</p>',
+        },
+        {
+          id: _springTableId,
+          type: 'data' as const,
+          heading: 'Table 1: Results from a spring extension experiment',
+          columns: [
+            { label: 'Force applied', unit: 'N' },
+            { label: 'Extension', unit: 'cm' },
+          ],
+          rows: [
+            ['0', '0.0'],
+            ['2', '1.0'],
+            ['4', '2.0'],
+            ['6', '3.0'],
+            ['8', '4.0'],
+            ['10', '5.0'],
+          ],
+          display: 'table' as const,
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [], fitType: 'none' as const, linkedDataId: null,
+          },
+        },
+        // Graph block — attached to question part (a); not rendered standalone
+        {
+          id: _springGraphId,
+          type: 'data' as const,
+          heading: '',
+          columns: [
+            { label: 'Force applied', unit: 'N' },
+            { label: 'Extension', unit: 'cm' },
+          ],
+          rows: [
+            ['0', '0.0'],
+            ['2', '1.0'],
+            ['4', '2.0'],
+            ['6', '3.0'],
+            ['8', '4.0'],
+            ['10', '5.0'],
+          ],
+          display: 'graph' as const,
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [0, 1, 2, 3, 4, 5],
+            fitType: 'linear' as const,
+            linkedDataId: null,
+          },
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>A student investigated how the extension of a spring depends on the applied force. The results are recorded in Table 1.</p>',
+          marks: 9, lines: 0,
+          parts: [
+            {
+              id: id(), label: 'a',
+              stem: '<p>Plot the data from Table 1 on the axes below. Draw a line of best fit through your plotted points.</p>',
+              marks: 4, lines: 0,
+              attachedDataId: _springGraphId,
+              markScheme: '<p>Award <strong>1 mark</strong> for each of:</p><p>• Axes correctly labelled with quantity and unit <strong>[1]</strong></p><p>• All five non-zero points plotted accurately (within half a small square) <strong>[2]</strong> — lose 1 mark for each incorrect point (min 0)</p><p>• Straight line of best fit drawn through the origin and the plotted points <strong>[1]</strong></p>',
+            },
+            {
+              id: id(), label: 'b',
+              stem: '<p>Use your graph to calculate the spring constant <em>k</em> of the spring. Give your answer in N/m.</p>',
+              marks: 3, lines: 4,
+              markScheme: '<p>Correct reading of gradient from graph, e.g. rise ÷ run = 10 ÷ 5 = 2 N/cm <strong>[1]</strong></p><p>Correct conversion: 2 N/cm = 200 N/m <strong>[1]</strong></p><p>k = <strong>200 N/m</strong> <strong>[1]</strong></p><p><em>Accept values in range 190–210 N/m if read from candidate\'s own line.</em></p>',
+            },
+            {
+              id: id(), label: 'c',
+              stem: '<p>Use your graph to predict the extension when a force of 12 N is applied. State one assumption you must make.</p>',
+              marks: 2, lines: 3,
+              markScheme: '<p>Extension = 6.0 cm (allow 5.8–6.2 cm) by extrapolating line of best fit <strong>[1]</strong></p><p>Assumption: the spring continues to obey Hooke\'s Law / has not reached its elastic limit / the relationship remains linear <strong>[1]</strong></p>',
+            },
+          ],
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Describe what happens to a spring when it is stretched beyond its elastic limit.</p>',
+          marks: 2, lines: 4, parts: [],
+          markScheme: '<p>Award <strong>1 mark</strong> for each of:</p><p>• The spring is permanently deformed / does not return to its original length when the force is removed <strong>[1]</strong></p><p>• The spring no longer obeys Hooke\'s Law / the extension is no longer proportional to the force <strong>[1]</strong></p>',
+        },
+        {
+          id: id(), type: 'multiple_choice' as const,
+          stem: '<p>A spring extends by 4 cm when a force of 8 N is applied. What is the spring constant in N/m?</p>',
+          marks: 1,
+          options: [
+            '<p>0.5 N/m</p>',
+            '<p>2 N/m</p>',
+            '<p>200 N/m</p>',
+            '<p>320 N/m</p>',
+          ],
+          correctIndex: 2,
+          markScheme: '<p><strong>C — 200 N/m</strong></p><p>k = F ÷ e = 8 ÷ 0.04 m = <strong>200 N/m</strong></p><p>Common error: using cm instead of m → k = 8 ÷ 4 = 2 (wrong unit). Always convert extension to metres before calculating k in N/m.</p>',
+        },
+        {
+          id: id(), type: 'worked_example' as const,
+          title: 'Worked example — calculating spring constant from a graph',
+          steps: [
+            '<p>Identify two widely-spaced points on the line of best fit (not data points).</p>',
+            '<p>Calculate the gradient: gradient = rise ÷ run = ΔF ÷ Δe</p>',
+            '<p>Example: rise = 10 − 0 = 10 N, run = 5 − 0 = 5 cm = 0.05 m</p>',
+            '<p>k = 10 ÷ 0.05 = <strong>200 N/m</strong></p>',
           ],
         },
       ],

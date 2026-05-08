@@ -1,14 +1,110 @@
-import type { QuestionBlock, QuestionPart } from '../../../types/worksheet'
+import { useState } from 'react'
+import type { QuestionBlock, QuestionPart, Block, DataBlock, FigureBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row } from '../EditorPrimitives'
 import { RichTextEditor } from '../RichTextEditor'
 
 interface Props {
   block: QuestionBlock
+  blocks: Block[]
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-export function QuestionEditor({ block, dispatch }: Props) {
+function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph: () => void; onAddFigure: () => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="q-attach-add">
+      {open && <div className="q-attach-backdrop" onClick={() => setOpen(false)} />}
+      <button type="button" className="q-attach-btn" onClick={() => setOpen(v => !v)} title="Attach graph or figure">+</button>
+      {open && (
+        <div className="q-attach-menu">
+          <button type="button" onClick={() => { onAddGraph(); setOpen(false) }}>Graph / data table</button>
+          <button type="button" onClick={() => { onAddFigure(); setOpen(false) }}>Figure / image</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AttachChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="q-attach-chip">
+      {label}
+      <button type="button" className="q-attach-chip-remove" onClick={onRemove} title="Remove attachment">×</button>
+    </span>
+  )
+}
+
+function Attachments({
+  dataId, figureId, blocks, afterId, dispatch,
+  onChangeDataId, onChangeFigureId,
+}: {
+  dataId?: string
+  figureId?: string
+  blocks: Block[]
+  afterId: string
+  dispatch: React.Dispatch<WorksheetAction>
+  onChangeDataId: (id: string | undefined) => void
+  onChangeFigureId: (id: string | undefined) => void
+}) {
+  const dataBlock = dataId ? blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined : undefined
+  const figBlock = figureId ? blocks.find(b => b.id === figureId && b.type === 'figure') as FigureBlock | undefined : undefined
+
+  function addGraph() {
+    const newBlock: DataBlock = {
+      id: crypto.randomUUID(),
+      type: 'data',
+      heading: '',
+      columns: [
+        { label: 'x', unit: '' },
+        { label: 'y', unit: '' },
+      ],
+      rows: [['', ''], ['', ''], ['', ''], ['', ''], ['', '']],
+      display: 'graph',
+      graph: {
+        xCol: 0, yCol: 1,
+        showXLabel: true, showYLabel: true,
+        showXScale: true, showYScale: true,
+        omitRows: [0, 1, 2, 3, 4],
+        fitType: 'none',
+        linkedDataId: null,
+      },
+    }
+    dispatch({ type: 'ADD_BLOCK', block: newBlock, afterId })
+    onChangeDataId(newBlock.id)
+  }
+
+  function addFigure() {
+    const newBlock: FigureBlock = {
+      id: crypto.randomUUID(),
+      type: 'figure',
+      caption: '',
+      size: 'medium',
+    }
+    dispatch({ type: 'ADD_BLOCK', block: newBlock, afterId })
+    onChangeFigureId(newBlock.id)
+  }
+
+  return (
+    <div className="q-attachments">
+      {dataBlock && (
+        <AttachChip
+          label={`Graph: ${dataBlock.heading || 'data block'}`}
+          onRemove={() => onChangeDataId(undefined)}
+        />
+      )}
+      {figBlock && (
+        <AttachChip
+          label={`Figure: ${figBlock.caption || 'image'}`}
+          onRemove={() => onChangeFigureId(undefined)}
+        />
+      )}
+      <AttachMenu onAddGraph={addGraph} onAddFigure={addFigure} />
+    </div>
+  )
+}
+
+export function QuestionEditor({ block, blocks, dispatch }: Props) {
   function update(updates: Partial<QuestionBlock>) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
@@ -30,6 +126,8 @@ export function QuestionEditor({ block, dispatch }: Props) {
     update({ parts: block.parts.filter((_, i) => i !== idx) })
   }
 
+  const hasParts = block.parts.length > 0
+
   return (
     <div className="block-fields">
       <Field label="Question stem">
@@ -37,10 +135,20 @@ export function QuestionEditor({ block, dispatch }: Props) {
           value={block.stem}
           onChange={stem => update({ stem })}
           placeholder="Question stem…"
-          
         />
       </Field>
-      {block.parts.length === 0 && (
+
+      <Attachments
+        dataId={block.attachedDataId}
+        figureId={block.attachedFigureId}
+        blocks={blocks}
+        afterId={block.id}
+        dispatch={dispatch}
+        onChangeDataId={id => update({ attachedDataId: id })}
+        onChangeFigureId={id => update({ attachedFigureId: id })}
+      />
+
+      {!hasParts && (
         <Row>
           <Field label="Marks">
             <input type="number" min={0} value={block.marks} onChange={e => update({ marks: +e.target.value })} />
@@ -51,7 +159,7 @@ export function QuestionEditor({ block, dispatch }: Props) {
         </Row>
       )}
 
-      {block.parts.length > 0 && (
+      {hasParts && (
         <div className="q-parts">
           {block.parts.map((part, i) => (
             <div key={part.id} className="q-part">
@@ -64,9 +172,17 @@ export function QuestionEditor({ block, dispatch }: Props) {
                   value={part.stem}
                   onChange={stem => updatePart(i, { stem })}
                   placeholder="Sub-question stem…"
-                  
                 />
               </Field>
+              <Attachments
+                dataId={part.attachedDataId}
+                figureId={part.attachedFigureId}
+                blocks={blocks}
+                afterId={block.id}
+                dispatch={dispatch}
+                onChangeDataId={id => updatePart(i, { attachedDataId: id })}
+                onChangeFigureId={id => updatePart(i, { attachedFigureId: id })}
+              />
               <Row>
                 <Field label="Marks">
                   <input type="number" min={0} value={part.marks} onChange={e => updatePart(i, { marks: +e.target.value })} />
@@ -75,6 +191,14 @@ export function QuestionEditor({ block, dispatch }: Props) {
                   <input type="number" min={1} max={20} value={part.lines} onChange={e => updatePart(i, { lines: +e.target.value })} />
                 </Field>
               </Row>
+              <div className="ms-divider" />
+              <Field label="Mark scheme answer">
+                <RichTextEditor
+                  value={part.markScheme ?? ''}
+                  onChange={markScheme => updatePart(i, { markScheme })}
+                  placeholder="Model answer for this part…"
+                />
+              </Field>
             </div>
           ))}
         </div>
@@ -82,14 +206,18 @@ export function QuestionEditor({ block, dispatch }: Props) {
 
       <button type="button" className="ep-list-add" onClick={addPart}>+ Add sub-part</button>
 
-      <div className="ms-divider" />
-      <Field label="Mark scheme answer">
-        <RichTextEditor
-          value={block.markScheme ?? ''}
-          onChange={markScheme => update({ markScheme })}
-          placeholder="Model answer / marking points…"
-        />
-      </Field>
+      {!hasParts && (
+        <>
+          <div className="ms-divider" />
+          <Field label="Mark scheme answer">
+            <RichTextEditor
+              value={block.markScheme ?? ''}
+              onChange={markScheme => update({ markScheme })}
+              placeholder="Model answer / marking points…"
+            />
+          </Field>
+        </>
+      )}
     </div>
   )
 }
