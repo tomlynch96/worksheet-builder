@@ -41,6 +41,7 @@ export const PRESETS: Preset[] = [
           id: id(), type: 'question',
           stem: '<p>State <strong>two</strong> properties shared by all electromagnetic waves.</p>',
           marks: 2, lines: 4, parts: [],
+          markScheme: '<p>Award <strong>1 mark</strong> for each of any two from:</p><p>• They all travel at 3 × 10<sup>8</sup> m/s in a vacuum / the speed of light</p><p>• They are all transverse waves</p><p>• They all transfer energy without transferring matter</p><p>• They can all travel through a vacuum</p>',
         },
         {
           id: id(), type: 'question',
@@ -50,6 +51,7 @@ export const PRESETS: Preset[] = [
             { id: id(), label: 'a', stem: '<p>Write down the values you know.</p>', marks: 1, lines: 2 },
             { id: id(), label: 'b', stem: '<p>Calculate the wavelength. Give your answer in metres.</p>', marks: 2, lines: 3 },
           ],
+          markScheme: '<p><strong>(a)</strong> v = 3 × 10<sup>8</sup> m/s; f = 100 MHz = 1 × 10<sup>8</sup> Hz <strong>[1]</strong></p><p><strong>(b)</strong> Rearrange: λ = v ÷ f <strong>[1]</strong></p><p>λ = 3 × 10<sup>8</sup> ÷ 1 × 10<sup>8</sup> = <strong>3 m</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'multiple_choice',
@@ -57,6 +59,7 @@ export const PRESETS: Preset[] = [
           marks: 1,
           options: ['<p>Radio waves</p>', '<p>Visible light</p>', '<p>X-rays</p>', '<p>Gamma rays</p>'],
           correctIndex: 3,
+          markScheme: '<p><strong>D — Gamma rays</strong></p><p>The EM spectrum in order of increasing frequency: radio → microwave → infrared → visible → ultraviolet → X-rays → gamma rays. Gamma rays have the highest frequency (and shortest wavelength).</p>',
         },
         {
           id: id(), type: 'cloze',
@@ -120,6 +123,7 @@ export const PRESETS: Preset[] = [
             { id: id(), label: 'b', stem: '<p>Number of neutrons</p>', marks: 1, lines: 2 },
             { id: id(), label: 'c', stem: '<p>Number of electrons</p>', marks: 1, lines: 2 },
           ],
+          markScheme: '<p><strong>(a)</strong> 20 protons <strong>[1]</strong> — equal to the atomic number of calcium</p><p><strong>(b)</strong> 20 neutrons <strong>[1]</strong> — mass number (40) − atomic number (20) = 20</p><p><strong>(c)</strong> 20 electrons <strong>[1]</strong> — equal to the number of protons in a neutral atom</p>',
         },
         {
           id: id(), type: 'order_steps',
@@ -136,6 +140,7 @@ export const PRESETS: Preset[] = [
           id: id(), type: 'question',
           stem: '<p>Explain why Rutherford\'s gold foil experiment led to the nuclear model replacing the plum pudding model.</p>',
           marks: 4, lines: 6, parts: [],
+          markScheme: '<p>Award <strong>1 mark</strong> for each of four from:</p><p>• The plum pudding model predicted that alpha particles would pass through with little/no deflection</p><p>• Most alpha particles did pass straight through (consistent with atom being mostly empty space) <strong>[1]</strong></p><p>• Some particles were deflected at large angles and a small number bounced straight back <strong>[1]</strong></p><p>• This could not be explained by the plum pudding model / positive charge spread throughout <strong>[1]</strong></p><p>• The results showed that positive charge and mass are concentrated in a small, dense nucleus <strong>[1]</strong></p><p><em>(QWC: credit logical sequence of ideas)</em></p>',
         },
       ],
     },
@@ -175,6 +180,7 @@ export const PRESETS: Preset[] = [
             { id: id(), label: 'b', stem: '<p>Calculate the resultant force acting on the car.</p>', marks: 2, lines: 3 },
             { id: id(), label: 'c', stem: '<p>State one assumption you made in part (b).</p>', marks: 1, lines: 2 },
           ],
+          markScheme: '<p><strong>(a)</strong> a = (v − u) ÷ t <strong>[1]</strong></p><p>a = (20 − 0) ÷ 8 = <strong>2.5 m/s²</strong> <strong>[1]</strong></p><p><strong>(b)</strong> F = ma = 1200 × 2.5 <strong>[1]</strong></p><p>F = <strong>3000 N</strong> <strong>[1]</strong></p><p><strong>(c)</strong> Any one from: no friction / no air resistance / the acceleration is uniform / road is flat <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'multiple_choice',
@@ -182,11 +188,13 @@ export const PRESETS: Preset[] = [
           marks: 1,
           options: ['<p>5 N</p>', '<p>10 N</p>', '<p>50 N</p>', '<p>500 N</p>'],
           correctIndex: 2,
+          markScheme: '<p><strong>C — 50 N</strong></p><p>W = mg = 5 × 10 = <strong>50 N</strong></p><p>Common error: confusing mass (5 kg) with weight, or using g = 9.8 N/kg (accept 49 N in extended questions).</p>',
         },
         {
           id: id(), type: 'question',
           stem: '<p>Describe the motion of an object when the resultant force acting on it is zero.</p>',
           marks: 2, lines: 4, parts: [],
+          markScheme: '<p>Award <strong>1 mark</strong> for each of two from:</p><p>• The object remains stationary (if already at rest) <strong>[1]</strong></p><p>• OR continues to move at constant velocity / constant speed in a straight line (if already moving) <strong>[1]</strong></p><p>• There is no change in speed or direction <strong>[1]</strong></p><p><em>Accept reference to Newton\'s First Law.</em></p>',
         },
         {
           id: id(), type: 'worked_example',
@@ -250,21 +258,25 @@ export const PRESETS: Preset[] = [
           id: id(), type: 'question',
           stem: '<p>A current of 2 A flows through a resistor of 5 Ω. Calculate the voltage across the resistor.</p>',
           marks: 2, lines: 0, parts: [],
+          markScheme: '<p>V = I × R <strong>[1]</strong></p><p>V = 2 × 5 = <strong>10 V</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
           stem: '<p>The voltage across a component is 18 V. The resistance is 6 Ω. Calculate the current flowing through it.</p>',
           marks: 2, lines: 0, parts: [],
+          markScheme: '<p>Rearrange: I = V ÷ R <strong>[1]</strong></p><p>I = 18 ÷ 6 = <strong>3 A</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
           stem: '<p>A current of 0.5 A flows through a component. The voltage across it is 12 V. Calculate the resistance of the component.</p>',
           marks: 2, lines: 0, parts: [],
+          markScheme: '<p>Rearrange: R = V ÷ I <strong>[1]</strong></p><p>R = 12 ÷ 0.5 = <strong>24 Ω</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
           stem: '<p>A resistor has a resistance of 2.2 kΩ. A current of 5 mA flows through it. Calculate the voltage. Give your answer in volts.</p>',
           marks: 3, lines: 0, parts: [],
+          markScheme: '<p>Convert units: R = 2.2 kΩ = 2200 Ω; I = 5 mA = 0.005 A <strong>[1]</strong></p><p>V = I × R = 0.005 × 2200 <strong>[1]</strong></p><p>V = <strong>11 V</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
@@ -275,11 +287,13 @@ export const PRESETS: Preset[] = [
             { id: id(), label: 'b', stem: '<p>Calculate the current flowing through the circuit.</p>', marks: 2, lines: 0 },
             { id: id(), label: 'c', stem: '<p>Calculate the voltage across resistor A.</p>', marks: 1, lines: 0 },
           ],
+          markScheme: '<p><strong>(a)</strong> R<sub>total</sub> = 4 + 6 = <strong>10 Ω</strong> <strong>[1]</strong></p><p><strong>(b)</strong> I = V ÷ R = 20 ÷ 10 <strong>[1]</strong> = <strong>2 A</strong> <strong>[1]</strong></p><p><strong>(c)</strong> V<sub>A</sub> = I × R<sub>A</sub> = 2 × 4 = <strong>8 V</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
           stem: '<p>A circuit has a supply voltage of 9 V. Three resistors are connected in series: 1 Ω, 2 Ω, and an unknown resistor R. The current in the circuit is 1.5 A. Calculate the resistance of R.</p>',
           marks: 4, lines: 0, parts: [],
+          markScheme: '<p>Total resistance = V ÷ I = 9 ÷ 1.5 = 6 Ω <strong>[1]</strong></p><p>Known resistance = 1 + 2 = 3 Ω <strong>[1]</strong></p><p>R = 6 − 3 <strong>[1]</strong> = <strong>3 Ω</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
@@ -289,11 +303,13 @@ export const PRESETS: Preset[] = [
             { id: id(), label: 'a', stem: '<p>Calculate the voltage across the lamp at 20 °C.</p>', marks: 2, lines: 0 },
             { id: id(), label: 'b', stem: '<p>Calculate the current through the lamp at full operating resistance, assuming the same voltage.</p>', marks: 2, lines: 0 },
           ],
+          markScheme: '<p><strong>(a)</strong> V = I × R = 0.4 × 5 <strong>[1]</strong> = <strong>2 V</strong> <strong>[1]</strong></p><p><strong>(b)</strong> I = V ÷ R = 2 ÷ 50 <strong>[1]</strong> = <strong>0.04 A</strong> <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'question',
           stem: '<p>Explain why the current through a filament lamp does not double when the voltage across it is doubled. Use the equation V = IR in your answer.</p>',
           marks: 3, lines: 0, parts: [],
+          markScheme: '<p>As voltage increases, the current increases and the filament heats up <strong>[1]</strong></p><p>This causes the resistance of the filament to increase <strong>[1]</strong></p><p>From V = IR: since R increases as V increases, the current (I = V ÷ R) does not increase proportionally / does not double <strong>[1]</strong></p><p><em>Accept: the lamp is a non-ohmic component / resistance is not constant.</em></p>',
         },
       ],
     },
@@ -335,6 +351,7 @@ export const PRESETS: Preset[] = [
             '<p>Using a larger volume of acid at the same concentration</p>',
           ],
           correctIndex: 3,
+          markScheme: '<p><strong>D — Using a larger volume of acid at the same concentration</strong></p><p>Increasing the volume does not change the concentration, so the number of acid particles per unit volume (and therefore collision frequency) is unchanged. Rate depends on concentration, not total volume.</p><p>A, B, and C all increase rate: higher temperature increases particle energy; smaller particle size increases surface area; higher concentration increases collision frequency.</p>',
         },
         {
           id: id(), type: 'cloze' as const,
@@ -401,6 +418,7 @@ export const PRESETS: Preset[] = [
             { id: id(), label: 'b', stem: '<p>Calculate the mean rate of reaction (in cm³/s) at 40 °C.</p>', marks: 2, lines: 3 },
             { id: id(), label: 'c', stem: '<p>Explain, using collision theory, why the rate of reaction increases as temperature rises.</p>', marks: 3, lines: 5 },
           ],
+          markScheme: '<p><strong>(a)</strong> As temperature increases, the time taken decreases <strong>[1]</strong>; the relationship is inversely proportional / the time halves for every 10 °C rise in temperature <strong>[1]</strong></p><p><strong>(b)</strong> Rate = 50 ÷ 60 <strong>[1]</strong> = <strong>0.83 cm³/s</strong> (allow 0.8) <strong>[1]</strong></p><p><strong>(c)</strong> Higher temperature gives particles more kinetic energy <strong>[1]</strong>; more particles have energy greater than or equal to the activation energy <strong>[1]</strong>; so a greater proportion of collisions are successful per unit time, increasing the rate of reaction <strong>[1]</strong></p>',
         },
         {
           id: id(), type: 'match_them_up' as const,

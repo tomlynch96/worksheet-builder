@@ -1,4 +1,4 @@
-import { useReducer } from 'react'
+import { useReducer, useEffect } from 'react'
 import type { Block, Worksheet } from '../types/worksheet'
 
 export type WorksheetAction =
@@ -7,6 +7,7 @@ export type WorksheetAction =
   | { type: 'DELETE_BLOCK'; id: string }
   | { type: 'MOVE_BLOCK'; id: string; direction: 'up' | 'down' }
   | { type: 'LOAD_PRESET'; worksheet: Worksheet }
+  | { type: 'LOAD_WORKSHEET'; worksheet: Worksheet }
 
 function reducer(state: Worksheet, action: WorksheetAction): Worksheet {
   switch (action.type) {
@@ -40,8 +41,12 @@ function reducer(state: Worksheet, action: WorksheetAction): Worksheet {
     }
     case 'LOAD_PRESET':
       return { ...action.worksheet, id: crypto.randomUUID() }
+    case 'LOAD_WORKSHEET':
+      return action.worksheet
   }
 }
+
+const STORAGE_KEY = 'worksheet-builder-draft'
 
 const INITIAL_WORKSHEET: Worksheet = {
   id: crypto.randomUUID(),
@@ -69,7 +74,23 @@ const INITIAL_WORKSHEET: Worksheet = {
   ],
 }
 
+function loadInitial(): Worksheet {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Worksheet
+      if (parsed.id && Array.isArray(parsed.blocks)) return parsed
+    }
+  } catch {}
+  return INITIAL_WORKSHEET
+}
+
 export function useWorksheet() {
-  const [worksheet, dispatch] = useReducer(reducer, INITIAL_WORKSHEET)
+  const [worksheet, dispatch] = useReducer(reducer, undefined, loadInitial)
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(worksheet))
+  }, [worksheet])
+
   return { worksheet, dispatch }
 }

@@ -1,21 +1,54 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { useWorksheet } from './hooks/useWorksheet'
 import { Editor } from './components/editor/Editor'
 import { WorksheetPreview } from './components/preview/WorksheetPreview'
 import { WorksheetPDF } from './components/pdf/WorksheetPDF'
 import { PRESETS } from './data/presets'
+import type { Worksheet } from './types/worksheet'
 import './App.css'
 
 export default function App() {
   const { worksheet, dispatch } = useWorksheet()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showPresets, setShowPresets] = useState(false)
+  const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
+  const openRef = useRef<HTMLInputElement>(null)
 
   function loadPreset(idx: number) {
     dispatch({ type: 'LOAD_PRESET', worksheet: PRESETS[idx].worksheet })
     setSelectedId(null)
     setShowPresets(false)
+  }
+
+  function handleSave() {
+    const json = JSON.stringify(worksheet, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const header = worksheet.blocks.find(b => b.type === 'header')
+    const title = header && 'title' in header ? header.title : 'worksheet'
+    a.download = `${(title as string).toLowerCase().replace(/\s+/g, '-') || 'worksheet'}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string) as Worksheet
+        if (parsed.id && Array.isArray(parsed.blocks)) {
+          dispatch({ type: 'LOAD_WORKSHEET', worksheet: parsed })
+          setSelectedId(null)
+        }
+      } catch {}
+    }
+    reader.readAsText(file)
+    e.target.value = ''
   }
 
   return (
@@ -43,14 +76,33 @@ export default function App() {
           )}
         </div>
 
-        <PDFDownloadLink
-          key={worksheet.blocks.map(b => b.id).join(',')}
-          document={<WorksheetPDF worksheet={worksheet} />}
-          fileName="worksheet.pdf"
-          className="btn-download"
-        >
-          {({ loading }) => (loading ? 'Preparing PDF…' : 'Download PDF')}
-        </PDFDownloadLink>
+        <div className="topbar-actions">
+          <div className="mode-toggle">
+            <button
+              className={`mode-toggle-btn${mode === 'worksheet' ? ' mode-toggle-btn--active' : ''}`}
+              onClick={() => setMode('worksheet')}
+            >Worksheet</button>
+            <button
+              className={`mode-toggle-btn${mode === 'markscheme' ? ' mode-toggle-btn--active' : ''}`}
+              onClick={() => setMode('markscheme')}
+            >Mark Scheme</button>
+          </div>
+          <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
+            Open
+          </button>
+          <button className="btn-topbar" onClick={handleSave} title="Save worksheet as JSON file">
+            Save
+          </button>
+          <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
+          <PDFDownloadLink
+            key={worksheet.blocks.map(b => b.id).join(',')}
+            document={<WorksheetPDF worksheet={worksheet} />}
+            fileName="worksheet.pdf"
+            className="btn-download"
+          >
+            {({ loading }) => (loading ? 'Preparing PDF…' : 'Download PDF')}
+          </PDFDownloadLink>
+        </div>
       </header>
 
       <div className="workspace">
@@ -68,6 +120,7 @@ export default function App() {
             worksheet={worksheet}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            mode={mode}
           />
         </main>
       </div>
