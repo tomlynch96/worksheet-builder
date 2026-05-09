@@ -19,27 +19,27 @@ export function buildAIPrompt(worksheet: Worksheet): string {
     ? `\n## Current worksheet context\n${context.map(c => `- ${c}`).join('\n')}\n`
     : ''
 
-  return `You are an expert secondary science teacher creating exam-quality worksheets. Generate a worksheet as a JSON object matching the schema below.
+  return `You are helping a teacher create a worksheet. Your ONLY output should be a single JSON object — nothing else. No explanation, no markdown fences, no code, no app. Just the raw JSON data for one worksheet.
 
+The JSON will be pasted into a worksheet builder tool that renders and prints it. You are not building software.
 ${contextBlock}
-## Qualifying questions — answer these before generating
+## Before writing the JSON, briefly answer these questions in a short paragraph
 
-Before writing the JSON, briefly answer:
-1. What is the **topic and spec point** this worksheet covers?
-2. What **year group and tier** is it aimed at (e.g. Year 10 Higher)?
-3. What **question types** will you include (structured questions, multiple choice, worked example, cloze, match)?
-4. How many **marks total** should the worksheet be worth?
-5. Are there any **required diagrams or data tables**?
+1. What topic and spec point does this worksheet cover?
+2. What year group and tier is it aimed at?
+3. What question types will you include?
+4. How many marks total?
+5. Any diagrams or data tables needed?
 
-Then output the JSON object only — no other text after it.
+Then output the raw JSON object — no markdown fences around it, no text after it.
 
 ---
 
-## JSON Schema
+## JSON format
 
-Every worksheet is a JSON object with this shape:
+Every worksheet is a JSON object:
 
-\`\`\`json
+\`\`\`
 {
   "id": "<uuid>",
   "blocks": [ /* array of block objects */ ]
@@ -48,213 +48,98 @@ Every worksheet is a JSON object with this shape:
 
 ### Block types
 
-#### header
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "header",
-  "title": "Forces and Motion",
-  "topic": "Newton's Laws — AQA GCSE Physics",
-  "examBoard": "AQA",
-  "tier": "higher",
-  "showName": true,
-  "showDate": true,
-  "showClass": true
-}
+**header**
 \`\`\`
-- \`examBoard\`: "AQA" | "OCR" | "Edexcel" | "WJEC"
-- \`tier\`: "higher" | "foundation" | "both"
+{ "id": "...", "type": "header", "title": "Forces and Motion", "topic": "Newton's Laws", "examBoard": "AQA", "tier": "higher", "showName": true, "showDate": true, "showClass": true }
+\`\`\`
+- examBoard: "AQA" | "OCR" | "Edexcel" | "WJEC"
+- tier: "higher" | "foundation" | "both"
 
-#### instructions
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "instructions",
-  "items": [
-    "Answer all questions.",
-    "Write your answers in the spaces provided.",
-    "The marks for each question are shown in brackets."
-  ]
-}
+**instructions**
+\`\`\`
+{ "id": "...", "type": "instructions", "items": ["Answer all questions.", "Show your working.", "Marks are shown in brackets."] }
 \`\`\`
 
-#### question
-\`\`\`json
+**question** (multi-part)
+\`\`\`
 {
-  "id": "<uuid>",
-  "type": "question",
+  "id": "...", "type": "question",
   "stem": "A car accelerates from rest to 20 m/s in 8 s.",
-  "marks": 0,
-  "lines": 0,
+  "marks": 0, "lines": 0,
   "parts": [
-    {
-      "id": "<uuid>",
-      "label": "a",
-      "stem": "Calculate the acceleration of the car.",
-      "marks": 2,
-      "lines": 4,
-      "markScheme": "a = Δv/Δt = 20/8 [1]; = 2.5 m/s² [1]"
-    },
-    {
-      "id": "<uuid>",
-      "label": "b",
-      "stem": "State Newton's Second Law.",
-      "marks": 1,
-      "lines": 2,
-      "markScheme": "Force equals mass times acceleration / F = ma [1]"
-    }
+    { "id": "...", "label": "a", "stem": "Calculate the acceleration.", "marks": 2, "lines": 4, "markScheme": "a = Δv/Δt = 20/8 [1]; = 2.5 m/s² [1]" },
+    { "id": "...", "label": "b", "stem": "State Newton's Second Law.", "marks": 1, "lines": 2, "markScheme": "F = ma / force = mass × acceleration [1]" }
   ],
   "markScheme": ""
 }
 \`\`\`
-- Use \`parts\` for multi-part questions; leave \`parts: []\` for single-part questions and put marks/lines/markScheme at the top level instead.
-- \`lines\`: number of answer lines to show (0–8)
-- \`markScheme\`: mark scheme text (shown in mark scheme view only)
 
-#### multiple_choice
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "multiple_choice",
-  "stem": "Which of the following is a vector quantity?",
-  "marks": 1,
-  "options": ["Speed", "Distance", "Velocity", "Time"],
-  "correctIndex": 2,
-  "markScheme": "C — Velocity [1]"
-}
+**question** (single, no parts)
+\`\`\`
+{ "id": "...", "type": "question", "stem": "State the unit of force.", "marks": 1, "lines": 2, "parts": [], "markScheme": "Newton (N) [1]" }
 \`\`\`
 
-#### worked_example
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "worked_example",
-  "title": "Calculating resultant force",
-  "steps": [
-    "Write down the equation: F = ma",
-    "Substitute values: F = 5 kg × 3 m/s²",
-    "Calculate: F = 15 N"
-  ]
-}
+**multiple_choice**
+\`\`\`
+{ "id": "...", "type": "multiple_choice", "stem": "Which is a vector?", "marks": 1, "options": ["Speed", "Distance", "Velocity", "Time"], "correctIndex": 2, "markScheme": "C — Velocity [1]" }
 \`\`\`
 
-#### information
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "information",
-  "heading": "Did you know?",
-  "content": "The speed of light in a vacuum is approximately 3 × 10⁸ m/s."
-}
+**worked_example**
+\`\`\`
+{ "id": "...", "type": "worked_example", "title": "Calculating force", "steps": ["Write the equation: F = ma", "Substitute: F = 5 × 3", "Answer: F = 15 N"] }
 \`\`\`
 
-#### cloze
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "cloze",
-  "heading": "Fill in the blanks using the words in the box.",
-  "text": "A [force] is needed to change the [velocity] of an object. This is described by Newton's [second] law.",
-  "showWordBank": true
-}
+**information**
 \`\`\`
-- Wrap each answer word in square brackets: \`[word]\`
-
-#### match_them_up
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "match_them_up",
-  "heading": "Match each quantity to its unit.",
-  "items": [
-    { "id": "<uuid>", "left": "Force", "right": "Newton (N)" },
-    { "id": "<uuid>", "left": "Mass", "right": "Kilogram (kg)" },
-    { "id": "<uuid>", "left": "Acceleration", "right": "m/s²" }
-  ]
-}
+{ "id": "...", "type": "information", "heading": "Did you know?", "content": "The speed of light is 3 × 10⁸ m/s." }
 \`\`\`
 
-#### order_steps
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "order_steps",
-  "heading": "Put these steps in the correct order.",
-  "steps": [
-    "Record the reading on the newton-meter",
-    "Attach the spring to a clamp stand",
-    "Add 100 g masses one at a time",
-    "Measure the extension of the spring"
-  ]
-}
+**cloze** (fill in the blanks — wrap answer words in [square brackets])
+\`\`\`
+{ "id": "...", "type": "cloze", "heading": "Fill in the blanks.", "text": "A [force] changes an object's [velocity]. This is Newton's [second] law.", "showWordBank": true }
 \`\`\`
 
-#### figure
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "figure",
-  "caption": "Figure 1: Diagram of a circuit",
-  "size": "medium"
-}
+**match_them_up**
 \`\`\`
-- \`size\`: "small" | "medium" | "large"
+{ "id": "...", "type": "match_them_up", "heading": "Match each quantity to its unit.", "items": [{ "id": "...", "left": "Force", "right": "Newton (N)" }, { "id": "...", "left": "Mass", "right": "kg" }] }
+\`\`\`
 
-#### data (table or graph)
-\`\`\`json
+**order_steps**
+\`\`\`
+{ "id": "...", "type": "order_steps", "heading": "Put these steps in order.", "steps": ["Attach the spring", "Add masses one at a time", "Measure the extension", "Record results"] }
+\`\`\`
+
+**figure** (placeholder image box)
+\`\`\`
+{ "id": "...", "type": "figure", "caption": "Figure 1: Circuit diagram", "size": "medium" }
+\`\`\`
+- size: "small" | "medium" | "large"
+
+**data** (table or graph)
+\`\`\`
 {
-  "id": "<uuid>",
-  "type": "data",
-  "heading": "Table 1: Results",
-  "columns": [
-    { "label": "Force", "unit": "N" },
-    { "label": "Extension", "unit": "cm" }
-  ],
-  "rows": [
-    ["1.0", "2.0"],
-    ["2.0", "4.1"],
-    ["3.0", "6.0"],
-    ["4.0", "8.2"],
-    ["5.0", "10.0"]
-  ],
+  "id": "...", "type": "data", "heading": "Table 1: Results",
+  "columns": [{ "label": "Force", "unit": "N" }, { "label": "Extension", "unit": "cm" }],
+  "rows": [["1.0","2.0"],["2.0","4.1"],["3.0","6.0"]],
   "display": "graph",
-  "graph": {
-    "xCol": 0,
-    "yCol": 1,
-    "showXLabel": true,
-    "showYLabel": true,
-    "showXScale": true,
-    "showYScale": true,
-    "omitRows": [],
-    "fitType": "linear",
-    "linkedDataId": null
-  }
+  "graph": { "xCol": 0, "yCol": 1, "showXLabel": true, "showYLabel": true, "showXScale": true, "showYScale": true, "omitRows": [], "fitType": "linear", "linkedDataId": null }
 }
 \`\`\`
-- \`display\`: "table" | "graph" | "bar"
-- \`omitRows\`: indices of rows to hide from students (leave empty to show all data points)
-- \`fitType\`: "none" | "linear" | "curve"
+- display: "table" | "graph" | "bar"
+- fitType: "none" | "linear" | "curve"
 
-#### spacer
-\`\`\`json
-{
-  "id": "<uuid>",
-  "type": "spacer",
-  "size": "small"
-}
+**spacer**
 \`\`\`
-- \`size\`: "small" | "medium" | "large"
+{ "id": "...", "type": "spacer", "size": "small" }
+\`\`\`
 
 ---
 
 ## Rules
 
-1. Generate all UUIDs as random strings like \`"b3f2a1d0-0001"\`, \`"b3f2a1d0-0002"\`, etc. — unique within the document.
-2. Always start with a \`header\` block, then an \`instructions\` block.
-3. Use \`parts\` for multi-part questions (a, b, c…). Single questions with one answer go at the top level.
-4. Every question and part must have a \`markScheme\` string — even if brief.
-5. Mark scheme text should use \`[1]\` notation: e.g. \`"Correct answer [1]; correct unit [1]"\`
-6. Keep language age-appropriate and use correct scientific terminology.
-7. Exam command words: \`describe\`, \`explain\`, \`calculate\`, \`state\`, \`suggest\`, \`evaluate\` — use the right one for the marks/AO.
-8. Output only the JSON object — no markdown fences, no commentary after the object.`
+1. Generate unique IDs like "id-001", "id-002", etc.
+2. Always start with a header block, then an instructions block.
+3. Every question and part needs a markScheme string using [1] notation.
+4. Use correct exam command words: describe, explain, calculate, state, suggest, evaluate.
+5. Output the raw JSON object only — no markdown fences, no explanation after it.`
 }
