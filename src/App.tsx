@@ -1,184 +1,44 @@
-import { useState, useRef } from 'react'
-import { PDFDownloadLink } from '@react-pdf/renderer'
-import { useWorksheet } from './hooks/useWorksheet'
-import { useSavedWorksheets } from './hooks/useSavedWorksheets'
-import { Editor } from './components/editor/Editor'
-import { WorksheetPreview } from './components/preview/WorksheetPreview'
-import { WorksheetPDF } from './components/pdf/WorksheetPDF'
-import { Gallery } from './pages/Gallery'
-import { PRESETS } from './data/presets'
-import { buildAIPrompt } from './utils/aiPrompt'
-import type { Worksheet } from './types/worksheet'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { ProfileProvider, useProfileContext } from './context/ProfileContext'
+import { Onboarding } from './pages/Onboarding'
+import { Home } from './pages/Home'
+import { EditorPage } from './pages/EditorPage'
+import { GalleryPage } from './pages/GalleryPage'
 import './App.css'
 
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { profile, loading } = useProfileContext()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !profile) navigate('/onboarding', { replace: true })
+  }, [loading, profile, navigate])
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading-spinner" />
+      </div>
+    )
+  }
+
+  if (!profile) return null
+  return <>{children}</>
+}
+
 export default function App() {
-  const { worksheet, dispatch } = useWorksheet()
-  const { entries, save: saveToGallery, remove: removeFromGallery } = useSavedWorksheets()
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
-  const [view, setView] = useState<'editor' | 'gallery'>('editor')
-  const [promptCopied, setPromptCopied] = useState(false)
-  const openRef = useRef<HTMLInputElement>(null)
-
-  function loadPreset(idx: number) {
-    dispatch({ type: 'LOAD_PRESET', worksheet: PRESETS[idx].worksheet })
-    setSelectedId(null)
-  }
-
-  function handleNew() {
-    const blank: Worksheet = {
-      id: crypto.randomUUID(),
-      blocks: [
-        {
-          id: crypto.randomUUID(), type: 'header',
-          title: '', topic: '', examBoard: 'AQA', tier: 'higher',
-          showName: true, showDate: true, showClass: true,
-        },
-        {
-          id: crypto.randomUUID(), type: 'instructions',
-          items: ['Answer all questions.', 'Write your answers in the spaces provided.', 'The marks for each question are shown in brackets.'],
-        },
-      ],
-    }
-    dispatch({ type: 'LOAD_PRESET', worksheet: blank })
-    setSelectedId(null)
-    setView('editor')
-  }
-
-  function handleSave() {
-    const json = JSON.stringify(worksheet, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    const header = worksheet.blocks.find(b => b.type === 'header')
-    const title = header && 'title' in header ? header.title : 'worksheet'
-    a.download = `${(title as string).toLowerCase().replace(/\s+/g, '-') || 'worksheet'}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    saveToGallery(worksheet)
-  }
-
-  function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(reader.result as string) as Worksheet
-        if (parsed.id && Array.isArray(parsed.blocks)) {
-          dispatch({ type: 'LOAD_WORKSHEET', worksheet: parsed })
-          setSelectedId(null)
-        }
-      } catch {}
-    }
-    reader.readAsText(file)
-    e.target.value = ''
-  }
-
-  function handleOpenFromGallery(w: Worksheet) {
-    dispatch({ type: 'LOAD_WORKSHEET', worksheet: w })
-    setSelectedId(null)
-    setView('editor')
-  }
-
-  function handleCopyPrompt() {
-    const prompt = buildAIPrompt(worksheet)
-    navigator.clipboard.writeText(prompt).then(() => {
-      setPromptCopied(true)
-      setTimeout(() => setPromptCopied(false), 2000)
-    })
-  }
-
   return (
-    <div className="app">
-      <header className="topbar">
-        <span className="topbar-brand">Worksheet Builder</span>
-
-        <div className="topbar-actions">
-          {view === 'editor' && (
-            <div className="mode-toggle">
-              <button
-                className={`mode-toggle-btn${mode === 'worksheet' ? ' mode-toggle-btn--active' : ''}`}
-                onClick={() => setMode('worksheet')}
-              >Worksheet</button>
-              <button
-                className={`mode-toggle-btn${mode === 'markscheme' ? ' mode-toggle-btn--active' : ''}`}
-                onClick={() => setMode('markscheme')}
-              >Mark Scheme</button>
-            </div>
-          )}
-
-          <button className="btn-topbar" onClick={handleNew} title="Start a blank worksheet">
-            New Worksheet
-          </button>
-
-          <button
-            className={`btn-topbar${view === 'gallery' ? ' btn-topbar--active' : ''}`}
-            onClick={() => setView(v => v === 'gallery' ? 'editor' : 'gallery')}
-          >
-            Saved Worksheets
-          </button>
-
-          {view === 'editor' && (
-            <>
-              <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
-                Open
-              </button>
-              <button className="btn-topbar" onClick={handleSave} title="Save worksheet as JSON and add to gallery">
-                Save
-              </button>
-              <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
-              <button
-                className="btn-topbar btn-topbar--ai"
-                onClick={handleCopyPrompt}
-                title="Copy an AI prompt to generate a worksheet JSON you can load here"
-              >
-                {promptCopied ? 'Copied!' : 'Copy AI Prompt'}
-              </button>
-              <PDFDownloadLink
-                key={worksheet.blocks.map(b => b.id).join(',')}
-                document={<WorksheetPDF worksheet={worksheet} />}
-                fileName="worksheet.pdf"
-                className="btn-download"
-              >
-                {({ loading }) => (loading ? 'Preparing PDF…' : 'Download PDF')}
-              </PDFDownloadLink>
-            </>
-          )}
-        </div>
-      </header>
-
-      {view === 'gallery' ? (
-        <div className="workspace">
-          <Gallery
-            entries={entries}
-            onOpen={handleOpenFromGallery}
-            onDelete={removeFromGallery}
-            onLoadPreset={idx => { loadPreset(idx); setView('editor') }}
-          />
-        </div>
-      ) : (
-        <div className="workspace">
-          <aside className="panel-editor">
-            <Editor
-              worksheet={worksheet}
-              dispatch={dispatch}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-            />
-          </aside>
-
-          <main className="panel-preview">
-            <WorksheetPreview
-              worksheet={worksheet}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              mode={mode}
-            />
-          </main>
-        </div>
-      )}
-    </div>
+    <ProfileProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/" element={<AuthGate><Home /></AuthGate>} />
+          <Route path="/editor" element={<AuthGate><EditorPage /></AuthGate>} />
+          <Route path="/gallery" element={<AuthGate><GalleryPage /></AuthGate>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ProfileProvider>
   )
 }

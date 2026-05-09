@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
+    "@supabase/supabase-js": "^2.105.4",
     "@tiptap/extension-subscript": "^3.22.5",
     "@tiptap/extension-superscript": "^3.22.5",
     "@tiptap/extension-underline": "^3.22.5",
@@ -19,7 +20,8 @@
     "@tiptap/starter-kit": "^3.22.5",
     "katex": "^0.16.45",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.15.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
