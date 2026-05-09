@@ -1,7 +1,7 @@
 import { supabase, isConfigured } from '../lib/supabase'
 import type { Worksheet, Block } from '../types/worksheet'
 
-const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-worksheet`
+const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dynamic-function`
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 async function callEdge(body: object): Promise<string> {
