@@ -49,8 +49,14 @@ export function useProfile() {
     return true
   }
 
-  async function updateCourses(courses: Omit<UserCourse, 'id' | 'profile_id'>[]) {
-    if (!profile) return
+  async function updateProfile(name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) {
+    if (!profile) return false
+    const { error } = await supabase
+      .from('profiles')
+      .update({ name })
+      .eq('id', profile.id)
+    if (error) return false
+
     await supabase.from('user_courses').delete().eq('profile_id', profile.id)
     if (courses.length > 0) {
       await supabase
@@ -58,9 +64,10 @@ export function useProfile() {
         .insert(courses.map(c => ({ ...c, profile_id: profile.id })))
     }
     setProfile(p =>
-      p ? { ...p, user_courses: courses.map((c, i) => ({ ...c, id: String(i), profile_id: p.id })) } : p
+      p ? { ...p, name, user_courses: courses.map((c, i) => ({ ...c, id: String(i), profile_id: p.id })) } : p
     )
+    return true
   }
 
-  return { profile, loading, createProfile, updateCourses }
+  return { profile, loading, createProfile, updateProfile }
 }
