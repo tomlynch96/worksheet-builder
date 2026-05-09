@@ -1,5 +1,3 @@
-import Anthropic from 'npm:@anthropic-ai/sdk'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -134,7 +132,6 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const client = new Anthropic({ apiKey })
     const body = await req.json()
     const { mode } = body as { mode: string }
 
@@ -181,15 +178,28 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8192,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8192,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
     })
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-    // Strip accidental markdown fences Claude might include
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text()
+      throw new Error(`Anthropic API error ${anthropicRes.status}: ${errText}`)
+    }
+
+    const anthropicJson = await anthropicRes.json() as { content: { type: string; text: string }[] }
+    const raw = anthropicJson.content[0]?.type === 'text' ? anthropicJson.content[0].text : ''
     const cleaned = raw.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
 
     return new Response(
