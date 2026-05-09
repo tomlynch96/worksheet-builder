@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import type { HeaderBlock, ExamBoard, Tier } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row, CheckRow } from '../EditorPrimitives'
+import { QUALIFICATIONS, getAllPoints } from '../../../data/specs'
 
 interface Props {
   block: HeaderBlock
@@ -18,6 +20,11 @@ export function HeaderEditor({ block, dispatch }: Props) {
   function update(updates: Partial<HeaderBlock>) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
+
+  const allPoints = useMemo(() => {
+    if (!block.qualification) return []
+    return getAllPoints(block.qualification)
+  }, [block.qualification])
 
   return (
     <div className="block-fields">
@@ -39,6 +46,32 @@ export function HeaderEditor({ block, dispatch }: Props) {
           </select>
         </Field>
       </Row>
+      <Field label="Qualification">
+        <select
+          value={block.qualification ?? ''}
+          onChange={e => update({ qualification: e.target.value || undefined, specPoint: undefined })}
+        >
+          <option value="">— None —</option>
+          {QUALIFICATIONS.map(q => (
+            <option key={q.id} value={q.id}>{q.label}</option>
+          ))}
+        </select>
+      </Field>
+      {block.qualification && (
+        <Field label="Spec point">
+          <select
+            value={block.specPoint ?? ''}
+            onChange={e => update({ specPoint: e.target.value || undefined })}
+          >
+            <option value="">— Select spec point —</option>
+            {allPoints.map(({ topic, point }) => (
+              <option key={point.ref} value={point.ref}>
+                {point.ref} — {topic.title}: {point.title}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <CheckRow label="Show name field" checked={block.showName} onChange={v => update({ showName: v })} />
       <CheckRow label="Show date field" checked={block.showDate} onChange={v => update({ showDate: v })} />
       <CheckRow label="Show class field" checked={block.showClass} onChange={v => update({ showClass: v })} />
