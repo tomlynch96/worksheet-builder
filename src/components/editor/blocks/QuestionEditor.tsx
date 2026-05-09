@@ -3,6 +3,8 @@ import type { QuestionBlock, QuestionPart, Block, DataBlock, FigureBlock } from 
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row } from '../EditorPrimitives'
 import { RichTextEditor } from '../RichTextEditor'
+import { DataEditor } from './DataEditor'
+import { FigureEditor } from './FigureEditor'
 
 interface Props {
   block: QuestionBlock
@@ -15,7 +17,9 @@ function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph: () => void; onAdd
   return (
     <div className="q-attach-add">
       {open && <div className="q-attach-backdrop" onClick={() => setOpen(false)} />}
-      <button type="button" className="q-attach-btn" onClick={() => setOpen(v => !v)} title="Attach graph or figure">+</button>
+      <button type="button" className="q-attach-btn" onClick={() => setOpen(v => !v)} title="Attach graph or figure">
+        + Attach
+      </button>
       {open && (
         <div className="q-attach-menu">
           <button type="button" onClick={() => { onAddGraph(); setOpen(false) }}>Graph / data table</button>
@@ -26,12 +30,33 @@ function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph: () => void; onAdd
   )
 }
 
-function AttachChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function InlineBlockEditor({
+  label,
+  onRemove,
+  children,
+}: {
+  label: string
+  onRemove: () => void
+  children: React.ReactNode
+}) {
+  const [collapsed, setCollapsed] = useState(false)
   return (
-    <span className="q-attach-chip">
-      {label}
-      <button type="button" className="q-attach-chip-remove" onClick={onRemove} title="Remove attachment">×</button>
-    </span>
+    <div className="q-inline-editor">
+      <div className="q-inline-editor-header">
+        <button
+          type="button"
+          className="q-inline-editor-toggle"
+          onClick={() => setCollapsed(v => !v)}
+        >
+          <span className="q-inline-editor-caret">{collapsed ? '▶' : '▼'}</span>
+          {label}
+        </button>
+        <button type="button" className="q-inline-editor-remove" onClick={onRemove} title="Remove attachment">
+          Remove
+        </button>
+      </div>
+      {!collapsed && <div className="q-inline-editor-body">{children}</div>}
+    </div>
   )
 }
 
@@ -85,21 +110,29 @@ function Attachments({
     onChangeFigureId(newBlock.id)
   }
 
+  const canAddMore = !dataBlock || !figBlock
+
   return (
     <div className="q-attachments">
       {dataBlock && (
-        <AttachChip
-          label={`Graph: ${dataBlock.heading || 'data block'}`}
+        <InlineBlockEditor
+          label="Graph / data table"
           onRemove={() => onChangeDataId(undefined)}
-        />
+        >
+          <DataEditor block={dataBlock} dispatch={dispatch} blocks={blocks} />
+        </InlineBlockEditor>
       )}
       {figBlock && (
-        <AttachChip
-          label={`Figure: ${figBlock.caption || 'image'}`}
+        <InlineBlockEditor
+          label="Figure / image"
           onRemove={() => onChangeFigureId(undefined)}
-        />
+        >
+          <FigureEditor block={figBlock} dispatch={dispatch} />
+        </InlineBlockEditor>
       )}
-      <AttachMenu onAddGraph={addGraph} onAddFigure={addFigure} />
+      {canAddMore && (
+        <AttachMenu onAddGraph={addGraph} onAddFigure={addFigure} />
+      )}
     </div>
   )
 }

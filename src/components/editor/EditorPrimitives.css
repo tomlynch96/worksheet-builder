@@ -186,10 +186,58 @@
 /* ── Question attachment chips ───────────────────────────── */
 .q-attachments {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.q-inline-editor {
+  border: 1px solid #e2e0ea;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.q-inline-editor-header {
+  display: flex;
   align-items: center;
-  min-height: 26px;
+  justify-content: space-between;
+  background: #f5f3ff;
+  border-bottom: 1px solid #e2e0ea;
+  padding: 4px 8px;
+}
+
+.q-inline-editor-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b21b6;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.q-inline-editor-toggle:hover { color: var(--ui-accent); }
+
+.q-inline-editor-caret {
+  font-size: 9px;
+  color: #7c3aed;
+}
+
+.q-inline-editor-remove {
+  background: none;
+  border: 1px solid #c4b5fd;
+  border-radius: 4px;
+  color: #7c3aed;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.q-inline-editor-remove:hover { background: #ede9fe; }
+
+.q-inline-editor-body {
+  padding: 10px;
+  background: #fdfcff;
 }
 
 .q-attach-chip {
@@ -222,13 +270,13 @@
 }
 
 .q-attach-btn {
-  width: 24px;
-  height: 24px;
+  padding: 4px 10px;
   border-radius: 4px;
   border: 1px dashed var(--ui-border);
   background: none;
   color: var(--ui-accent);
-  font-size: 16px;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1;
   cursor: pointer;
   display: flex;
