@@ -413,9 +413,10 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
     return { x: p.cx + PDF_ML, y: p.cy + PDF_MT }
   }
 
-  const xStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : (xMax - xMin || 1)
-  const yStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : (yMax - yMin || 1)
-  const xMinStep = xStep / 5, yMinStep = yStep / 5
+  const xStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : Math.max(xMax - xMin, 1)
+  const yStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : Math.max(yMax - yMin, 1)
+  const xMinStep = Math.max(xStep / 5, 1e-10)
+  const yMinStep = Math.max(yStep / 5, 1e-10)
 
   const xMinor: number[] = [], yMinor: number[] = []
   for (let v = xMin; v <= xMax + xMinStep * 0.01; v += xMinStep) {

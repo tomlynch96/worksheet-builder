@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useProfileContext } from '../../context/ProfileContext'
 import './Topbar.css'
 
 interface TopbarProps {
@@ -7,6 +8,8 @@ interface TopbarProps {
 
 export function Topbar({ actions }: TopbarProps) {
   const { pathname } = useLocation()
+  const { profile } = useProfileContext()
+  const initial = (profile?.name ?? 'T').charAt(0).toUpperCase()
 
   return (
     <header className="topbar">
@@ -22,6 +25,14 @@ export function Topbar({ actions }: TopbarProps) {
       </nav>
 
       {actions && <div className="topbar-actions">{actions}</div>}
+
+      <Link
+        to="/profile"
+        className={`topbar-avatar${pathname === '/profile' ? ' topbar-avatar--active' : ''}`}
+        title="Your profile"
+      >
+        {initial}
+      </Link>
     </header>
   )
 }

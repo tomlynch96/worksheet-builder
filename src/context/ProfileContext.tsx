@@ -6,7 +6,7 @@ interface ProfileContextValue {
   profile: Profile | null
   loading: boolean
   createProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
-  updateCourses: (courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<void>
+  updateProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)

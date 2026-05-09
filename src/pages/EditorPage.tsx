@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { Topbar } from '../components/layout/Topbar'
@@ -24,64 +24,83 @@ export function EditorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const [promptCopied, setPromptCopied] = useState(false)
-  const [saveFeedback, setSaveFeedback] = useState('')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const openRef = useRef<HTMLInputElement>(null)
 
-  // Load worksheet passed from Home (open existing) or apply wizard params (new)
+  // Autosave — skip the initial render(s) while the worksheet loads
+  const saveRef = useRef(save)
+  saveRef.current = save
+  const committedRef = useRef(false)
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const triggerAutoSave = useCallback((w: typeof worksheet) => {
+    if (!committedRef.current || !profile) return
+    clearTimeout(autoSaveTimer.current)
+    setSaveStatus('saving')
+    autoSaveTimer.current = setTimeout(async () => {
+      await saveRef.current(w)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
+    }, 1500)
+  }, [profile])
+
+  // Load worksheet from navigation state or wizard query params, then enable autosave
   useEffect(() => {
     if (location.state?.worksheet) {
       dispatch({ type: 'LOAD_WORKSHEET', worksheet: location.state.worksheet as Worksheet })
       setSelectedId(null)
-      return
-    }
-    if (typeof location.state?.preset === 'number') {
+    } else if (typeof location.state?.preset === 'number') {
       dispatch({ type: 'LOAD_PRESET', worksheet: PRESETS[location.state.preset].worksheet })
       setSelectedId(null)
-      return
-    }
-    const qual = searchParams.get('qual')
-    const board = searchParams.get('board')
-    const spec = searchParams.get('spec')
-    const topic = searchParams.get('topic')
-    if (qual || board) {
-      const blank: Worksheet = {
-        id: crypto.randomUUID(),
-        blocks: [
-          {
-            id: crypto.randomUUID(),
-            type: 'header',
-            title: '',
-            topic: topic || '',
-            examBoard: (board as ExamBoard) || 'AQA',
-            tier: 'higher' as Tier,
-            showName: true,
-            showDate: true,
-            showClass: true,
-            qualification: qual || undefined,
-            specPoint: spec || undefined,
-          },
-          {
-            id: crypto.randomUUID(),
-            type: 'instructions',
-            items: [
-              'Answer all questions.',
-              'Write your answers in the spaces provided.',
-              'The marks for each question are shown in brackets.',
-            ],
-          },
-        ],
+    } else {
+      const qual = searchParams.get('qual')
+      const board = searchParams.get('board')
+      const spec = searchParams.get('spec')
+      const topic = searchParams.get('topic')
+      if (qual || board) {
+        const blank: Worksheet = {
+          id: crypto.randomUUID(),
+          blocks: [
+            {
+              id: crypto.randomUUID(),
+              type: 'header',
+              title: '',
+              topic: topic || '',
+              examBoard: (board as ExamBoard) || 'AQA',
+              tier: 'higher' as Tier,
+              showName: true,
+              showDate: true,
+              showClass: true,
+              qualification: qual || undefined,
+              specPoint: spec || undefined,
+            },
+            {
+              id: crypto.randomUUID(),
+              type: 'instructions',
+              items: [
+                'Answer all questions.',
+                'Write your answers in the spaces provided.',
+                'The marks for each question are shown in brackets.',
+              ],
+            },
+          ],
+        }
+        dispatch({ type: 'LOAD_PRESET', worksheet: blank })
+        setSelectedId(null)
       }
-      dispatch({ type: 'LOAD_PRESET', worksheet: blank })
-      setSelectedId(null)
     }
+    // Allow React to flush the new worksheet state before we start watching changes
+    const t = setTimeout(() => { committedRef.current = true }, 200)
+    return () => clearTimeout(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function handleSave() {
-    save(worksheet)
-    setSaveFeedback('Saved!')
-    setTimeout(() => setSaveFeedback(''), 2000)
-  }
+  // Autosave on every change once committed
+  useEffect(() => {
+    triggerAutoSave(worksheet)
+    return () => clearTimeout(autoSaveTimer.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [worksheet])
 
   function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -133,17 +152,15 @@ export function EditorPage() {
         >Mark Scheme</button>
       </div>
 
+      <span className={`editor-save-status editor-save-status--${saveStatus}`}>
+        {saveStatus === 'saving' && '● Saving…'}
+        {saveStatus === 'saved' && '✓ Saved'}
+      </span>
+
       <button className="btn-topbar" onClick={() => navigate('/')}>← Home</button>
 
       <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
         Open
-      </button>
-      <button
-        className="btn-topbar"
-        onClick={handleSave}
-        title="Save worksheet to your account"
-      >
-        {saveFeedback || 'Save'}
       </button>
       <button className="btn-topbar" onClick={handleDownloadJSON} title="Download as JSON">
         Export JSON

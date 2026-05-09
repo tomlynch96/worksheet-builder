@@ -330,10 +330,10 @@ function PreviewDataGraph({ block }: { block: DataBlock }) {
   }
 
   const { xTicks, yTicks, points, bestFitLine, xMin, xMax, yMin, yMax } = layout
-  const xMajorStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : (xMax - xMin)
-  const yMajorStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : (yMax - yMin)
-  const xMinorStep = xMajorStep / 5
-  const yMinorStep = yMajorStep / 5
+  const xMajorStep = xTicks.length > 1 ? xTicks[1].value - xTicks[0].value : Math.max(xMax - xMin, 1)
+  const yMajorStep = yTicks.length > 1 ? yTicks[1].value - yTicks[0].value : Math.max(yMax - yMin, 1)
+  const xMinorStep = Math.max(xMajorStep / 5, 1e-10)
+  const yMinorStep = Math.max(yMajorStep / 5, 1e-10)
 
   const xMinorLines: number[] = []
   for (let v = xMin; v <= xMax + xMinorStep * 0.01; v += xMinorStep) {

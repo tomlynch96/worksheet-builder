@@ -44,6 +44,25 @@
   margin-left: auto;
 }
 
+.topbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4f46e5;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s;
+  margin-left: 4px;
+}
+.topbar-avatar:hover { background: #4338ca; }
+.topbar-avatar--active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4f46e5; }
+
 /* ── Buttons used in topbar (shared across pages) ── */
 .btn-topbar {
   padding: 6px 14px;

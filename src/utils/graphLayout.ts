@@ -49,9 +49,13 @@ export function computeGraphLayout(
   const yStep = niceInterval(yRange)
 
   const xMin = Math.min(0, niceMin(Math.min(...xs), xStep))
-  const xMax = niceMax(Math.max(...xs), xStep)
+  let xMax = niceMax(Math.max(...xs), xStep)
   const yMin = Math.min(0, niceMin(Math.min(...ys), yStep))
-  const yMax = niceMax(Math.max(...ys), yStep)
+  let yMax = niceMax(Math.max(...ys), yStep)
+
+  // Guard: when all data points share the same value xMax can equal xMin (e.g. all rows empty → all 0)
+  if (xMax <= xMin) xMax = xMin + xStep
+  if (yMax <= yMin) yMax = yMin + yStep
 
   const xTicks: Tick[] = []
   for (let v = xMin; v <= xMax + xStep * 0.01; v += xStep) {
