@@ -11,7 +11,24 @@
   padding: 10px 12px 14px;
   background: #f8f7fb;
   border-top: 1px solid var(--ui-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+.editor-ai-btn {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid #c4b5fd;
+  border-radius: 6px;
+  background: #f5f3ff;
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.editor-ai-btn:hover { background: #ede9fe; border-color: #a78bfa; }
 
 /* ── Focused block header ─────────────────────────────── */
 .editor-focused-header {

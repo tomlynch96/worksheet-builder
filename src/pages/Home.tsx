@@ -66,6 +66,11 @@ export function Home() {
     navigate(`/editor?${params.toString()}`)
   }
 
+  function handleWizardGenerated(worksheet: Worksheet) {
+    setShowWizard(false)
+    navigate('/editor', { state: { worksheet } })
+  }
+
   function handleOpenSheet(worksheet: Worksheet) {
     navigate('/editor', { state: { worksheet } })
   }
@@ -123,6 +128,7 @@ export function Home() {
       {showWizard && (
         <NewSheetWizard
           onConfirm={handleWizardConfirm}
+          onGenerated={handleWizardGenerated}
           onCancel={() => setShowWizard(false)}
         />
       )}

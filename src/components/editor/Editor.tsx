@@ -1,7 +1,9 @@
-import type { Worksheet, BlockType } from '../../types/worksheet'
+import { useState } from 'react'
+import type { Worksheet, BlockType, HeaderBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
 import { AddBlockMenu } from './AddBlockMenu'
+import { AIDialog } from './AIDialog'
 import { ActiveEditorProvider } from './ActiveEditorContext'
 import { RTEToolbar } from './RTEToolbar'
 import './Editor.css'
@@ -47,6 +49,15 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const { blocks } = worksheet
   const selectedBlock = blocks.find(b => b.id === selectedId) ?? null
   const selectedIdx = selectedBlock ? blocks.indexOf(selectedBlock) : -1
+  const [showAIDialog, setShowAIDialog] = useState(false)
+
+  const header = blocks.find(b => b.type === 'header') as HeaderBlock | undefined
+  const worksheetContext = [
+    header?.examBoard,
+    header?.tier,
+    header?.topic,
+    header?.specPoint,
+  ].filter(Boolean).join(' · ')
 
   return (
     <ActiveEditorProvider>
@@ -102,9 +113,29 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
         )}
 
         <div className="editor-footer">
-          <AddBlockMenu dispatch={dispatch} onAdded={id => onSelect(id)} />
+          <AddBlockMenu
+            dispatch={dispatch}
+            onAdded={id => onSelect(id)}
+            worksheetContext={worksheetContext}
+          />
+          <button
+            type="button"
+            className="editor-ai-btn"
+            onClick={() => setShowAIDialog(true)}
+            title="Ask AI to edit this worksheet"
+          >
+            ✦ Ask AI
+          </button>
         </div>
       </div>
+
+      {showAIDialog && (
+        <AIDialog
+          worksheet={worksheet}
+          dispatch={dispatch}
+          onClose={() => setShowAIDialog(false)}
+        />
+      )}
     </ActiveEditorProvider>
   )
 }
