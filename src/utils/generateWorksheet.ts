@@ -14,7 +14,7 @@ async function callEdge(body: object): Promise<string> {
     headers: {
       'Content-Type': 'application/json',
       'apikey': ANON_KEY,
-      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      Authorization: `Bearer ${session?.access_token ?? ANON_KEY}`,
     },
     body: JSON.stringify(body),
   })
