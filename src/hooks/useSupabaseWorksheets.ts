@@ -71,7 +71,8 @@ export function useSupabaseWorksheets(profileId: string | null) {
       blocks: worksheet.blocks,
     }
 
-    const { data } = await supabase.from('worksheets').upsert(row).select().single()
+    const { data, error } = await supabase.from('worksheets').upsert(row).select().single()
+    if (error) throw new Error(error.message)
     if (data) {
       const entry = rowToEntry(data as Record<string, unknown>)
       setEntries(prev => [entry, ...prev.filter(e => e.id !== entry.id)])
