@@ -3,6 +3,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// ── Formatting rules (referenced by all system prompts) ───────────────────
+
+const FORMATTING_RULES = `
+## Critical formatting rules — apply to ALL blocks
+- NEVER include question numbers (1., 2., Q1, etc.) in any stem or heading — the app adds these automatically.
+- NEVER include marks in brackets (e.g. [2 marks], (3)) in any stem or content — marks are displayed separately.
+- NEVER include part labels (a), (b), (i), (ii) in sub-part stems — the app adds these automatically.
+- Write stems and content as plain prose only.`
+
 // ── Shared JSON format spec ────────────────────────────────────────────────
 
 const WORKSHEET_FORMAT = `
@@ -110,13 +119,6 @@ PEDAGOGICAL RULES — follow exactly:
 5. All markScheme fields must show full marking points with [marks].
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
-
-const FORMATTING_RULES = `
-## Critical formatting rules — apply to ALL blocks
-- NEVER include question numbers (1., 2., Q1, etc.) in any stem or heading — the app adds these automatically.
-- NEVER include marks in brackets (e.g. [2 marks], (3)) in any stem or content — marks are displayed separately.
-- NEVER include part labels (a), (b), (i), (ii) in sub-part stems — the app adds these automatically.
-- Write stems and content as plain prose only.`
 
 const SYSTEM_BLOCK = `You are generating a single content block for a science worksheet.
 Output ONLY the raw JSON object for that one block — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
