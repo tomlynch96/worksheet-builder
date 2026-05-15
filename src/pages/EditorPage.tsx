@@ -30,6 +30,8 @@ export function EditorPage() {
   // Autosave — skip the initial render(s) while the worksheet loads
   const saveRef = useRef(save)
   saveRef.current = save
+  const worksheetRef = useRef(worksheet)
+  worksheetRef.current = worksheet
   const committedRef = useRef(false)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -95,7 +97,11 @@ export function EditorPage() {
       }
     }
     // Allow React to flush the new worksheet state before we start watching changes
-    const t = setTimeout(() => { committedRef.current = true }, 200)
+    const t = setTimeout(() => {
+      committedRef.current = true
+      // Immediately save whatever is loaded (catches AI-generated sheets that need no further edits)
+      triggerAutoSave(worksheetRef.current)
+    }, 300)
     return () => clearTimeout(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
