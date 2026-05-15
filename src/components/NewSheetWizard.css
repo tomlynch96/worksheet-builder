@@ -176,3 +176,125 @@
 }
 .wizard-btn--confirm:hover { background: #4338ca; }
 .wizard-btn--confirm:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+/* ── Worksheet type picker (step 3) ── */
+.wizard-type-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wizard-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.wizard-type-btn:hover { border-color: #818cf8; background: #fafafa; }
+.wizard-type-btn--selected {
+  border-color: #4f46e5;
+  background: #f5f3ff;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+}
+.wizard-type-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.wizard-type-icon {
+  font-size: 20px;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.wizard-type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wizard-type-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.wizard-type-desc {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ── Extra notes textarea ── */
+.wizard-textarea {
+  padding: 8px 10px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f2937;
+  background: #fff;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.wizard-textarea:focus { border-color: #4f46e5; }
+.wizard-textarea:disabled { background: #f9fafb; color: #9ca3af; }
+
+.wizard-optional {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+/* ── Error message ── */
+.wizard-error {
+  font-size: 12px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+/* ── Mode step actions ── */
+.wizard-actions--mode {
+  flex-wrap: wrap;
+}
+
+.wizard-btn--blank {
+  background: #f3f4f6;
+  color: #374151;
+  flex: 0;
+  white-space: nowrap;
+}
+.wizard-btn--blank:hover { background: #e5e7eb; }
+.wizard-btn--blank:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.wizard-btn--generate {
+  background: #4f46e5;
+  color: #fff;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.wizard-btn--generate:hover:not(:disabled) { background: #4338ca; }
+.wizard-btn--generate:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+/* ── Spinner ── */
+.wizard-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: wizard-spin 0.7s linear infinite;
+}
+@keyframes wizard-spin { to { transform: rotate(360deg); } }

@@ -300,6 +300,7 @@ export function GalleryPage() {
       {showWizard && (
         <NewSheetWizard
           onConfirm={handleWizardConfirm}
+          onGenerated={w => { setShowWizard(false); navigate('/editor', { state: { worksheet: w } }) }}
           onCancel={() => setShowWizard(false)}
         />
       )}

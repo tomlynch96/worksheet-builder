@@ -1,9 +1,12 @@
-import type { Worksheet, BlockType } from '../../types/worksheet'
+import { useState } from 'react'
+import type { Worksheet, BlockType, HeaderBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
 import { AddBlockMenu } from './AddBlockMenu'
+import { AIDialog } from './AIDialog'
 import { ActiveEditorProvider } from './ActiveEditorContext'
 import { RTEToolbar } from './RTEToolbar'
+import { generateBlock } from '../../utils/generateWorksheet'
 import './Editor.css'
 
 const BLOCK_LABELS: Record<BlockType, string> = {
@@ -43,10 +46,44 @@ interface Props {
   onSelect: (id: string | null) => void
 }
 
+interface BlockAIState {
+  prompt: string
+  loading: boolean
+  error: string | null
+}
+
 export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const { blocks } = worksheet
   const selectedBlock = blocks.find(b => b.id === selectedId) ?? null
   const selectedIdx = selectedBlock ? blocks.indexOf(selectedBlock) : -1
+  const [showAIDialog, setShowAIDialog] = useState(false)
+  const [blockAI, setBlockAI] = useState<BlockAIState | null>(null)
+
+  const header = blocks.find(b => b.type === 'header') as HeaderBlock | undefined
+  const worksheetContext = [
+    header?.examBoard,
+    header?.tier,
+    header?.topic,
+    header?.specPoint,
+  ].filter(Boolean).join(' · ')
+
+  async function handleBlockAISubmit() {
+    if (!selectedBlock || !blockAI?.prompt.trim()) return
+    setBlockAI(s => s && { ...s, loading: true, error: null })
+    try {
+      const generated = await generateBlock({
+        blockType: selectedBlock.type,
+        context: worksheetContext,
+        request: blockAI.prompt,
+      })
+      // Merge generated content into current block, preserving id and type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      dispatch({ type: 'UPDATE_BLOCK', id: selectedBlock.id, updates: { ...(generated as any), id: selectedBlock.id, type: selectedBlock.type } })
+      setBlockAI(null)
+    } catch (err) {
+      setBlockAI(s => s && { ...s, loading: false, error: err instanceof Error ? err.message : String(err) })
+    }
+  }
 
   return (
     <ActiveEditorProvider>
@@ -61,13 +98,19 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
               <button
                 type="button"
                 className="editor-back-btn"
-                onClick={() => onSelect(null)}
+                onClick={() => { onSelect(null); setBlockAI(null) }}
                 aria-label="Close editor"
               >
                 ← Back
               </button>
               <span className="editor-focused-type">{BLOCK_LABELS[selectedBlock.type]}</span>
               <div className="editor-focused-controls">
+                <button
+                  type="button"
+                  className="ctrl-btn ctrl-btn--ai"
+                  onClick={() => setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })}
+                  title="AI fill this block"
+                >✦</button>
                 <button
                   type="button"
                   className="ctrl-btn"
@@ -90,6 +133,35 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
                 >×</button>
               </div>
             </div>
+
+            {blockAI && (
+              <div className="editor-block-ai">
+                <textarea
+                  className="editor-block-ai-input"
+                  rows={2}
+                  autoFocus
+                  placeholder={`Describe what this ${BLOCK_LABELS[selectedBlock.type].toLowerCase()} should contain…`}
+                  value={blockAI.prompt}
+                  onChange={e => setBlockAI(s => s && { ...s, prompt: e.target.value })}
+                  disabled={blockAI.loading}
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleBlockAISubmit() }}
+                />
+                {blockAI.error && <p className="editor-block-ai-error">{blockAI.error}</p>}
+                <div className="editor-block-ai-actions">
+                  <span className="editor-block-ai-hint">⌘↵ to generate</span>
+                  <button type="button" className="editor-block-ai-cancel" onClick={() => setBlockAI(null)} disabled={blockAI.loading}>Cancel</button>
+                  <button
+                    type="button"
+                    className="editor-block-ai-submit"
+                    onClick={handleBlockAISubmit}
+                    disabled={!blockAI.prompt.trim() || blockAI.loading}
+                  >
+                    {blockAI.loading ? <><span className="editor-block-ai-spinner" /> Filling…</> : '✦ Fill block'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="editor-focused-body">
               <BlockEditor block={selectedBlock} blocks={blocks} dispatch={dispatch} />
             </div>
@@ -102,9 +174,29 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
         )}
 
         <div className="editor-footer">
-          <AddBlockMenu dispatch={dispatch} onAdded={id => onSelect(id)} />
+          <AddBlockMenu
+            dispatch={dispatch}
+            onAdded={id => onSelect(id)}
+            worksheetContext={worksheetContext}
+          />
+          <button
+            type="button"
+            className="editor-ai-btn"
+            onClick={() => setShowAIDialog(true)}
+            title="Ask AI to edit the whole worksheet"
+          >
+            ✦ Edit worksheet with AI
+          </button>
         </div>
       </div>
+
+      {showAIDialog && (
+        <AIDialog
+          worksheet={worksheet}
+          dispatch={dispatch}
+          onClose={() => setShowAIDialog(false)}
+        />
+      )}
     </ActiveEditorProvider>
   )
 }

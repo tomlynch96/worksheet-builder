@@ -24,7 +24,7 @@ export function EditorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const [promptCopied, setPromptCopied] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const openRef = useRef<HTMLInputElement>(null)
 
   // Autosave — skip the initial render(s) while the worksheet loads
@@ -38,9 +38,14 @@ export function EditorPage() {
     clearTimeout(autoSaveTimer.current)
     setSaveStatus('saving')
     autoSaveTimer.current = setTimeout(async () => {
-      await saveRef.current(w)
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
+      try {
+        await saveRef.current(w)
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus('idle'), 2000)
+      } catch {
+        setSaveStatus('error')
+        setTimeout(() => setSaveStatus('idle'), 4000)
+      }
     }, 1500)
   }, [profile])
 
@@ -155,6 +160,7 @@ export function EditorPage() {
       <span className={`editor-save-status editor-save-status--${saveStatus}`}>
         {saveStatus === 'saving' && '● Saving…'}
         {saveStatus === 'saved' && '✓ Saved'}
+        {saveStatus === 'error' && '⚠ Save failed'}
       </span>
 
       <button className="btn-topbar" onClick={() => navigate('/')}>← Home</button>
