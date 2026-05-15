@@ -2,6 +2,9 @@ import type { Worksheet, Block, QuestionBlock, MatchThemUpBlock, MatchItem } fro
 
 const API_URL = '/api/generate-worksheet'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const toUUID = (id: string | undefined) => (id && UUID_RE.test(id)) ? id : crypto.randomUUID()
+
 async function callAPI(body: object): Promise<string> {
   const res = await fetch(API_URL, {
     method: 'POST',
@@ -15,7 +18,7 @@ async function callAPI(body: object): Promise<string> {
 
 // Ensure blocks from AI have correct IDs and required fields on nested items
 function sanitiseBlock(block: Block): Block {
-  const id = block.id || crypto.randomUUID()
+  const id = toUUID(block.id)
   const labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
   if (block.type === 'question') {
@@ -49,7 +52,7 @@ function sanitiseBlock(block: Block): Block {
 }
 
 function sanitiseWorksheet(ws: Worksheet): Worksheet {
-  return { ...ws, blocks: ws.blocks.map(sanitiseBlock) }
+  return { ...ws, id: toUUID(ws.id), blocks: ws.blocks.map(sanitiseBlock) }
 }
 
 export async function generateWorksheet(params: {
