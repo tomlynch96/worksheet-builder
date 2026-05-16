@@ -2,49 +2,81 @@ import { useState, useEffect } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
 import type { Profile, UserCourse } from '../types/profile'
 
-const PROFILE_ID_KEY = 'worksheet-builder-profile-id'
-
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authUserId, setAuthUserId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return }
-    const id = localStorage.getItem(PROFILE_ID_KEY)
-    if (!id) { setLoading(false); return }
 
-    supabase
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setAuthUserId(session.user.id)
+        loadProfile(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setAuthUserId(session.user.id)
+        loadProfile(session.user.id)
+      } else {
+        setAuthUserId(null)
+        setProfile(null)
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function loadProfile(id: string) {
+    const { data, error } = await supabase
       .from('profiles')
       .select('*, user_courses(*)')
       .eq('id', id)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data) setProfile(data as Profile)
-        else localStorage.removeItem(PROFILE_ID_KEY)
-        setLoading(false)
-      })
-  }, [])
+      .maybeSingle()
+
+    if (!error && data) setProfile(data as Profile)
+    setLoading(false)
+  }
+
+  async function sendMagicLink(email: string): Promise<{ error?: string }> {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    })
+    return error ? { error: error.message } : {}
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+  }
 
   async function createProfile(name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) {
+    if (!authUserId) return false
+
     const { data, error } = await supabase
       .from('profiles')
-      .insert({ name })
+      .insert({ id: authUserId, name })
       .select()
       .single()
 
     if (error || !data) return false
 
-    localStorage.setItem(PROFILE_ID_KEY, data.id)
-
     if (courses.length > 0) {
       await supabase
         .from('user_courses')
-        .insert(courses.map(c => ({ ...c, profile_id: data.id })))
+        .insert(courses.map(c => ({ ...c, profile_id: authUserId })))
     }
 
     setProfile({
       ...data,
-      user_courses: courses.map((c, i) => ({ ...c, id: String(i), profile_id: data.id })),
+      user_courses: courses.map((c, i) => ({ ...c, id: String(i), profile_id: authUserId })),
     })
     return true
   }
@@ -69,5 +101,5 @@ export function useProfile() {
     return true
   }
 
-  return { profile, loading, createProfile, updateProfile }
+  return { profile, loading, authUserId, sendMagicLink, signOut, createProfile, updateProfile }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Topbar } from '../components/layout/Topbar'
 import { useProfileContext } from '../context/ProfileContext'
+import { supabase } from '../lib/supabase'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import type { UserCourse } from '../types/profile'
 import './ProfilePage.css'
@@ -9,7 +10,7 @@ import './ProfilePage.css'
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
 
 export function ProfilePage() {
-  const { profile, updateProfile } = useProfileContext()
+  const { profile, signOut, updateProfile } = useProfileContext()
   const navigate = useNavigate()
 
   const [name, setName] = useState(profile?.name ?? '')
@@ -19,6 +20,20 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [signingOut, setSigningOut] = useState(false)
+
+  async function handleSignOut() {
+    setSigningOut(true)
+    await signOut()
+    navigate('/onboarding', { replace: true })
+  }
+
+  const [email, setEmail] = useState('')
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setEmail(data.user.email)
+    })
+  }, [])
 
   useEffect(() => {
     if (profile) {
@@ -67,10 +82,19 @@ export function ProfilePage() {
             <div className="profile-avatar">
               {(name || 'T').charAt(0).toUpperCase()}
             </div>
-            <div>
+            <div className="profile-header-info">
               <h1 className="profile-title">Your Profile</h1>
+              {email && <p className="profile-email">{email}</p>}
               <p className="profile-subtitle">Update your name and the courses you teach.</p>
             </div>
+            <button
+              type="button"
+              className="profile-signout"
+              onClick={handleSignOut}
+              disabled={signingOut}
+            >
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </button>
           </div>
 
           <form onSubmit={handleSave} className="profile-form">

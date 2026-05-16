@@ -8,19 +8,23 @@ import './Onboarding.css'
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
 
 export function Onboarding() {
-  const { createProfile } = useProfileContext()
+  const { authUserId, sendMagicLink, createProfile } = useProfileContext()
   const navigate = useNavigate()
+
+  // Magic-link form
+  const [email, setEmail] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [emailError, setEmailError] = useState('')
+
+  // Profile setup form
   const [name, setName] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  function courseKey(qualId: string, board: string) {
-    return `${qualId}:${board}`
-  }
+  const [profileError, setProfileError] = useState('')
 
   function toggle(qualId: string, board: string) {
-    const key = courseKey(qualId, board)
+    const key = `${qualId}:${board}`
     setSelected(prev => {
       const next = new Set(prev)
       next.has(key) ? next.delete(key) : next.add(key)
@@ -28,12 +32,25 @@ export function Onboarding() {
     })
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSendLink(e: React.FormEvent) {
     e.preventDefault()
-    if (selected.size === 0) { setError('Please select at least one course.'); return }
+    if (!email.trim()) { setEmailError('Please enter your email address.'); return }
+    setSending(true)
+    setEmailError('')
+    const { error } = await sendMagicLink(email.trim())
+    setSending(false)
+    if (error) {
+      setEmailError(error)
+    } else {
+      setSent(true)
+    }
+  }
 
+  async function handleCreateProfile(e: React.FormEvent) {
+    e.preventDefault()
+    if (selected.size === 0) { setProfileError('Please select at least one course.'); return }
     setSaving(true)
-    setError('')
+    setProfileError('')
 
     const courses = Array.from(selected).map(key => {
       const [qualification_id, exam_board] = key.split(':')
@@ -44,7 +61,7 @@ export function Onboarding() {
     if (ok) {
       navigate('/', { replace: true })
     } else {
-      setError('Could not save profile — check your Supabase connection.')
+      setProfileError('Could not save profile — please try again.')
       setSaving(false)
     }
   }
@@ -63,68 +80,119 @@ export function Onboarding() {
     )
   }
 
-  return (
-    <div className="onboarding-layout">
-      <form className="onboarding-card" onSubmit={handleSubmit}>
-        <div className="onboarding-logo">WB</div>
-        <h1 className="onboarding-title">Welcome to Worksheet Builder</h1>
-        <p className="onboarding-body">
-          Tell us which courses you teach so we can organise your worksheets and pre-fill new ones.
-        </p>
+  // Signed in but no profile yet — show course selection
+  if (authUserId) {
+    return (
+      <div className="onboarding-layout">
+        <form className="onboarding-card" onSubmit={handleCreateProfile}>
+          <div className="onboarding-logo">WB</div>
+          <h1 className="onboarding-title">One more step</h1>
+          <p className="onboarding-body">
+            Tell us which courses you teach so we can organise your worksheets and pre-fill new ones.
+          </p>
 
-        <div className="onboarding-name-row">
-          <label className="onboarding-label">Your name (optional)</label>
-          <input
-            className="onboarding-input"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="e.g. Mr Smith"
-          />
-        </div>
+          <div className="onboarding-name-row">
+            <label className="onboarding-label">Your name (optional)</label>
+            <input
+              className="onboarding-input"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Mr Smith"
+            />
+          </div>
 
-        <div className="onboarding-courses">
-          <div className="onboarding-label">Which courses do you teach?</div>
-          <div className="onboarding-board-key">
-            {EXAM_BOARDS.map(b => (
-              <span key={b} className="onboarding-board-label">{b}</span>
+          <div className="onboarding-courses">
+            <div className="onboarding-label">Which courses do you teach?</div>
+            <div className="onboarding-board-key">
+              {EXAM_BOARDS.map(b => (
+                <span key={b} className="onboarding-board-label">{b}</span>
+              ))}
+            </div>
+            {QUALIFICATION_OFFERINGS.map(qual => (
+              <div key={qual.id} className="onboarding-qual-row">
+                <span className="onboarding-qual-name">{qual.label}</span>
+                <div className="onboarding-boards">
+                  {EXAM_BOARDS.map(board => {
+                    const key = `${qual.id}:${board}`
+                    const checked = selected.has(key)
+                    return (
+                      <button
+                        key={board}
+                        type="button"
+                        className={`onboarding-board-btn${checked ? ' onboarding-board-btn--on' : ''}`}
+                        onClick={() => toggle(qual.id, board)}
+                        aria-pressed={checked}
+                      >
+                        {checked ? '✓' : ''}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             ))}
           </div>
-          {QUALIFICATION_OFFERINGS.map(qual => (
-            <div key={qual.id} className="onboarding-qual-row">
-              <span className="onboarding-qual-name">{qual.label}</span>
-              <div className="onboarding-boards">
-                {EXAM_BOARDS.map(board => {
-                  const key = courseKey(qual.id, board)
-                  const checked = selected.has(key)
-                  return (
-                    <button
-                      key={board}
-                      type="button"
-                      className={`onboarding-board-btn${checked ? ' onboarding-board-btn--on' : ''}`}
-                      onClick={() => toggle(qual.id, board)}
-                      aria-pressed={checked}
-                    >
-                      {checked ? '✓' : ''}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
 
-        {error && <p className="onboarding-error">{error}</p>}
+          {profileError && <p className="onboarding-error">{profileError}</p>}
 
-        <div className="onboarding-hint">
-          {selected.size === 0
-            ? 'Select at least one course to continue.'
-            : `${selected.size} course${selected.size !== 1 ? 's' : ''} selected`}
-        </div>
+          <div className="onboarding-hint">
+            {selected.size === 0
+              ? 'Select at least one course to continue.'
+              : `${selected.size} course${selected.size !== 1 ? 's' : ''} selected`}
+          </div>
 
-        <button className="onboarding-submit" type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Get started →'}
-        </button>
-      </form>
+          <button className="onboarding-submit" type="submit" disabled={saving}>
+            {saving ? 'Saving…' : 'Get started →'}
+          </button>
+        </form>
+      </div>
+    )
+  }
+
+  // Not signed in — show magic link form
+  return (
+    <div className="onboarding-layout">
+      <div className="onboarding-card">
+        <div className="onboarding-logo">WB</div>
+        <h1 className="onboarding-title">Worksheet Builder</h1>
+        <p className="onboarding-body">
+          A free AI worksheet generation platform for secondary science teachers.
+          Sign in with a magic link — no password needed.
+        </p>
+
+        {sent ? (
+          <div className="onboarding-sent">
+            <div className="onboarding-sent-icon">✉</div>
+            <p className="onboarding-sent-heading">Check your inbox</p>
+            <p className="onboarding-sent-body">
+              We sent a sign-in link to <strong>{email}</strong>.
+              Click it to continue — you can close this tab.
+            </p>
+            <button
+              className="onboarding-retry"
+              type="button"
+              onClick={() => { setSent(false); setEmail('') }}
+            >
+              Use a different email
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSendLink} className="onboarding-magic-form">
+            <label className="onboarding-label">Email address</label>
+            <input
+              className="onboarding-input"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@school.ac.uk"
+              autoFocus
+            />
+            {emailError && <p className="onboarding-error">{emailError}</p>}
+            <button className="onboarding-submit" type="submit" disabled={sending}>
+              {sending ? 'Sending…' : 'Send magic link →'}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   )
 }

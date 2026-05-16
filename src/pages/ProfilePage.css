@@ -31,6 +31,37 @@
   color: #fff;
 }
 
+.profile-header-info {
+  flex: 1;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin: 2px 0 4px;
+}
+
+.profile-signout {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.profile-signout:hover:not(:disabled) {
+  background: rgba(255,255,255,0.18);
+}
+
+.profile-signout:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .profile-avatar {
   width: 52px;
   height: 52px;

@@ -5,6 +5,9 @@ import type { Profile, UserCourse } from '../types/profile'
 interface ProfileContextValue {
   profile: Profile | null
   loading: boolean
+  authUserId: string | null
+  sendMagicLink: (email: string) => Promise<{ error?: string }>
+  signOut: () => Promise<void>
   createProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
   updateProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
 }
