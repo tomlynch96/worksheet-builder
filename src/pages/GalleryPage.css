@@ -154,6 +154,94 @@
 .gallery-btn--load   { background: #eff6ff; color: #1d4ed8; }
 .gallery-btn--load:hover { background: #dbeafe; }
 
+/* ── Toolbar (tabs + search) ── */
+.gallery-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gallery-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.gallery-tab {
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  color: #374151;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.gallery-tab:hover { border-color: #a5b4fc; }
+.gallery-tab--active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+.gallery-search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+  padding: 7px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #374151;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.gallery-search:focus { border-color: #6366f1; }
+
+/* ── Collapsible subgroup ── */
+.gallery-subgroup-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.gallery-subgroup-toggle:hover { color: #374151; }
+
+.gallery-subgroup-chevron {
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.gallery-subgroup-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.gallery-subgroup-count {
+  margin-left: auto;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 /* ── States ── */
 .gallery-loading {
   font-size: 14px; color: #9ca3af; padding: 32px 0;

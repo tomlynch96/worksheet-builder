@@ -129,11 +129,10 @@ function TemplateCard({ idx, onLoad }: { idx: number; onLoad: (idx: number) => v
   )
 }
 
-// Group entries by (exam_board + qualification_id) then by topic from spec data
 interface Group {
   key: string
   label: string
-  subGroups: { topicTitle: string; entries: WorksheetEntry[] }[]
+  subGroups: { topicTitle: string; topicRef: string; entries: WorksheetEntry[] }[]
   ungrouped: WorksheetEntry[]
 }
 
@@ -167,6 +166,7 @@ function groupEntries(entries: WorksheetEntry[]): { groups: Group[]; unassigned:
 
     const subGroups = Array.from(subGroupMap.entries())
       .map(([ref, sg]) => ({
+        topicRef: ref,
         topicTitle: topics?.find(t => t.ref === ref)?.title ?? ref,
         entries: sg,
       }))
@@ -182,6 +182,9 @@ export function GalleryPage() {
   const navigate = useNavigate()
   const { entries, loading, remove } = useSupabaseWorksheets(profile?.id ?? null)
   const [showWizard, setShowWizard] = useState(false)
+  const [courseTab, setCourseTab] = useState<string>('all')
+  const [search, setSearch] = useState('')
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
   function handleOpen(worksheet: Worksheet) {
     navigate('/editor', { state: { worksheet } })
@@ -207,7 +210,37 @@ export function GalleryPage() {
     navigate(`/editor?${params.toString()}`)
   }
 
-  const { groups, unassigned } = groupEntries(entries)
+  function toggleCollapsed(key: string) {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  // Build course tabs from user's enrolled courses
+  const courseTabs = (profile?.user_courses ?? []).map(uc => ({
+    key: `${uc.exam_board}:${uc.qualification_id}`,
+    label: offeringLabel(uc.qualification_id, uc.exam_board),
+  }))
+
+  // Filter entries by active course tab and search query
+  const q = search.trim().toLowerCase()
+  const filtered = entries.filter(e => {
+    if (courseTab !== 'all') {
+      const key = `${e.exam_board}:${e.qualification_id}`
+      if (key !== courseTab) return false
+    }
+    if (q) {
+      const inTitle = (e.title ?? '').toLowerCase().includes(q)
+      const inTopic = (e.topic ?? '').toLowerCase().includes(q)
+      if (!inTitle && !inTopic) return false
+    }
+    return true
+  })
+
+  const { groups, unassigned } = groupEntries(filtered)
   const hasAny = entries.length > 0
 
   return (
@@ -243,6 +276,34 @@ export function GalleryPage() {
             )}
           </div>
 
+          {/* Course tabs + search */}
+          {hasAny && (
+            <div className="gallery-toolbar">
+              {courseTabs.length > 0 && (
+                <div className="gallery-tabs">
+                  <button
+                    className={`gallery-tab${courseTab === 'all' ? ' gallery-tab--active' : ''}`}
+                    onClick={() => setCourseTab('all')}
+                  >All</button>
+                  {courseTabs.map(ct => (
+                    <button
+                      key={ct.key}
+                      className={`gallery-tab${courseTab === ct.key ? ' gallery-tab--active' : ''}`}
+                      onClick={() => setCourseTab(ct.key)}
+                    >{ct.label}</button>
+                  ))}
+                </div>
+              )}
+              <input
+                className="gallery-search"
+                type="search"
+                placeholder="Search by title or topic…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+          )}
+
           {loading ? (
             <div className="gallery-loading">Loading…</div>
           ) : !hasAny ? (
@@ -250,38 +311,77 @@ export function GalleryPage() {
               <div className="gallery-empty-icon">📄</div>
               <p>Save a worksheet from the editor to see it here.</p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="gallery-empty">
+              <p>No worksheets match your search.</p>
+            </div>
           ) : (
             <div className="gallery-grouped">
-              {/* Grouped by course + topic */}
               {groups.map(group => (
                 <div key={group.key} className="gallery-group">
                   <h3 className="gallery-group-title">{group.label}</h3>
 
-                  {group.subGroups.map(sg => (
-                    <div key={sg.topicTitle} className="gallery-subgroup">
-                      <div className="gallery-subgroup-title">{sg.topicTitle}</div>
-                      <div className="gallery-grid">
-                        {sg.entries.map(e => (
-                          <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
-                        ))}
+                  {group.subGroups.map(sg => {
+                    const colKey = `${group.key}:${sg.topicRef}`
+                    const isCollapsed = collapsed.has(colKey)
+                    return (
+                      <div key={sg.topicTitle} className="gallery-subgroup">
+                        <button
+                          className="gallery-subgroup-title gallery-subgroup-toggle"
+                          onClick={() => toggleCollapsed(colKey)}
+                        >
+                          <span className={`gallery-subgroup-chevron${isCollapsed ? ' gallery-subgroup-chevron--collapsed' : ''}`}>▾</span>
+                          {sg.topicTitle}
+                          <span className="gallery-subgroup-count">{sg.entries.length}</span>
+                        </button>
+                        {!isCollapsed && (
+                          <div className="gallery-grid">
+                            {sg.entries.map(e => (
+                              <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
 
                   {group.ungrouped.length > 0 && (
                     <div className="gallery-subgroup">
-                      {group.subGroups.length > 0 && <div className="gallery-subgroup-title">Other</div>}
-                      <div className="gallery-grid">
-                        {group.ungrouped.map(e => (
-                          <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
-                        ))}
-                      </div>
+                      {group.subGroups.length > 0 && (() => {
+                        const colKey = `${group.key}:__other__`
+                        const isCollapsed = collapsed.has(colKey)
+                        return (
+                          <>
+                            <button
+                              className="gallery-subgroup-title gallery-subgroup-toggle"
+                              onClick={() => toggleCollapsed(colKey)}
+                            >
+                              <span className={`gallery-subgroup-chevron${isCollapsed ? ' gallery-subgroup-chevron--collapsed' : ''}`}>▾</span>
+                              Other
+                              <span className="gallery-subgroup-count">{group.ungrouped.length}</span>
+                            </button>
+                            {!isCollapsed && (
+                              <div className="gallery-grid">
+                                {group.ungrouped.map(e => (
+                                  <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )
+                      })()}
+                      {group.subGroups.length === 0 && (
+                        <div className="gallery-grid">
+                          {group.ungrouped.map(e => (
+                            <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               ))}
 
-              {/* Unassigned (no qualification) */}
               {unassigned.length > 0 && (
                 <div className="gallery-group">
                   <h3 className="gallery-group-title">Unassigned</h3>
