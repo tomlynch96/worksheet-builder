@@ -66,9 +66,9 @@ export function Home() {
     navigate(`/editor?${params.toString()}`)
   }
 
-  function handleWizardGenerated(worksheet: Worksheet) {
+  function handleWizardGenerated(worksheet: Worksheet, worksheetType: string) {
     setShowWizard(false)
-    navigate('/editor', { state: { worksheet } })
+    navigate('/editor', { state: { worksheet, aiGenerated: true, worksheetType } })
   }
 
   function handleOpenSheet(worksheet: Worksheet) {

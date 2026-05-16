@@ -6,6 +6,7 @@ import { Home } from './pages/Home'
 import { EditorPage } from './pages/EditorPage'
 import { GalleryPage } from './pages/GalleryPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { InsightsPage } from './pages/InsightsPage'
 import './App.css'
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/editor" element={<AuthGate><EditorPage /></AuthGate>} />
           <Route path="/gallery" element={<AuthGate><GalleryPage /></AuthGate>} />
           <Route path="/profile" element={<AuthGate><ProfilePage /></AuthGate>} />
+          <Route path="/insights" element={<AuthGate><InsightsPage /></AuthGate>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

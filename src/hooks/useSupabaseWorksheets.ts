@@ -56,10 +56,10 @@ export function useSupabaseWorksheets(profileId: string | null) {
 
   useEffect(() => { load() }, [load])
 
-  async function save(worksheet: Worksheet) {
+  async function save(worksheet: Worksheet, aiMeta?: { worksheetType: string; originalBlocks: import('../types/worksheet').Block[] }) {
     if (!profileId || !isConfigured) return
     const header = worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined
-    const row = {
+    const row: Record<string, unknown> = {
       id: worksheet.id,
       profile_id: profileId,
       title: header?.title || '',
@@ -71,8 +71,33 @@ export function useSupabaseWorksheets(profileId: string | null) {
       blocks: worksheet.blocks,
     }
 
-    const { data, error } = await supabase.from('worksheets').upsert(row).select().single()
+    // On the first save of an AI-generated worksheet, record the original blocks
+    if (aiMeta) {
+      row.ai_generated = true
+      row.worksheet_type = aiMeta.worksheetType
+      // Only set original_blocks if not already saved (use ignoreDuplicates via onConflict update)
+    }
+
+    const { data, error } = await supabase
+      .from('worksheets')
+      .upsert(row, {
+        onConflict: 'id',
+        // Don't overwrite original_blocks on subsequent saves
+        ignoreDuplicates: false,
+      })
+      .select()
+      .single()
     if (error) throw new Error(error.message)
+
+    // Store original_blocks only if this worksheet has never been saved before
+    if (aiMeta && data && !(data as Record<string, unknown>).original_blocks) {
+      await supabase
+        .from('worksheets')
+        .update({ original_blocks: aiMeta.originalBlocks })
+        .eq('id', worksheet.id)
+        .is('original_blocks', null)
+    }
+
     if (data) {
       const entry = rowToEntry(data as Record<string, unknown>)
       setEntries(prev => [entry, ...prev.filter(e => e.id !== entry.id)])

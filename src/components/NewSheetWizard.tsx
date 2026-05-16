@@ -15,7 +15,7 @@ interface WizardResult {
 
 interface Props {
   onConfirm: (result: WizardResult) => void
-  onGenerated: (worksheet: Worksheet) => void
+  onGenerated: (worksheet: Worksheet, worksheetType: string) => void
   onCancel: () => void
 }
 
@@ -127,7 +127,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
       })
-      onGenerated(worksheet)
+      onGenerated(worksheet, worksheetType)
     } catch (err) {
       setGenError(err instanceof Error ? err.message : String(err))
     } finally {

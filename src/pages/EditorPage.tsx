@@ -7,16 +7,18 @@ import { WorksheetPreview } from '../components/preview/WorksheetPreview'
 import { WorksheetPDF } from '../components/pdf/WorksheetPDF'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
+import { useEditTracking } from '../hooks/useEditTracking'
 import { useProfileContext } from '../context/ProfileContext'
 import { buildAIPrompt } from '../utils/aiPrompt'
 import { PRESETS } from '../data/presets'
-import type { Worksheet, ExamBoard, Tier } from '../types/worksheet'
+import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
 import './EditorPage.css'
 
 export function EditorPage() {
   const { profile } = useProfileContext()
   const { worksheet, dispatch } = useWorksheet()
   const { save } = useSupabaseWorksheets(profile?.id ?? null)
+  const { trackEdit } = useEditTracking(profile?.id ?? null)
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -27,9 +29,16 @@ export function EditorPage() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const openRef = useRef<HTMLInputElement>(null)
 
+  // Track original AI blocks and worksheet type for edit diffing
+  const originalBlocksRef = useRef<Block[]>([])
+  const worksheetTypeRef = useRef<string>('')
+  const isAIGeneratedRef = useRef(false)
+
   // Autosave — skip the initial render(s) while the worksheet loads
   const saveRef = useRef(save)
   saveRef.current = save
+  const trackEditRef = useRef(trackEdit)
+  trackEditRef.current = trackEdit
   const worksheetRef = useRef(worksheet)
   worksheetRef.current = worksheet
   const committedRef = useRef(false)
@@ -41,7 +50,15 @@ export function EditorPage() {
     setSaveStatus('saving')
     autoSaveTimer.current = setTimeout(async () => {
       try {
-        await saveRef.current(w)
+        const aiMeta = isAIGeneratedRef.current ? {
+          worksheetType: worksheetTypeRef.current,
+          originalBlocks: originalBlocksRef.current,
+        } : undefined
+        await saveRef.current(w, aiMeta)
+        // Track edits against original AI output on every save
+        if (isAIGeneratedRef.current && originalBlocksRef.current.length > 0) {
+          await trackEditRef.current(w, originalBlocksRef.current, worksheetTypeRef.current)
+        }
         setSaveStatus('saved')
         setTimeout(() => setSaveStatus('idle'), 2000)
       } catch {
@@ -54,8 +71,15 @@ export function EditorPage() {
   // Load worksheet from navigation state or wizard query params, then enable autosave
   useEffect(() => {
     if (location.state?.worksheet) {
-      dispatch({ type: 'LOAD_WORKSHEET', worksheet: location.state.worksheet as Worksheet })
+      const ws = location.state.worksheet as Worksheet
+      dispatch({ type: 'LOAD_WORKSHEET', worksheet: ws })
       setSelectedId(null)
+      // If navigated here from AI generation, capture the original blocks
+      if (location.state?.aiGenerated) {
+        isAIGeneratedRef.current = true
+        originalBlocksRef.current = ws.blocks
+        worksheetTypeRef.current = location.state.worksheetType ?? ''
+      }
     } else if (typeof location.state?.preset === 'number') {
       dispatch({ type: 'LOAD_PRESET', worksheet: PRESETS[location.state.preset].worksheet })
       setSelectedId(null)
@@ -96,10 +120,8 @@ export function EditorPage() {
         setSelectedId(null)
       }
     }
-    // Allow React to flush the new worksheet state before we start watching changes
     const t = setTimeout(() => {
       committedRef.current = true
-      // Immediately save whatever is loaded (catches AI-generated sheets that need no further edits)
       triggerAutoSave(worksheetRef.current)
     }, 300)
     return () => clearTimeout(t)
