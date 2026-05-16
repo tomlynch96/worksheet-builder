@@ -235,6 +235,14 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
                   placeholder="Model answer for this part…"
                 />
               </Field>
+              <Field label="Numerical answer (no units, for answer box)">
+                <input
+                  value={part.numericalAnswer ?? ''}
+                  onChange={e => updatePart(i, { numericalAnswer: e.target.value || undefined })}
+                  placeholder="e.g. 9.8"
+                  style={{ maxWidth: 160 }}
+                />
+              </Field>
             </div>
           ))}
         </div>
@@ -250,6 +258,14 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
               value={block.markScheme ?? ''}
               onChange={markScheme => update({ markScheme })}
               placeholder="Model answer / marking points…"
+            />
+          </Field>
+          <Field label="Numerical answer (no units, for answer box)">
+            <input
+              value={block.numericalAnswer ?? ''}
+              onChange={e => update({ numericalAnswer: e.target.value || undefined })}
+              placeholder="e.g. 9.8"
+              style={{ maxWidth: 160 }}
             />
           </Field>
         </>

@@ -15,7 +15,7 @@ export function InformationEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Heading (optional)">
-        <input value={block.heading} onChange={e => update({ heading: e.target.value })} placeholder="e.g. Key information" />
+        <RichTextEditor value={block.heading} onChange={heading => update({ heading })} placeholder="e.g. Key information" multiline={false} />
       </Field>
       <Field label="Content">
         <RichTextEditor

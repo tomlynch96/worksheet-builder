@@ -29,7 +29,7 @@ export function MatchThemUpEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Heading">
-        <input value={block.heading} onChange={e => update({ heading: e.target.value })} placeholder="Match each term to its definition." />
+        <RichTextEditor value={block.heading} onChange={heading => update({ heading })} placeholder="Match each term to its definition." multiline={false} />
       </Field>
       <div className="match-grid-header">
         <span>Term</span>

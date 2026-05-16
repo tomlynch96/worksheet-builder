@@ -1,7 +1,7 @@
 import katex from 'katex'
 import 'katex/contrib/mhchem'
 import { useRef, useLayoutEffect, useState } from 'react'
-import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
+import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock, NumericalAnswersBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages, estimateBlockHeight } from '../../utils/pagination'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
@@ -163,7 +163,9 @@ function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num
 function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
   return (
     <div className="pr-worked-example">
-      <div className="pr-worked-title">{block.title || 'Worked example'}</div>
+      <div className="pr-worked-title">
+        {block.title ? <RichText html={block.title} /> : 'Worked example'}
+      </div>
       <div className="pr-worked-steps">
         {block.steps.map((step, i) => (
           <div key={i} className="pr-worked-step">{step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}</div>
@@ -176,7 +178,7 @@ function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
 function PreviewInformation({ block }: { block: InformationBlock }) {
   return (
     <div className="pr-information">
-      {block.heading && <div className="pr-information-heading">{block.heading}</div>}
+      {block.heading && <div className="pr-information-heading"><RichText html={block.heading} /></div>}
       <div className="pr-information-content">
         {block.content ? <RichText html={block.content} /> : <em className="pr-placeholder">Information text…</em>}
       </div>
@@ -653,6 +655,44 @@ function PreviewOrderStepsMS({ block, num }: { block: OrderStepsBlock; num: numb
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+function collectNumericalAnswers(blocks: Block[]): string[] {
+  const answers: string[] = []
+  for (const b of blocks) {
+    if (b.type !== 'question') continue
+    if (b.parts.length === 0) {
+      if (b.numericalAnswer?.trim()) answers.push(b.numericalAnswer.trim())
+    } else {
+      for (const p of b.parts) {
+        if (p.numericalAnswer?.trim()) answers.push(p.numericalAnswer.trim())
+      }
+    }
+  }
+  return answers
+}
+
+function PreviewNumericalAnswers({ block, blocks }: { block: NumericalAnswersBlock; blocks: Block[] }) {
+  const answers = seededShuffle(collectNumericalAnswers(blocks), block.id)
+  return (
+    <div className="pr-numerical-answers">
+      <div className="pr-numerical-heading">
+        {block.heading ? <RichText html={block.heading} /> : 'Numerical answers'}
+      </div>
+      {answers.length === 0 ? (
+        <p className="pr-numerical-empty">No numerical answers set yet. Edit questions and enter a numerical answer to populate this box.</p>
+      ) : (
+        <div className="pr-numerical-grid">
+          {answers.map((ans, i) => (
+            <span key={i} className="pr-numerical-item">
+              <span className="pr-numerical-circle" />
+              {ans}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks: Block[]; mode: 'worksheet' | 'markscheme'; showLines?: boolean }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   if (mode === 'markscheme') {
@@ -675,9 +715,10 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
     case 'match_them_up':   return <PreviewMatchThemUp block={block} num={num} />
     case 'cloze':           return <PreviewCloze block={block} num={num} />
     case 'order_steps':     return <PreviewOrderSteps block={block} num={num} />
-    case 'figure':          return <PreviewFigure block={block} />
-    case 'spacer':          return <PreviewSpacer block={block} />
-    case 'data':            return <PreviewData block={block as DataBlock} blocks={blocks} />
+    case 'figure':             return <PreviewFigure block={block} />
+    case 'spacer':             return <PreviewSpacer block={block} />
+    case 'data':               return <PreviewData block={block as DataBlock} blocks={blocks} />
+    case 'numerical_answers':  return <PreviewNumericalAnswers block={block as NumericalAnswersBlock} blocks={blocks} />
   }
 }
 

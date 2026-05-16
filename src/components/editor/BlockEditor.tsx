@@ -12,6 +12,7 @@ import { OrderStepsEditor } from './blocks/OrderStepsEditor'
 import { FigureEditor } from './blocks/FigureEditor'
 import { SpacerEditor } from './blocks/SpacerEditor'
 import { DataEditor } from './blocks/DataEditor'
+import { NumericalAnswersEditor } from './blocks/NumericalAnswersEditor'
 
 interface Props {
   block: Block
@@ -30,8 +31,9 @@ export function BlockEditor({ block, blocks, dispatch }: Props) {
     case 'match_them_up':   return <MatchThemUpEditor block={block} dispatch={dispatch} />
     case 'cloze':           return <ClozeEditor block={block} dispatch={dispatch} />
     case 'order_steps':     return <OrderStepsEditor block={block} dispatch={dispatch} />
-    case 'figure':          return <FigureEditor block={block} dispatch={dispatch} />
-    case 'spacer':          return <SpacerEditor block={block} dispatch={dispatch} />
-    case 'data':            return <DataEditor block={block as DataBlock} dispatch={dispatch} blocks={blocks} />
+    case 'figure':             return <FigureEditor block={block} dispatch={dispatch} />
+    case 'spacer':             return <SpacerEditor block={block} dispatch={dispatch} />
+    case 'data':               return <DataEditor block={block as DataBlock} dispatch={dispatch} blocks={blocks} />
+    case 'numerical_answers':  return <NumericalAnswersEditor block={block} dispatch={dispatch} />
   }
 }

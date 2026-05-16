@@ -30,6 +30,7 @@ export interface QuestionPart {
   attachedDataId?: string
   attachedFigureId?: string
   markScheme?: string
+  numericalAnswer?: string
 }
 
 export interface QuestionBlock {
@@ -42,6 +43,7 @@ export interface QuestionBlock {
   attachedDataId?: string
   attachedFigureId?: string
   markScheme?: string
+  numericalAnswer?: string
 }
 
 export interface WorkedExampleBlock {
@@ -141,6 +143,12 @@ export interface DataBlock {
   graph: GraphOptions
 }
 
+export interface NumericalAnswersBlock {
+  id: string
+  type: 'numerical_answers'
+  heading: string
+}
+
 export type Block =
   | HeaderBlock
   | InstructionsBlock
@@ -154,6 +162,7 @@ export type Block =
   | OrderStepsBlock
   | MultipleChoiceBlock
   | DataBlock
+  | NumericalAnswersBlock
 
 export type BlockType = Block['type']
 

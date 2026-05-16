@@ -12,17 +12,18 @@ interface Props {
 }
 
 const BLOCK_OPTIONS: { type: BlockType; label: string; description: string; color: string }[] = [
-  { type: 'question',        label: 'Question',           description: 'Numbered question with answer lines',          color: '#16a34a' },
-  { type: 'multiple_choice', label: 'Multiple choice',    description: 'A–D options with one correct answer',          color: '#0891b2' },
-  { type: 'cloze',           label: 'Cloze activity',     description: 'Fill-in-the-blanks with a word bank',          color: '#db2777' },
-  { type: 'match_them_up',   label: 'Match them up',      description: 'Draw lines between terms and definitions',     color: '#7c3aed' },
-  { type: 'order_steps',     label: 'Order the steps',    description: 'Sequence jumbled steps into correct order',    color: '#4338ca' },
-  { type: 'information',     label: 'Information',        description: 'Highlighted background knowledge block',       color: '#b45309' },
-  { type: 'worked_example',  label: 'Worked example',     description: 'Step-by-step model answer in a box',          color: '#c2410c' },
-  { type: 'figure',          label: 'Figure',             description: 'Diagram placeholder with caption',             color: '#475569' },
-  { type: 'instructions',    label: 'Instructions',       description: 'Bulleted list of task instructions',           color: '#0369a1' },
-  { type: 'spacer',          label: 'Spacer',             description: 'Blank vertical space',                         color: '#9ca3af' },
-  { type: 'data',            label: 'Data table / graph', description: 'Editable data table with optional graph view', color: '#0d9488' },
+  { type: 'question',           label: 'Question',              description: 'Numbered question with answer lines',          color: '#16a34a' },
+  { type: 'multiple_choice',    label: 'Multiple choice',       description: 'A–D options with one correct answer',          color: '#0891b2' },
+  { type: 'cloze',              label: 'Cloze activity',        description: 'Fill-in-the-blanks with a word bank',          color: '#db2777' },
+  { type: 'match_them_up',      label: 'Match them up',         description: 'Draw lines between terms and definitions',     color: '#7c3aed' },
+  { type: 'order_steps',        label: 'Order the steps',       description: 'Sequence jumbled steps into correct order',    color: '#4338ca' },
+  { type: 'information',        label: 'Information',           description: 'Highlighted background knowledge block',       color: '#b45309' },
+  { type: 'worked_example',     label: 'Worked example',        description: 'Step-by-step model answer in a box',          color: '#c2410c' },
+  { type: 'numerical_answers',  label: 'Numerical answers box', description: 'Scrambled numerical answers for self-checking',color: '#374151' },
+  { type: 'figure',             label: 'Figure',                description: 'Diagram placeholder with caption',             color: '#475569' },
+  { type: 'instructions',       label: 'Instructions',          description: 'Bulleted list of task instructions',           color: '#0369a1' },
+  { type: 'spacer',             label: 'Spacer',                description: 'Blank vertical space',                         color: '#9ca3af' },
+  { type: 'data',               label: 'Data table / graph',    description: 'Editable data table with optional graph view', color: '#0d9488' },
 ]
 
 function makeBlock(type: BlockType): Block {
@@ -59,6 +60,8 @@ function makeBlock(type: BlockType): Block {
         { label: 'x', unit: '' }, { label: 'y', unit: '' }
       ], rows: [['', ''], ['', ''], ['', ''], ['', '']], display: 'table',
       graph: { xCol: 0, yCol: 1, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true, omitRows: [], fitType: 'none', linkedDataId: null } }
+    case 'numerical_answers':
+      return { id, type: 'numerical_answers', heading: 'Numerical answers' }
   }
 }
 

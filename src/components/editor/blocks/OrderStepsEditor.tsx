@@ -24,7 +24,7 @@ export function OrderStepsEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Heading">
-        <input value={block.heading} onChange={e => update({ heading: e.target.value })} placeholder="Number these steps 1 to … in the correct order." />
+        <RichTextEditor value={block.heading} onChange={heading => update({ heading })} placeholder="Number these steps 1 to … in the correct order." multiline={false} />
       </Field>
       <p className="ep-hint">Enter steps in the correct order — they will be shuffled for students.</p>
       <div className="ep-list-editor">

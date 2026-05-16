@@ -19,6 +19,7 @@ export function estimateBlockHeight(block: Block): number {
     case 'figure': return ({ small: 114, medium: 174, large: 234 } as Record<FigureBlock['size'], number>)[block.size]
     case 'spacer': return ({ small: 16, medium: 32, large: 56 } as Record<SpacerBlock['size'], number>)[block.size]
     case 'data': return block.display === 'table' ? 50 + block.rows.length * 22 : 320
+    case 'numerical_answers': return 80
   }
 }
 

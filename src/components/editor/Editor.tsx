@@ -10,33 +10,35 @@ import { generateBlock } from '../../utils/generateWorksheet'
 import './Editor.css'
 
 const BLOCK_LABELS: Record<BlockType, string> = {
-  header:          'Header',
-  instructions:    'Instructions',
-  question:        'Question',
-  multiple_choice: 'Multiple Choice',
-  worked_example:  'Worked Example',
-  information:     'Information',
-  match_them_up:   'Match Them Up',
-  cloze:           'Cloze Activity',
-  order_steps:     'Order the Steps',
-  figure:          'Figure',
-  spacer:          'Spacer',
-  data:            'Data / Graph',
+  header:             'Header',
+  instructions:       'Instructions',
+  question:           'Question',
+  multiple_choice:    'Multiple Choice',
+  worked_example:     'Worked Example',
+  information:        'Information',
+  match_them_up:      'Match Them Up',
+  cloze:              'Cloze Activity',
+  order_steps:        'Order the Steps',
+  figure:             'Figure',
+  spacer:             'Spacer',
+  data:               'Data / Graph',
+  numerical_answers:  'Numerical Answers',
 }
 
 const BLOCK_COLORS: Record<BlockType, string> = {
-  header:          '#1e3a5f',
-  instructions:    '#0369a1',
-  question:        '#16a34a',
-  multiple_choice: '#0891b2',
-  worked_example:  '#c2410c',
-  information:     '#b45309',
-  match_them_up:   '#7c3aed',
-  cloze:           '#db2777',
-  order_steps:     '#4338ca',
-  figure:          '#475569',
-  spacer:          '#9ca3af',
-  data:            '#0d9488',
+  header:             '#1e3a5f',
+  instructions:       '#0369a1',
+  question:           '#16a34a',
+  multiple_choice:    '#0891b2',
+  worked_example:     '#c2410c',
+  information:        '#b45309',
+  match_them_up:      '#7c3aed',
+  cloze:              '#db2777',
+  order_steps:        '#4338ca',
+  figure:             '#475569',
+  spacer:             '#9ca3af',
+  data:               '#0d9488',
+  numerical_answers:  '#374151',
 }
 
 interface Props {
@@ -175,6 +177,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
 
         <div className="editor-footer">
           <AddBlockMenu
+            afterId={selectedId ?? undefined}
             dispatch={dispatch}
             onAdded={id => onSelect(id)}
             worksheetContext={worksheetContext}

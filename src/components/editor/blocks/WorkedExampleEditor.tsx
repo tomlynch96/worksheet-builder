@@ -24,7 +24,7 @@ export function WorkedExampleEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Title">
-        <input value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Worked example" />
+        <RichTextEditor value={block.title} onChange={title => update({ title })} placeholder="Worked example" multiline={false} />
       </Field>
       <div className="ep-list-editor">
         {block.steps.map((step, i) => (

@@ -1,6 +1,7 @@
 import type { ClozeBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, CheckRow } from '../EditorPrimitives'
+import { RichTextEditor } from '../RichTextEditor'
 import { extractClozeWords } from '../../../utils/shuffle'
 
 interface Props {
@@ -18,7 +19,7 @@ export function ClozeEditor({ block, dispatch }: Props) {
   return (
     <div className="block-fields">
       <Field label="Heading">
-        <input value={block.heading} onChange={e => update({ heading: e.target.value })} placeholder="Fill in the blanks using the words below." />
+        <RichTextEditor value={block.heading} onChange={heading => update({ heading })} placeholder="Fill in the blanks using the words below." multiline={false} />
       </Field>
       <Field label="Text — wrap answer words in [square brackets]">
         <textarea

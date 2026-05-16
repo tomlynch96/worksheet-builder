@@ -36,7 +36,12 @@ multiple_choice: { "id":"...", "type":"multiple_choice", "stem":"...", "marks":1
 
 worked_example: { "id":"...", "type":"worked_example", "title":"...", "steps":["Write equation: F = ma", "Substitute: F = 5 × 3", "Answer: F = 15 N"] }
 
-information: { "id":"...", "type":"information", "heading":"Key facts", "content":"..." }
+information: { "id":"...", "type":"information", "heading":"Key facts", "content":"<p><strong>Term:</strong> definition or key fact here.</p><p><strong>Formula:</strong> F = ma, where F is force (N), m is mass (kg), a is acceleration (m/s²).</p>" }
+IMPORTANT: The information "content" field MUST use HTML formatting:
+- Wrap each separate piece of information in its own <p> tag
+- Use <strong> for key terms, formula names, or bold headings within the content
+- Write equations as plain text within the paragraph (e.g. F = ma, v² = u² + 2as)
+- Never put all content in one long run-on string — each fact gets its own paragraph
 
 cloze: { "id":"...", "type":"cloze", "heading":"Fill in the blanks.", "text":"A [force] changes an object's [velocity].", "showWordBank":true }
 

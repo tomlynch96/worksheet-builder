@@ -516,3 +516,51 @@
   border-radius: 3px;
   flex-shrink: 0;
 }
+
+/* ── Numerical Answers box ── */
+.pr-numerical-answers {
+  border: 2px solid #374151;
+  border-radius: 6px;
+  padding: 10px 14px 12px;
+  margin-bottom: 12px;
+  background: #f9fafb;
+}
+
+.pr-numerical-heading {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pr-numerical-empty {
+  font-size: 9pt;
+  color: #9ca3af;
+  margin: 0;
+  font-style: italic;
+}
+
+.pr-numerical-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.pr-numerical-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10pt;
+  color: #111827;
+}
+
+.pr-numerical-circle {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid #374151;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
