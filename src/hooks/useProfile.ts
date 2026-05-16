@@ -41,7 +41,9 @@ export function useProfile() {
       .eq('id', id)
       .maybeSingle()
 
+    if (error) console.error('[loadProfile] error:', error.code, error.message, error.details)
     if (!error && data) setProfile(data as Profile)
+    else console.warn('[loadProfile] no profile found for', id)
     setLoading(false)
   }
 
