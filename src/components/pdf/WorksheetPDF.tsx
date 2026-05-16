@@ -15,7 +15,7 @@ Font.register({
     { src: '/fonts/LiberationSans-BoldItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 })
-import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock } from '../../types/worksheet'
+import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock, NumericalAnswersBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
@@ -525,6 +525,40 @@ function PDFInlineFigure({ figureId, blocks }: { figureId: string; blocks: Block
   return <View style={{ marginLeft: 15, marginTop: 4, marginBottom: 4 }}><PDFFigure block={found} /></View>
 }
 
+function PDFNumericalAnswers({ block, blocks }: { block: NumericalAnswersBlock; blocks: Block[] }) {
+  const answers: string[] = []
+  for (const b of blocks) {
+    if (b.type !== 'question') continue
+    if (b.parts.length === 0) {
+      if (b.numericalAnswer?.trim()) answers.push(b.numericalAnswer.trim())
+    } else {
+      for (const p of b.parts) {
+        if (p.numericalAnswer?.trim()) answers.push(p.numericalAnswer.trim())
+      }
+    }
+  }
+  const shuffled = seededShuffle(answers, block.id)
+  return (
+    <View style={{ borderWidth: 2, borderColor: '#374151', borderRadius: 4, padding: '8 11', marginBottom: 14, backgroundColor: '#f9fafb' }}>
+      <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9, color: '#111827', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+        {block.heading || 'Numerical answers'}
+      </Text>
+      {shuffled.length === 0 ? (
+        <Text style={{ fontSize: 9, color: '#9ca3af', fontStyle: 'italic' }}>No numerical answers set.</Text>
+      ) : (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {shuffled.map((ans, i) => (
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 1.5, borderColor: '#374151' }} />
+              <Text style={{ fontSize: 10 }}>{ans}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  )
+}
+
 function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
@@ -537,9 +571,10 @@ function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
     case 'match_them_up':   return <PDFMatchThemUp block={block} num={num} />
     case 'cloze':           return <PDFCloze block={block} num={num} />
     case 'order_steps':     return <PDFOrderSteps block={block} num={num} />
-    case 'figure':          return <PDFFigure block={block} />
-    case 'spacer':          return <PDFSpacer block={block} />
-    case 'data':            return <PDFData block={block as DataBlock} blocks={blocks} />
+    case 'figure':             return <PDFFigure block={block} />
+    case 'spacer':             return <PDFSpacer block={block} />
+    case 'data':               return <PDFData block={block as DataBlock} blocks={blocks} />
+    case 'numerical_answers':  return <PDFNumericalAnswers block={block as NumericalAnswersBlock} blocks={blocks} />
   }
 }
 

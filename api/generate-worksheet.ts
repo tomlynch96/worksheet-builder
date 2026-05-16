@@ -25,12 +25,12 @@ instructions: { "id":"...", "type":"instructions", "items":["Answer all question
 
 question (multi-part):
 { "id":"...", "type":"question", "stem":"...", "marks":0, "lines":0,
-  "parts":[ { "id":"part-001", "label":"a", "stem":"...", "marks":2, "lines":4, "markScheme":"..." },
-            { "id":"part-002", "label":"b", "stem":"...", "marks":2, "lines":4, "markScheme":"..." } ],
+  "parts":[ { "id":"part-001", "label":"a", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"9.8" },
+            { "id":"part-002", "label":"b", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"" } ],
   "markScheme":"" }
 IMPORTANT: every part MUST have a "label" field set to "a", "b", "c" etc. and a unique "id".
 
-question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"..." }
+question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"...", "numericalAnswer":"15" }
 
 multiple_choice: { "id":"...", "type":"multiple_choice", "stem":"...", "marks":1, "options":["A","B","C","D"], "correctIndex":2, "markScheme":"C — ... [1]" }
 
@@ -69,7 +69,8 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 2. Always start: header block → instructions block → information block (key facts).
 3. Every question / part must have a markScheme using [1] notation.
 4. Use correct exam command words: state, give, describe, explain, calculate, suggest, evaluate.
-5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.`
+5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
+6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
@@ -101,6 +102,8 @@ PEDAGOGICAL RULES — follow exactly:
 4. Use realistic numerical values with appropriate significant figures.
 5. Each question is a single-part question block (no sub-parts for simple ones).
 6. All markScheme fields must show full working with [marks].
+7. Every calculation question MUST have a "numericalAnswer" field set to the plain numeric answer (no units).
+8. End the worksheet with a numerical_answers block: { "id":"id-na", "type":"numerical_answers", "heading":"Numerical answers" }
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 }
