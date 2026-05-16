@@ -156,7 +156,10 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
   }
 
   function removePart(idx: number) {
-    update({ parts: block.parts.filter((_, i) => i !== idx) })
+    const labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const remaining = block.parts.filter((_, i) => i !== idx)
+    const relabelled = remaining.map((p, i) => ({ ...p, label: labels[i] ?? `${i + 1}` }))
+    update({ parts: relabelled })
   }
 
   const hasParts = block.parts.length > 0

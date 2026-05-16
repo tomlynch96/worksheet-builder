@@ -24,12 +24,14 @@ export function EditorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const [promptCopied, setPromptCopied] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const openRef = useRef<HTMLInputElement>(null)
 
   // Autosave — skip the initial render(s) while the worksheet loads
   const saveRef = useRef(save)
   saveRef.current = save
+  const worksheetRef = useRef(worksheet)
+  worksheetRef.current = worksheet
   const committedRef = useRef(false)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -38,9 +40,14 @@ export function EditorPage() {
     clearTimeout(autoSaveTimer.current)
     setSaveStatus('saving')
     autoSaveTimer.current = setTimeout(async () => {
-      await saveRef.current(w)
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
+      try {
+        await saveRef.current(w)
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus('idle'), 2000)
+      } catch {
+        setSaveStatus('error')
+        setTimeout(() => setSaveStatus('idle'), 4000)
+      }
     }, 1500)
   }, [profile])
 
@@ -90,7 +97,11 @@ export function EditorPage() {
       }
     }
     // Allow React to flush the new worksheet state before we start watching changes
-    const t = setTimeout(() => { committedRef.current = true }, 200)
+    const t = setTimeout(() => {
+      committedRef.current = true
+      // Immediately save whatever is loaded (catches AI-generated sheets that need no further edits)
+      triggerAutoSave(worksheetRef.current)
+    }, 300)
     return () => clearTimeout(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -101,6 +112,15 @@ export function EditorPage() {
     return () => clearTimeout(autoSaveTimer.current)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worksheet])
+
+  // If profile loads after the commit timer fired, re-attempt the save
+  const profileSavedRef = useRef(false)
+  useEffect(() => {
+    if (!profile || profileSavedRef.current) return
+    profileSavedRef.current = true
+    if (committedRef.current) triggerAutoSave(worksheetRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile])
 
   function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -155,6 +175,7 @@ export function EditorPage() {
       <span className={`editor-save-status editor-save-status--${saveStatus}`}>
         {saveStatus === 'saving' && '● Saving…'}
         {saveStatus === 'saved' && '✓ Saved'}
+        {saveStatus === 'error' && '⚠ Save failed'}
       </span>
 
       <button className="btn-topbar" onClick={() => navigate('/')}>← Home</button>

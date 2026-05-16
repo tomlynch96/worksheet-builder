@@ -31,6 +31,7 @@
 .editor-save-status--idle   { opacity: 0; }
 .editor-save-status--saving { opacity: 1; color: #94a3b8; }
 .editor-save-status--saved  { opacity: 1; color: #4ade80; }
+.editor-save-status--error  { opacity: 1; color: #f87171; }
 
 .panel-preview {
   flex: 1;

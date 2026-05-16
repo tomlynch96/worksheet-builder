@@ -3,6 +3,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// ── Formatting rules (referenced by all system prompts) ───────────────────
+
+const FORMATTING_RULES = `
+## Critical formatting rules — apply to ALL blocks
+- NEVER include question numbers (1., 2., Q1, etc.) in any stem or heading — the app adds these automatically.
+- NEVER include marks in brackets (e.g. [2 marks], (3)) in any stem or content — marks are displayed separately.
+- NEVER include part labels (a), (b), (i), (ii) in sub-part stems — the app adds these automatically.
+- Write stems and content as plain prose only.`
+
 // ── Shared JSON format spec ────────────────────────────────────────────────
 
 const WORKSHEET_FORMAT = `
@@ -71,6 +80,7 @@ PEDAGOGICAL RULES — follow exactly:
 4. Use realistic numerical values with appropriate significant figures.
 5. Each question is a single-part question block (no sub-parts for the simple ones).
 6. All markScheme fields must show full working with [marks].
+${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
 const SYSTEM_KNOWLEDGE = `You are generating a knowledge-recall science worksheet for secondary school pupils.
@@ -87,6 +97,7 @@ PEDAGOGICAL RULES — follow exactly:
    - describe and explain questions requiring structured full-sentence answers. 3–4 marks each.
 5. Every key term and concept must appear in at least 3 different question formats across the sheet.
 6. All markScheme fields must show full marking points with [marks].
+${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
 const SYSTEM_PRACTICAL = `You are generating a practical/experimental science worksheet for secondary school pupils.
@@ -106,15 +117,18 @@ PEDAGOGICAL RULES — follow exactly:
    - Conclusion: what relationship does the data show?
    - Evaluation: suggest one improvement to the method and explain why.
 5. All markScheme fields must show full marking points with [marks].
+${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
 const SYSTEM_BLOCK = `You are generating a single content block for a science worksheet.
 Output ONLY the raw JSON object for that one block — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
-Use "id": "ai-block-001" as the id. The teacher will review and add it to their worksheet.`
+Use "id": "ai-block-001" as the id. The teacher will review and add it to their worksheet.
+${FORMATTING_RULES}`
 
 const SYSTEM_EDIT = `You are editing an existing science worksheet based on a teacher's instruction.
 You will receive the current worksheet JSON and the teacher's request.
-Output ONLY the updated complete worksheet as a raw JSON object — same id, same format, no markdown fences, no text before or after.`
+Output ONLY the updated complete worksheet as a raw JSON object — same id, same format, no markdown fences, no text before or after.
+${FORMATTING_RULES}`
 
 // ── Handler ────────────────────────────────────────────────────────────────
 

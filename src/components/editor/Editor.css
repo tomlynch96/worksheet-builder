@@ -131,6 +131,97 @@
   background: #fee2e2;
   color: var(--ui-danger);
 }
+.ctrl-btn--ai { color: #a78bfa; }
+.ctrl-btn--ai:hover:not(:disabled) { background: #f5f3ff; color: #4f46e5; }
+
+/* ── Block-level AI fill panel ────────────────────────── */
+.editor-block-ai {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  background: #f5f3ff;
+  border-bottom: 1px solid #ddd6fe;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editor-block-ai-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1.5px solid #c4b5fd;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #1f2937;
+  resize: none;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.editor-block-ai-input:focus { border-color: #4f46e5; }
+.editor-block-ai-input:disabled { background: #faf5ff; }
+
+.editor-block-ai-error {
+  font-size: 11px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 5px;
+  padding: 5px 8px;
+  margin: 0;
+}
+
+.editor-block-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-block-ai-hint {
+  font-size: 10px;
+  color: #a78bfa;
+  flex: 1;
+}
+
+.editor-block-ai-cancel {
+  padding: 5px 10px;
+  border: 1px solid #ddd6fe;
+  border-radius: 5px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 11px;
+  cursor: pointer;
+}
+.editor-block-ai-cancel:hover { background: #f9fafb; }
+
+.editor-block-ai-submit {
+  padding: 5px 12px;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s;
+}
+.editor-block-ai-submit:hover:not(:disabled) { background: #4338ca; }
+.editor-block-ai-submit:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+.editor-block-ai-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: eai-spin 0.7s linear infinite;
+}
+@keyframes eai-spin { to { transform: rotate(360deg); } }
 
 /* ── Shared editor styles used by block editors ─────────── */
 .ep-hint {
