@@ -15,17 +15,16 @@ export function Topbar({ actions }: TopbarProps) {
     <header className="topbar">
       <Link to="/" className="topbar-brand">Worksheet Builder</Link>
 
-      <nav className="topbar-nav">
-        <Link className={`topbar-nav-link${pathname === '/' ? ' topbar-nav-link--active' : ''}`} to="/">
-          Home
-        </Link>
-        <Link className={`topbar-nav-link${pathname === '/gallery' ? ' topbar-nav-link--active' : ''}`} to="/gallery">
-          My Worksheets
-        </Link>
-        <Link className={`topbar-nav-link${pathname === '/insights' ? ' topbar-nav-link--active' : ''}`} to="/insights">
-          Insights
-        </Link>
-      </nav>
+      {pathname !== '/editor' && (
+        <nav className="topbar-nav">
+          <Link className={`topbar-nav-link${pathname === '/gallery' ? ' topbar-nav-link--active' : ''}`} to="/gallery">
+            My Worksheets
+          </Link>
+          <Link className={`topbar-nav-link${pathname === '/insights' ? ' topbar-nav-link--active' : ''}`} to="/insights">
+            Insights
+          </Link>
+        </nav>
+      )}
 
       {actions && <div className="topbar-actions">{actions}</div>}
 

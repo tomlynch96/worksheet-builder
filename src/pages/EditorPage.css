@@ -26,8 +26,10 @@
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-  min-width: 70px;
+  width: 72px;
+  flex-shrink: 0;
   text-align: center;
+  display: inline-block;
 }
 .editor-save-status--idle   { color: #4ade80; }
 .editor-save-status--saving { color: #94a3b8; }
