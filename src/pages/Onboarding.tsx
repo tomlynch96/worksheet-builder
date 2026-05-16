@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
-import { isConfigured } from '../lib/supabase'
+import { isConfigured, supabase } from '../lib/supabase'
 import './Onboarding.css'
 
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
@@ -16,6 +16,21 @@ export function Onboarding() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [emailError, setEmailError] = useState('')
+
+  // Password sign-in
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [signingIn, setSigningIn] = useState(false)
+
+  async function handlePasswordSignIn(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim() || !password) return
+    setSigningIn(true)
+    setEmailError('')
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    setSigningIn(false)
+    if (error) setEmailError(error.message)
+  }
 
   // Profile setup form
   const [name, setName] = useState('')
@@ -176,7 +191,7 @@ export function Onboarding() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSendLink} className="onboarding-magic-form">
+          <form onSubmit={showPassword ? handlePasswordSignIn : handleSendLink} className="onboarding-magic-form">
             <label className="onboarding-label">Email address</label>
             <input
               className="onboarding-input"
@@ -186,9 +201,31 @@ export function Onboarding() {
               placeholder="you@school.ac.uk"
               autoFocus
             />
+            {showPassword && (
+              <>
+                <label className="onboarding-label">Password</label>
+                <input
+                  className="onboarding-input"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Your password"
+                  autoFocus
+                />
+              </>
+            )}
             {emailError && <p className="onboarding-error">{emailError}</p>}
-            <button className="onboarding-submit" type="submit" disabled={sending}>
-              {sending ? 'Sending…' : 'Send magic link →'}
+            <button className="onboarding-submit" type="submit" disabled={sending || signingIn}>
+              {showPassword
+                ? (signingIn ? 'Signing in…' : 'Sign in →')
+                : (sending ? 'Sending…' : 'Send magic link →')}
+            </button>
+            <button
+              type="button"
+              className="onboarding-retry"
+              onClick={() => { setShowPassword(p => !p); setEmailError('') }}
+            >
+              {showPassword ? 'Use magic link instead' : 'Sign in with password instead'}
             </button>
           </form>
         )}
