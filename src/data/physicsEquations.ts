@@ -5,6 +5,33 @@ export interface PhysicsEquation {
   level: 'GCSE' | 'A-Level' | 'Both'
 }
 
+const TOPIC_KEYWORD_MAP: { keywords: string[]; topics: string[] }[] = [
+  { keywords: ['force', 'newton', 'momentum', 'pressure', 'moment', 'density', 'hooke', 'spring'], topics: ['Forces', 'Motion'] },
+  { keywords: ['energy', 'work done', 'power', 'efficiency', 'kinetic', 'potential', 'elastic'], topics: ['Energy'] },
+  { keywords: ['wave', 'electromagnetic', 'em wave', 'light', 'sound', 'refract', 'diffract', 'frequency', 'wavelength', 'period'], topics: ['Waves'] },
+  { keywords: ['electric', 'circuit', 'resistance', 'current', 'voltage', 'charge', 'ohm', 'resistor'], topics: ['Electricity'] },
+  { keywords: ['thermal', 'heat', 'temperature', 'specific heat', 'latent', 'gas law', 'boyle', 'charles', 'pressure law'], topics: ['Thermal'] },
+  { keywords: ['nuclear', 'radioact', 'atom', 'decay', 'half-life', 'radiation', 'fission', 'fusion'], topics: ['Nuclear'] },
+  { keywords: ['motion', 'speed', 'velocity', 'acceleration', 'distance', 'displacement', 'suvat', 'kinematics'], topics: ['Motion'] },
+  { keywords: ['magnet', 'electromagnet', 'transformer', 'motor', 'generator', 'flux', 'induction', 'faraday'], topics: ['Magnetism'] },
+  { keywords: ['circular', 'centripetal', 'orbit', 'satellite', 'planet'], topics: ['Circular motion', 'Gravity'] },
+  { keywords: ['capacitor'], topics: ['Capacitors'] },
+  { keywords: ['gravity', 'gravitational field', 'weight', 'gravitational potential'], topics: ['Gravity'] },
+  { keywords: ['quantum', 'photon', 'photoelectric', 'de broglie', 'wave-particle'], topics: ['Quantum'] },
+]
+
+export function getEquationsForTopic(topicText: string): PhysicsEquation[] {
+  const lower = topicText.toLowerCase()
+  const matchedTopics = new Set<string>()
+  for (const { keywords, topics } of TOPIC_KEYWORD_MAP) {
+    if (keywords.some(k => lower.includes(k))) {
+      topics.forEach(t => matchedTopics.add(t))
+    }
+  }
+  if (matchedTopics.size === 0) return PHYSICS_EQUATIONS.filter(e => e.level === 'GCSE')
+  return PHYSICS_EQUATIONS.filter(e => matchedTopics.has(e.topic))
+}
+
 export const PHYSICS_EQUATIONS: PhysicsEquation[] = [
   // Forces
   { name: 'Newton\'s second law', latex: 'F = ma', topic: 'Forces', level: 'GCSE' },

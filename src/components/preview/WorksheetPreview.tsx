@@ -50,7 +50,8 @@ function RichText({ html, className }: { html: string; className?: string }) {
   return <span className={className}>{html}</span>
 }
 
-function AnswerLines({ count }: { count: number }) {
+function AnswerLines({ count, show = true }: { count: number; show?: boolean }) {
+  if (!show) return null
   return (
     <div className="answer-lines">
       {Array.from({ length: count }).map((_, i) => (
@@ -94,7 +95,7 @@ function PreviewInstructions({ block }: { block: InstructionsBlock }) {
   )
 }
 
-function PreviewQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Block[]; num: number }) {
+function PreviewQuestion({ block, blocks, num, showLines = true }: { block: QuestionBlock; blocks: Block[]; num: number; showLines?: boolean }) {
   const hasParts = block.parts.length > 0
   return (
     <div className="pr-question">
@@ -109,7 +110,7 @@ function PreviewQuestion({ block, blocks, num }: { block: QuestionBlock; blocks:
       </div>
       {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} />}
       {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
-      {!hasParts && <AnswerLines count={block.lines} />}
+      {!hasParts && <AnswerLines count={block.lines} show={showLines} />}
       {hasParts && (
         <div className="pr-parts">
           {block.parts.map(part => (
@@ -125,7 +126,7 @@ function PreviewQuestion({ block, blocks, num }: { block: QuestionBlock; blocks:
               </div>
               {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} />}
               {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
-              <AnswerLines count={part.lines} />
+              <AnswerLines count={part.lines} show={showLines} />
             </div>
           ))}
         </div>
@@ -652,7 +653,7 @@ function PreviewOrderStepsMS({ block, num }: { block: OrderStepsBlock; num: numb
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PreviewBlock({ block, blocks, mode }: { block: Block; blocks: Block[]; mode: 'worksheet' | 'markscheme' }) {
+function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks: Block[]; mode: 'worksheet' | 'markscheme'; showLines?: boolean }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   if (mode === 'markscheme') {
     switch (block.type) {
@@ -667,7 +668,7 @@ function PreviewBlock({ block, blocks, mode }: { block: Block; blocks: Block[]; 
   switch (block.type) {
     case 'header':          return <PreviewHeader block={block} />
     case 'instructions':    return <PreviewInstructions block={block} />
-    case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} />
+    case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} />
     case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PreviewWorkedExample block={block} />
     case 'information':     return <PreviewInformation block={block} />
@@ -758,7 +759,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
       >
         {renderableBlocks.map(block => (
           <div key={block.id}>
-            <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} />
+            <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
           </div>
         ))}
       </div>
@@ -780,11 +781,11 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
                   onClick={() => onSelect(block.id)}
                   title="Click to edit"
                 >
-                  <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} />
+                  <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
                 </div>
               )
             }
-            return <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} mode={mode} />
+            return <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
           })}
         </div>
       ))}

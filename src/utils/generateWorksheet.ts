@@ -63,11 +63,22 @@ export async function generateWorksheet(params: {
   specPoint?: string
   worksheetType: 'maths' | 'knowledge' | 'practical'
   extraNotes?: string
+  difficulty?: number
+  equations?: string[]
 }): Promise<Worksheet> {
   const raw = await callAPI({ mode: 'worksheet', ...params })
   const parsed = JSON.parse(raw) as Worksheet
   if (!parsed.id || !Array.isArray(parsed.blocks)) throw new Error('Invalid worksheet returned by AI.')
-  return sanitiseWorksheet(parsed)
+  const sanitised = sanitiseWorksheet(parsed)
+  // Ensure spec metadata is always present in the header block
+  const blocks = sanitised.blocks.map(b => {
+    if (b.type === 'header') {
+      const h = b as { qualification?: string; specPoint?: string }
+      return { ...b, qualification: h.qualification || params.qualification, specPoint: h.specPoint || params.specPoint }
+    }
+    return b
+  })
+  return { ...sanitised, blocks }
 }
 
 export async function generateBlock(params: {

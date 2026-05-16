@@ -8,6 +8,7 @@ export type WorksheetAction =
   | { type: 'MOVE_BLOCK'; id: string; direction: 'up' | 'down' }
   | { type: 'LOAD_PRESET'; worksheet: Worksheet }
   | { type: 'LOAD_WORKSHEET'; worksheet: Worksheet }
+  | { type: 'TOGGLE_LINES' }
 
 function reducer(state: Worksheet, action: WorksheetAction): Worksheet {
   switch (action.type) {
@@ -43,6 +44,8 @@ function reducer(state: Worksheet, action: WorksheetAction): Worksheet {
       return { ...action.worksheet, id: crypto.randomUUID() }
     case 'LOAD_WORKSHEET':
       return action.worksheet
+    case 'TOGGLE_LINES':
+      return { ...state, showLines: state.showLines === false ? true : false }
   }
 }
 

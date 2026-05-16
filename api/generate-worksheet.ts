@@ -68,22 +68,37 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 
 // ── System prompts ────────────────────────────────────────────────────────
 
-const SYSTEM_MATHS = `You are generating a maths/calculation science worksheet for secondary school pupils.
+function buildMathsPrompt(difficulty: number, equations: string[]): string {
+  const dists: Record<number, { simple: number; unit: number; rearrange: number; multi: number }> = {
+    1: { simple: 10, unit: 4,  rearrange: 2,  multi: 1  },
+    2: { simple: 8,  unit: 5,  rearrange: 4,  multi: 2  },
+    3: { simple: 6,  unit: 6,  rearrange: 6,  multi: 3  },
+    4: { simple: 5,  unit: 4,  rearrange: 7,  multi: 4  },
+    5: { simple: 5,  unit: 3,  rearrange: 7,  multi: 6  },
+  }
+  const d = dists[difficulty] ?? dists[3]
+  const total = d.simple + d.unit + d.rearrange + d.multi
+  const eqList = equations.length > 0
+    ? `\nEquations to use (only these — do not introduce others):\n${equations.map(e => `  - ${e}`).join('\n')}`
+    : ''
 
+  return `You are generating a maths/calculation science worksheet for secondary school pupils.
+${eqList}
 PEDAGOGICAL RULES — follow exactly:
 
 1. Open with an information block listing every equation, symbol definition, and constant needed.
 2. Include one worked_example block immediately before the questions begin.
-3. Question sequence — produce AT LEAST 21 numbered questions:
-   Q1–Q6  (6 questions): Single-step substitution only. Values given explicitly in the question stem. No rearranging. No unit conversions.
-   Q7–Q12 (6 questions): Introduce unit conversions (e.g. km→m, g→kg, min→s, cm→m). Still single-step otherwise.
-   Q13–Q18 (6 questions): Introduce rearranging — the subject is NOT isolated. Values given.
-   Q19+   (at least 3 questions): Multi-step problems requiring a second relevant equation.
+3. Question sequence — produce AT LEAST ${total} questions with this distribution:
+   First ${d.simple} questions : Single-step substitution only. Values given explicitly. No rearranging. No unit conversions.
+   Next  ${d.unit} questions   : Introduce unit conversions (e.g. km→m, g→kg, min→s, cm→m). Still single-step otherwise.
+   Next  ${d.rearrange} questions: Introduce rearranging — the subject is NOT isolated in the equation. Values given.
+   Final ${d.multi}+ questions : Multi-step problems requiring a second relevant equation or combining concepts.
 4. Use realistic numerical values with appropriate significant figures.
 5. Each question is a single-part question block (no sub-parts for simple ones).
 6. All markScheme fields must show full working with [marks].
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
+}
 
 const SYSTEM_KNOWLEDGE = `You are generating a knowledge-recall science worksheet for secondary school pupils.
 
@@ -142,9 +157,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let userMessage: string
 
   if (mode === 'worksheet') {
-    const { topic, examBoard, tier, qualification, specPoint, worksheetType, extraNotes } = params as Record<string, string>
-    const typeMap: Record<string, string> = { maths: SYSTEM_MATHS, knowledge: SYSTEM_KNOWLEDGE, practical: SYSTEM_PRACTICAL }
-    systemPrompt = typeMap[worksheetType] ?? SYSTEM_KNOWLEDGE
+    const { topic, examBoard, tier, qualification, specPoint, worksheetType, extraNotes, difficulty, equations } = params as Record<string, unknown>
+    const mathsPrompt = buildMathsPrompt(
+      typeof difficulty === 'number' ? difficulty : 3,
+      Array.isArray(equations) ? equations as string[] : [],
+    )
+    const typeMap: Record<string, string> = { maths: mathsPrompt, knowledge: SYSTEM_KNOWLEDGE, practical: SYSTEM_PRACTICAL }
+    systemPrompt = typeMap[worksheetType as string] ?? SYSTEM_KNOWLEDGE
     userMessage = [
       'Generate a worksheet with these parameters:',
       `Topic: ${topic}`,

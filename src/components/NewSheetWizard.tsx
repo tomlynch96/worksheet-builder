@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getSpecTopics, offeringLabel } from '../data/qualifications'
+import { getEquationsForTopic } from '../data/physicsEquations'
 import { generateWorksheet } from '../utils/generateWorksheet'
 import type { UserCourse } from '../types/profile'
 import type { Worksheet } from '../types/worksheet'
@@ -63,6 +64,34 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
 
+  // Maths options
+  const [difficulty, setDifficulty] = useState(3)
+  const [selectedEquations, setSelectedEquations] = useState<Set<string> | null>(null)
+
+  const topicTitle = useMemo(
+    () => topics?.find(t => t.ref === selectedTopic)?.title ?? freeText,
+    [topics, selectedTopic, freeText]
+  )
+
+  const relevantEquations = useMemo(
+    () => getEquationsForTopic(topicTitle || selectedPoint),
+    [topicTitle, selectedPoint]
+  )
+
+  function handleSelectMaths() {
+    setWorksheetType('maths')
+    // Pre-select all relevant equations when maths is first chosen
+    setSelectedEquations(new Set(relevantEquations.map(e => e.name)))
+  }
+
+  function toggleEquation(name: string) {
+    setSelectedEquations(prev => {
+      const next = new Set(prev ?? [])
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
+  }
+
   const topics = useMemo(() => {
     if (!selectedCourse) return null
     return getSpecTopics(selectedCourse.qualification_id, selectedCourse.exam_board)
@@ -102,7 +131,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
   async function handleGenerate() {
     if (!selectedCourse || !worksheetType) return
-    const topicTitle = topics?.find(t => t.ref === selectedTopic)?.title ?? freeText
     setGenerating(true)
     setGenError(null)
     try {
@@ -114,6 +142,10 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         specPoint: selectedPoint || freeText,
         worksheetType,
         extraNotes: extraNotes.trim() || undefined,
+        difficulty: worksheetType === 'maths' ? difficulty : undefined,
+        equations: worksheetType === 'maths' && selectedEquations
+          ? Array.from(selectedEquations)
+          : undefined,
       })
       onGenerated(worksheet)
     } catch (err) {
@@ -224,7 +256,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
                 <button
                   key={wt.id}
                   className={`wizard-type-btn${worksheetType === wt.id ? ' wizard-type-btn--selected' : ''}`}
-                  onClick={() => setWorksheetType(wt.id)}
+                  onClick={() => wt.id === 'maths' ? handleSelectMaths() : setWorksheetType(wt.id)}
                   disabled={generating}
                 >
                   <span className="wizard-type-icon">{wt.icon}</span>
@@ -235,6 +267,67 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
                 </button>
               ))}
             </div>
+
+            {/* Maths-specific options */}
+            {worksheetType === 'maths' && (
+              <div className="wizard-maths-options">
+                <div className="wizard-field">
+                  <label className="wizard-label">
+                    Difficulty
+                    <span className="wizard-difficulty-badge">
+                      {['', 'Very easy', 'Easy', 'Medium', 'Hard', 'Very hard'][difficulty]}
+                    </span>
+                  </label>
+                  <div className="wizard-slider-row">
+                    <span className="wizard-slider-label">Simple</span>
+                    <input
+                      type="range" min={1} max={5} value={difficulty}
+                      onChange={e => setDifficulty(Number(e.target.value))}
+                      className="wizard-slider"
+                      disabled={generating}
+                    />
+                    <span className="wizard-slider-label">Complex</span>
+                  </div>
+                  <p className="wizard-field-hint">
+                    {difficulty <= 2 && 'Mostly direct substitution. Minimal rearranging.'}
+                    {difficulty === 3 && 'Balanced: substitution → unit conversions → rearranging → multi-step.'}
+                    {difficulty === 4 && 'More rearranging and multi-step. Still starts with 5 simple questions.'}
+                    {difficulty >= 5 && 'Heavy on rearranging, multi-step, and combining equations.'}
+                  </p>
+                </div>
+
+                {relevantEquations.length > 0 && (
+                  <div className="wizard-field">
+                    <label className="wizard-label">
+                      Equations to include
+                      <span className="wizard-eq-count">
+                        {selectedEquations?.size ?? 0} of {relevantEquations.length} selected
+                      </span>
+                    </label>
+                    <div className="wizard-eq-grid">
+                      {relevantEquations.map(eq => {
+                        const checked = selectedEquations?.has(eq.name) ?? false
+                        return (
+                          <button
+                            key={eq.name}
+                            type="button"
+                            className={`wizard-eq-btn${checked ? ' wizard-eq-btn--on' : ''}`}
+                            onClick={() => toggleEquation(eq.name)}
+                            disabled={generating}
+                          >
+                            <span className="wizard-eq-check">{checked ? '✓' : ''}</span>
+                            <span className="wizard-eq-info">
+                              <span className="wizard-eq-name">{eq.name}</span>
+                              <span className="wizard-eq-formula">{eq.latex.replace(/\\[a-zA-Z]+{?|[{}\\]/g, '').trim()}</span>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {worksheetType && (
               <div className="wizard-field">

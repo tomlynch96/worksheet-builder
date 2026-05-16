@@ -178,6 +178,14 @@ export function EditorPage() {
         {saveStatus === 'error' && '⚠ Save failed'}
       </span>
 
+      <button
+        className={`btn-topbar${worksheet.showLines === false ? ' btn-topbar--active' : ''}`}
+        onClick={() => dispatch({ type: 'TOGGLE_LINES' })}
+        title="Toggle answer lines on all questions"
+      >
+        {worksheet.showLines === false ? 'Show lines' : 'Hide lines'}
+      </button>
+
       <button className="btn-topbar" onClick={() => navigate('/')}>← Home</button>
 
       <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">

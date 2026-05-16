@@ -160,4 +160,5 @@ export type BlockType = Block['type']
 export interface Worksheet {
   id: string
   blocks: Block[]
+  showLines?: boolean
 }
