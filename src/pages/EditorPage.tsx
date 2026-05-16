@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { Topbar } from '../components/layout/Topbar'
 import { Editor } from '../components/editor/Editor'
@@ -9,7 +9,6 @@ import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useEditTracking } from '../hooks/useEditTracking'
 import { useProfileContext } from '../context/ProfileContext'
-import { buildAIPrompt } from '../utils/aiPrompt'
 import { PRESETS } from '../data/presets'
 import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
 import './EditorPage.css'
@@ -19,22 +18,18 @@ export function EditorPage() {
   const { worksheet, dispatch } = useWorksheet()
   const { save } = useSupabaseWorksheets(profile?.id ?? null)
   const { trackEdit } = useEditTracking(profile?.id ?? null)
-  const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
-  const [promptCopied, setPromptCopied] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const openRef = useRef<HTMLInputElement>(null)
 
-  // Track original AI blocks and worksheet type for edit diffing
   const originalBlocksRef = useRef<Block[]>([])
   const worksheetTypeRef = useRef<string>('')
   const isAIGeneratedRef = useRef(false)
 
-  // Autosave — skip the initial render(s) while the worksheet loads
   const saveRef = useRef(save)
   saveRef.current = save
   const trackEditRef = useRef(trackEdit)
@@ -55,12 +50,10 @@ export function EditorPage() {
           originalBlocks: originalBlocksRef.current,
         } : undefined
         await saveRef.current(w, aiMeta)
-        // Track edits against original AI output on every save
         if (isAIGeneratedRef.current && originalBlocksRef.current.length > 0) {
           await trackEditRef.current(w, originalBlocksRef.current, worksheetTypeRef.current)
         }
         setSaveStatus('saved')
-        setTimeout(() => setSaveStatus('idle'), 2000)
       } catch {
         setSaveStatus('error')
         setTimeout(() => setSaveStatus('idle'), 4000)
@@ -68,13 +61,11 @@ export function EditorPage() {
     }, 1500)
   }, [profile])
 
-  // Load worksheet from navigation state or wizard query params, then enable autosave
   useEffect(() => {
     if (location.state?.worksheet) {
       const ws = location.state.worksheet as Worksheet
       dispatch({ type: 'LOAD_WORKSHEET', worksheet: ws })
       setSelectedId(null)
-      // If navigated here from AI generation, capture the original blocks
       if (location.state?.aiGenerated) {
         isAIGeneratedRef.current = true
         originalBlocksRef.current = ws.blocks
@@ -128,14 +119,12 @@ export function EditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Autosave on every change once committed
   useEffect(() => {
     triggerAutoSave(worksheet)
     return () => clearTimeout(autoSaveTimer.current)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worksheet])
 
-  // If profile loads after the commit timer fired, re-attempt the save
   const profileSavedRef = useRef(false)
   useEffect(() => {
     if (!profile || profileSavedRef.current) return
@@ -174,12 +163,10 @@ export function EditorPage() {
     URL.revokeObjectURL(url)
   }
 
-  function handleCopyPrompt() {
-    navigator.clipboard.writeText(buildAIPrompt(worksheet)).then(() => {
-      setPromptCopied(true)
-      setTimeout(() => setPromptCopied(false), 2000)
-    })
-  }
+  const saveLabel =
+    saveStatus === 'saving' ? '● Saving…' :
+    saveStatus === 'error'  ? '⚠ Failed' :
+    '✓ Saved'
 
   const topbarActions = (
     <>
@@ -195,42 +182,32 @@ export function EditorPage() {
       </div>
 
       <span className={`editor-save-status editor-save-status--${saveStatus}`}>
-        {saveStatus === 'saving' && '● Saving…'}
-        {saveStatus === 'saved' && '✓ Saved'}
-        {saveStatus === 'error' && '⚠ Save failed'}
+        {saveLabel}
       </span>
 
       <button
         className={`btn-topbar${worksheet.showLines === false ? ' btn-topbar--active' : ''}`}
         onClick={() => dispatch({ type: 'TOGGLE_LINES' })}
-        title="Toggle answer lines on all questions"
+        title="Toggle answer lines"
       >
         {worksheet.showLines === false ? 'Show lines' : 'Hide lines'}
       </button>
 
-      <button className="btn-topbar" onClick={() => navigate('/')}>← Home</button>
-
       <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
-        Open
+        Open JSON
       </button>
       <button className="btn-topbar" onClick={handleDownloadJSON} title="Download as JSON">
         Export JSON
       </button>
       <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
-      <button
-        className="btn-topbar btn-topbar--ai"
-        onClick={handleCopyPrompt}
-        title="Copy AI prompt to generate a worksheet JSON"
-      >
-        {promptCopied ? 'Copied!' : 'Copy AI Prompt'}
-      </button>
+
       <PDFDownloadLink
         key={worksheet.blocks.map(b => b.id).join(',')}
         document={<WorksheetPDF worksheet={worksheet} />}
         fileName="worksheet.pdf"
         className="btn-download"
       >
-        {({ loading }) => (loading ? 'Preparing PDF…' : 'Download PDF')}
+        {({ loading }) => (loading ? 'Preparing…' : 'Download PDF')}
       </PDFDownloadLink>
     </>
   )
