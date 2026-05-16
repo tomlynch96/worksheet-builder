@@ -62,13 +62,14 @@ export function useProfile() {
 
     const { data, error } = await supabase
       .from('profiles')
-      .insert({ id: authUserId, name })
+      .upsert({ id: authUserId, name })
       .select()
       .single()
 
     if (error || !data) return false
 
     if (courses.length > 0) {
+      await supabase.from('user_courses').delete().eq('profile_id', authUserId)
       await supabase
         .from('user_courses')
         .insert(courses.map(c => ({ ...c, profile_id: authUserId })))
