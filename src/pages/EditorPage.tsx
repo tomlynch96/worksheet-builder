@@ -113,6 +113,15 @@ export function EditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worksheet])
 
+  // If profile loads after the commit timer fired, re-attempt the save
+  const profileSavedRef = useRef(false)
+  useEffect(() => {
+    if (!profile || profileSavedRef.current) return
+    profileSavedRef.current = true
+    if (committedRef.current) triggerAutoSave(worksheetRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile])
+
   function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return

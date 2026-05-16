@@ -112,8 +112,9 @@ ${WORKSHEET_FORMAT}`
 
 const SYSTEM_BLOCK = `You are generating a single content block for a science worksheet.
 Output ONLY the raw JSON object for that one block — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
-Use "id": "ai-block-001" as the id.
-${FORMATTING_RULES}`
+Use "id": "ai-block-001" as the id. Follow the exact JSON structure shown in the format guide below.
+${FORMATTING_RULES}
+${WORKSHEET_FORMAT}`
 
 const SYSTEM_EDIT = `You are editing an existing science worksheet based on a teacher's instruction.
 You will receive the current worksheet JSON and the teacher's request.
