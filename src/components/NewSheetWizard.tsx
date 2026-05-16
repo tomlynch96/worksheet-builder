@@ -64,6 +64,16 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
 
+  const topics = useMemo(() => {
+    if (!selectedCourse) return null
+    return getSpecTopics(selectedCourse.qualification_id, selectedCourse.exam_board)
+  }, [selectedCourse])
+
+  const pointsForTopic = useMemo(() => {
+    if (!topics || !selectedTopic) return []
+    return topics.find(t => t.ref === selectedTopic)?.points ?? []
+  }, [topics, selectedTopic])
+
   // Maths options
   const [difficulty, setDifficulty] = useState(3)
   const [selectedEquations, setSelectedEquations] = useState<Set<string> | null>(null)
@@ -80,7 +90,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
   function handleSelectMaths() {
     setWorksheetType('maths')
-    // Pre-select all relevant equations when maths is first chosen
     setSelectedEquations(new Set(relevantEquations.map(e => e.name)))
   }
 
@@ -91,16 +100,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
       return next
     })
   }
-
-  const topics = useMemo(() => {
-    if (!selectedCourse) return null
-    return getSpecTopics(selectedCourse.qualification_id, selectedCourse.exam_board)
-  }, [selectedCourse])
-
-  const pointsForTopic = useMemo(() => {
-    if (!topics || !selectedTopic) return []
-    return topics.find(t => t.ref === selectedTopic)?.points ?? []
-  }, [topics, selectedTopic])
 
   function handleCourseSelect(course: UserCourse) {
     setSelectedCourse(course)
