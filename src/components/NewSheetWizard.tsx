@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getSpecTopics, offeringLabel } from '../data/qualifications'
-import { getEquationsForTopic } from '../data/physicsEquations'
 import { generateWorksheet } from '../utils/generateWorksheet'
 import type { UserCourse } from '../types/profile'
 import type { Worksheet } from '../types/worksheet'
@@ -76,29 +75,14 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
   // Maths options
   const [difficulty, setDifficulty] = useState(3)
-  const [selectedEquations, setSelectedEquations] = useState<Set<string> | null>(null)
 
   const topicTitle = useMemo(
     () => topics?.find(t => t.ref === selectedTopic)?.title ?? freeText,
     [topics, selectedTopic, freeText]
   )
 
-  const relevantEquations = useMemo(
-    () => getEquationsForTopic(topicTitle || selectedPoint),
-    [topicTitle, selectedPoint]
-  )
-
   function handleSelectMaths() {
     setWorksheetType('maths')
-    setSelectedEquations(new Set(relevantEquations.map(e => e.name)))
-  }
-
-  function toggleEquation(name: string) {
-    setSelectedEquations(prev => {
-      const next = new Set(prev ?? [])
-      next.has(name) ? next.delete(name) : next.add(name)
-      return next
-    })
   }
 
   function handleCourseSelect(course: UserCourse) {
@@ -142,9 +126,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         worksheetType,
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
-        equations: worksheetType === 'maths' && selectedEquations
-          ? Array.from(selectedEquations)
-          : undefined,
       })
       onGenerated(worksheet)
     } catch (err) {
@@ -295,36 +276,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
                   </p>
                 </div>
 
-                {relevantEquations.length > 0 && (
-                  <div className="wizard-field">
-                    <label className="wizard-label">
-                      Equations to include
-                      <span className="wizard-eq-count">
-                        {selectedEquations?.size ?? 0} of {relevantEquations.length} selected
-                      </span>
-                    </label>
-                    <div className="wizard-eq-grid">
-                      {relevantEquations.map(eq => {
-                        const checked = selectedEquations?.has(eq.name) ?? false
-                        return (
-                          <button
-                            key={eq.name}
-                            type="button"
-                            className={`wizard-eq-btn${checked ? ' wizard-eq-btn--on' : ''}`}
-                            onClick={() => toggleEquation(eq.name)}
-                            disabled={generating}
-                          >
-                            <span className="wizard-eq-check">{checked ? '✓' : ''}</span>
-                            <span className="wizard-eq-info">
-                              <span className="wizard-eq-name">{eq.name}</span>
-                              <span className="wizard-eq-formula">{eq.latex.replace(/\\[a-zA-Z]+{?|[{}\\]/g, '').trim()}</span>
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
