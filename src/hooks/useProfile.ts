@@ -48,7 +48,7 @@ export function useProfile() {
   async function sendMagicLink(email: string): Promise<{ error?: string }> {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: 'https://worksheet-builder-ten.vercel.app' },
     })
     return error ? { error: error.message } : {}
   }
