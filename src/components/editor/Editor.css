@@ -133,6 +133,21 @@
 }
 .ctrl-btn--ai { color: #a78bfa; }
 .ctrl-btn--ai:hover:not(:disabled) { background: #f5f3ff; color: #4f46e5; }
+.ctrl-btn--vary { color: #059669; font-size: 15px; font-weight: 700; }
+.ctrl-btn--vary:hover:not(:disabled) { background: #ecfdf5; color: #047857; }
+.ctrl-btn--we { color: #c2410c; font-size: 9px; font-weight: 700; letter-spacing: -0.3px; }
+.ctrl-btn--we:hover:not(:disabled) { background: #fff7ed; color: #9a3412; }
+
+.ctrl-spinner {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: eai-spin 0.7s linear infinite;
+  opacity: 0.7;
+}
 
 /* ── Block-level AI fill panel ────────────────────────── */
 .editor-block-ai {

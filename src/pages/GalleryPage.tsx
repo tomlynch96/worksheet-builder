@@ -184,7 +184,8 @@ export function GalleryPage() {
   const [showWizard, setShowWizard] = useState(false)
   const [courseTab, setCourseTab] = useState<string>('all')
   const [search, setSearch] = useState('')
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   function handleOpen(worksheet: Worksheet) {
     navigate('/editor', { state: { worksheet } })
@@ -210,8 +211,8 @@ export function GalleryPage() {
     navigate(`/editor?${params.toString()}`)
   }
 
-  function toggleCollapsed(key: string) {
-    setCollapsed(prev => {
+  function toggleExpanded(key: string) {
+    setExpanded(prev => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
@@ -254,13 +255,20 @@ export function GalleryPage() {
       <div className="gallery-page">
         {/* Templates */}
         <section className="gallery-section">
-          <div className="gallery-section-hdr">
-            <h2 className="gallery-section-title">Templates</h2>
-            <p className="gallery-section-sub">Start from a ready-made worksheet.</p>
-          </div>
-          <div className="gallery-grid gallery-grid--templates">
-            {PRESETS.map((_, i) => <TemplateCard key={i} idx={i} onLoad={handleLoadPreset} />)}
-          </div>
+          <button
+            className="gallery-section-toggle"
+            onClick={() => setTemplatesOpen(o => !o)}
+            aria-expanded={templatesOpen}
+          >
+            <span className="gallery-section-title">Templates</span>
+            <span className="gallery-section-sub">Start from a ready-made worksheet.</span>
+            <span className={`gallery-collapse-chevron${templatesOpen ? '' : ' gallery-collapse-chevron--closed'}`}>▾</span>
+          </button>
+          {templatesOpen && (
+            <div className="gallery-grid gallery-grid--templates">
+              {PRESETS.map((_, i) => <TemplateCard key={i} idx={i} onLoad={handleLoadPreset} />)}
+            </div>
+          )}
         </section>
 
         <hr className="gallery-divider" />
@@ -323,12 +331,12 @@ export function GalleryPage() {
 
                   {group.subGroups.map(sg => {
                     const colKey = `${group.key}:${sg.topicRef}`
-                    const isCollapsed = collapsed.has(colKey)
+                    const isCollapsed = !expanded.has(colKey)
                     return (
                       <div key={sg.topicTitle} className="gallery-subgroup">
                         <button
                           className="gallery-subgroup-title gallery-subgroup-toggle"
-                          onClick={() => toggleCollapsed(colKey)}
+                          onClick={() => toggleExpanded(colKey)}
                         >
                           <span className={`gallery-subgroup-chevron${isCollapsed ? ' gallery-subgroup-chevron--collapsed' : ''}`}>▾</span>
                           {sg.topicTitle}
@@ -349,12 +357,12 @@ export function GalleryPage() {
                     <div className="gallery-subgroup">
                       {group.subGroups.length > 0 && (() => {
                         const colKey = `${group.key}:__other__`
-                        const isCollapsed = collapsed.has(colKey)
+                        const isCollapsed = !expanded.has(colKey)
                         return (
                           <>
                             <button
                               className="gallery-subgroup-title gallery-subgroup-toggle"
-                              onClick={() => toggleCollapsed(colKey)}
+                              onClick={() => toggleExpanded(colKey)}
                             >
                               <span className={`gallery-subgroup-chevron${isCollapsed ? ' gallery-subgroup-chevron--collapsed' : ''}`}>▾</span>
                               Other
