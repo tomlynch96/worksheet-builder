@@ -5,6 +5,9 @@ function id() { return crypto.randomUUID() }
 const _rateTableId = id()
 const _springTableId = id()
 const _springGraphId = id()
+const _photoNAId = id()
+const _waveDataId = id()
+const _respNAId = id()
 
 export interface Preset {
   label: string
@@ -571,6 +574,345 @@ export const PRESETS: Preset[] = [
             '<p>Example: rise = 10 − 0 = 10 N, run = 5 − 0 = 5 cm = 0.05 m</p>',
             '<p>k = 10 ÷ 0.05 = <strong>200 N/m</strong></p>',
           ],
+        },
+      ],
+    },
+  },
+
+  // ── Photosynthesis — OCR Gateway ────────────────────────────────────────────
+  {
+    label: 'Photosynthesis',
+    description: 'OCR Gateway — Biology — figures, spacers, match activity, and numerical answers box',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Photosynthesis',
+          topic: 'Biology — B4 — Photosynthesis',
+          examBoard: 'OCR', tier: 'higher',
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions in the spaces provided.',
+            'Show all working for calculation questions.',
+            'Marks available are shown in brackets.',
+          ],
+        },
+        {
+          id: id(), type: 'information' as const,
+          heading: 'Key equation',
+          content: '<p>The word equation for photosynthesis is:</p><p><strong>carbon dioxide + water → glucose + oxygen</strong></p><p>The balanced symbol equation is: <strong>6CO<sub>2</sub> + 6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> + 6O<sub>2</sub></strong></p><p>Photosynthesis requires <strong>light energy</strong>, absorbed by the green pigment <strong>chlorophyll</strong> in the chloroplasts.</p>',
+        },
+        {
+          id: id(), type: 'figure' as const,
+          size: 'medium' as const,
+          caption: 'Figure 1 — Cross-section of a leaf showing the main tissues involved in photosynthesis',
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Use Figure 1. Name the layer of cells in a leaf that is <strong>most</strong> adapted for photosynthesis and explain why.</p>',
+          marks: 3, lines: 6, parts: [],
+          markScheme: '<p>• Palisade mesophyll / palisade layer <strong>[1]</strong></p><p>• Cells are tightly packed / columnar <strong>[1]</strong></p><p>• Contain many chloroplasts to absorb maximum light <strong>[1]</strong></p>',
+        },
+        {
+          id: id(), type: 'spacer' as const, size: 'small' as const,
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>A plant absorbs 360 g of CO<sub>2</sub> during one hour of photosynthesis. Calculate the mass of glucose produced. (M<sub>r</sub>: CO<sub>2</sub> = 44, C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> = 180)</p>',
+          marks: 3, lines: 4, parts: [],
+          markScheme: '<p>Moles CO<sub>2</sub> = 360 ÷ 44 = 8.18 mol <strong>[1]</strong></p><p>Moles glucose = 8.18 ÷ 6 = 1.36 mol <strong>[1]</strong></p><p>Mass glucose = 1.36 × 180 = <strong>245 g</strong> (accept 244–246) <strong>[1]</strong></p>',
+          numericalAnswer: '245',
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>A student measures the rate of photosynthesis of pondweed at three light intensities. At 2000 lux, 18 bubbles per minute were produced. At 4000 lux, 30 bubbles per minute. At 6000 lux, 30 bubbles per minute. Explain what limits the rate between 4000 and 6000 lux.</p>',
+          marks: 3, lines: 6, parts: [],
+          markScheme: '<p>• Rate does not increase beyond 4000 lux — graph levels off / plateau <strong>[1]</strong></p><p>• A factor other than light is now limiting <strong>[1]</strong></p><p>• CO<sub>2</sub> concentration / temperature is the limiting factor <strong>[1]</strong></p>',
+        },
+        {
+          id: id(), type: 'match_them_up' as const,
+          heading: 'Match each term to its correct definition.',
+          items: [
+            { id: id(), left: 'Chlorophyll', right: 'Green pigment that absorbs light energy for photosynthesis' },
+            { id: id(), left: 'Chloroplast', right: 'Organelle in plant cells where photosynthesis occurs' },
+            { id: id(), left: 'Limiting factor', right: 'A variable that prevents the rate of photosynthesis from increasing further' },
+            { id: id(), left: 'Compensation point', right: 'Light intensity at which the rate of photosynthesis equals the rate of respiration' },
+          ],
+        },
+        {
+          id: id(), type: 'spacer' as const, size: 'medium' as const,
+        },
+        {
+          id: _photoNAId, type: 'numerical_answers' as const,
+          heading: 'Numerical answers',
+        },
+      ],
+    },
+  },
+
+  // ── Waves and Sound — Edexcel ────────────────────────────────────────────────
+  {
+    label: 'Waves and Sound',
+    description: 'Edexcel GCSE Physics — data table, cloze passage, and numerical answers box',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Waves and Sound',
+          topic: 'Physics — Topic 6 — Waves in matter',
+          examBoard: 'Edexcel', tier: 'higher',
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions.',
+            'Show full working for calculations — method marks are awarded.',
+            'Use the data provided in Table 1 where instructed.',
+          ],
+        },
+        {
+          id: _waveDataId, type: 'data' as const,
+          heading: 'Table 1 — Properties of selected waves',
+          display: 'table' as const,
+          columns: [
+            { label: 'Wave type', unit: '' },
+            { label: 'Frequency', unit: 'Hz' },
+            { label: 'Wavelength', unit: 'm' },
+            { label: 'Speed', unit: 'm/s' },
+          ],
+          rows: [
+            ['Audible sound (low)', '20', '17', '340'],
+            ['Audible sound (high)', '20 000', '0.017', '340'],
+            ['Ultrasound', '2 000 000', '0.00017', '340'],
+            ['Seismic P-wave (rock)', '1', '8 000', '8 000'],
+          ],
+          graph: {
+            xCol: 0, yCol: 1,
+            showXLabel: true, showYLabel: true,
+            showXScale: true, showYScale: true,
+            omitRows: [], fitType: 'none' as const, linkedDataId: null,
+          },
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Use Table 1. Show that the wave speed equation is satisfied for audible sound at 20 Hz. Use the equation <em>v = fλ</em>.</p>',
+          marks: 2, lines: 3, parts: [],
+          markScheme: '<p>v = 20 × 17 = <strong>340 m/s</strong> <strong>[1]</strong>; matches value in table <strong>[1]</strong></p>',
+          numericalAnswer: '340',
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>An ultrasound pulse is emitted by a probe and reflects off an object. The pulse returns after 0.000 06 s. Calculate the distance to the object. (Speed of ultrasound in tissue = 1 500 m/s)</p>',
+          marks: 3, lines: 4, parts: [],
+          markScheme: '<p>Total distance = v × t = 1500 × 0.000 06 = 0.09 m <strong>[1]</strong></p><p>Distance to object = 0.09 ÷ 2 <strong>[1]</strong> = <strong>0.045 m</strong> (= 4.5 cm) <strong>[1]</strong></p>',
+          numericalAnswer: '0.045',
+        },
+        {
+          id: id(), type: 'worked_example' as const,
+          title: 'Worked example — using v = fλ',
+          steps: [
+            '<p>Write the equation: v = f × λ</p>',
+            '<p>Identify values: f = 400 Hz, v = 340 m/s, λ = ?</p>',
+            '<p>Rearrange: λ = v ÷ f = 340 ÷ 400</p>',
+            '<p>λ = <strong>0.85 m</strong></p>',
+          ],
+        },
+        {
+          id: id(), type: 'cloze' as const,
+          heading: 'Complete the paragraph using the words in the box.',
+          text: 'Sound waves are [longitudinal] waves — the particles vibrate [parallel] to the direction of wave travel. They require a [medium] to travel and cannot pass through a [vacuum]. The [frequency] of a sound wave determines its pitch, while the [amplitude] determines its loudness.',
+          showWordBank: true,
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Explain why ultrasound is used in medicine rather than audible sound for internal imaging.</p>',
+          marks: 3, lines: 6, parts: [],
+          markScheme: '<p>• Very high frequency / very short wavelength <strong>[1]</strong></p><p>• Can pass through soft tissue and reflect off boundaries between tissues <strong>[1]</strong></p><p>• No ionising radiation / no damage to living cells / safe for use on pregnant women <strong>[1]</strong></p>',
+        },
+        {
+          id: id(), type: 'spacer' as const, size: 'small' as const,
+        },
+        {
+          id: id(), type: 'numerical_answers' as const,
+          heading: 'Numerical answers',
+        },
+      ],
+    },
+  },
+
+  // ── Aerobic Respiration — AQA Biology ───────────────────────────────────────
+  {
+    label: 'Aerobic Respiration',
+    description: 'AQA Biology — order steps, cloze, calculations, and numerical answers box',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Aerobic Respiration',
+          topic: 'Biology — B9 — Respiration',
+          examBoard: 'AQA', tier: 'higher',
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions in the spaces provided.',
+            'Show all working for calculation questions.',
+            'The marks for each question are shown in brackets.',
+          ],
+        },
+        {
+          id: id(), type: 'information' as const,
+          heading: 'Key information',
+          content: '<p>Aerobic respiration is the process by which cells release energy from glucose using oxygen. The overall equation is:</p><p><strong>glucose + oxygen → carbon dioxide + water (+ energy)</strong></p><p><strong>C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> + 6O<sub>2</sub> → 6CO<sub>2</sub> + 6H<sub>2</sub>O</strong></p><p>Energy released is used to make <strong>ATP</strong>, the cell\'s energy currency. Respiration occurs in the mitochondria.</p>',
+        },
+        {
+          id: id(), type: 'order_steps' as const,
+          heading: 'Put the following stages of aerobic respiration in the correct order.',
+          steps: [
+            'Glucose is split into pyruvate in the cytoplasm (glycolysis)',
+            'Pyruvate is transported into the mitochondria',
+            'Pyruvate is converted to acetyl-CoA, releasing CO₂',
+            'Acetyl-CoA enters the Krebs cycle — more CO₂ and hydrogen released',
+            'Hydrogen atoms are passed along the electron transport chain',
+            'Oxygen accepts the hydrogen to form water; ATP is produced',
+          ],
+        },
+        {
+          id: id(), type: 'spacer' as const, size: 'small' as const,
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>A muscle cell uses 0.18 g of glucose during vigorous exercise. Calculate the mass of CO<sub>2</sub> produced. (M<sub>r</sub>: glucose = 180, CO<sub>2</sub> = 44)</p>',
+          marks: 3, lines: 4, parts: [],
+          markScheme: '<p>Moles glucose = 0.18 ÷ 180 = 0.001 mol <strong>[1]</strong></p><p>Moles CO<sub>2</sub> = 0.001 × 6 = 0.006 mol <strong>[1]</strong></p><p>Mass CO<sub>2</sub> = 0.006 × 44 = <strong>0.264 g</strong> <strong>[1]</strong></p>',
+          numericalAnswer: '0.264',
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>A student measures the rate of CO<sub>2</sub> production by yeast at 20 °C and 35 °C. At 20 °C, 12 cm<sup>3</sup> CO<sub>2</sub> is produced per minute. At 35 °C, 48 cm<sup>3</sup> per minute. Calculate the Q<sub>10</sub> value. (Q<sub>10</sub> = rate at higher temp ÷ rate at lower temp; temperature difference = 15 °C)</p>',
+          marks: 2, lines: 3, parts: [],
+          markScheme: '<p>Q<sub>10</sub> = 48 ÷ 12 = <strong>4</strong> (for a 15 °C rise) <strong>[2]</strong></p><p>Accept ecf from incorrect rate values.</p>',
+          numericalAnswer: '4',
+        },
+        {
+          id: id(), type: 'cloze' as const,
+          heading: 'Complete the passage using the words in the box.',
+          text: 'Aerobic respiration requires [oxygen] and releases much more [energy] per glucose molecule than [anaerobic] respiration. The products are [carbon dioxide] and [water]. The process takes place in the [mitochondria].',
+          showWordBank: true,
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Explain why athletes have a higher density of mitochondria in their muscle cells than non-athletes.</p>',
+          marks: 3, lines: 6, parts: [],
+          markScheme: '<p>• Athletes require more energy / ATP for muscle contraction <strong>[1]</strong></p><p>• Aerobic respiration occurs in mitochondria <strong>[1]</strong></p><p>• More mitochondria = higher rate of aerobic respiration = more ATP produced <strong>[1]</strong></p>',
+        },
+        {
+          id: id(), type: 'spacer' as const, size: 'medium' as const,
+        },
+        {
+          id: _respNAId, type: 'numerical_answers' as const,
+          heading: 'Numerical answers',
+        },
+      ],
+    },
+  },
+
+  // ── Atomic Structure — WJEC ──────────────────────────────────────────────────
+  {
+    label: 'Atomic Structure',
+    description: 'WJEC GCSE Chemistry — worked example, figure placeholder, multiple choice, and recall questions',
+    worksheet: {
+      id: id(),
+      blocks: [
+        {
+          id: id(), type: 'header' as const,
+          title: 'Atomic Structure',
+          topic: 'Chemistry — C1 — The nature of substances and chemical reactions',
+          examBoard: 'WJEC', tier: 'higher',
+          showName: true, showDate: true, showClass: true,
+        },
+        {
+          id: id(), type: 'instructions' as const,
+          items: [
+            'Answer all questions.',
+            'For multiple choice questions, circle the letter of the correct answer.',
+            'Marks are shown in brackets.',
+          ],
+        },
+        {
+          id: id(), type: 'information' as const,
+          heading: 'Key facts',
+          content: '<p>An atom consists of a central <strong>nucleus</strong> (containing protons and neutrons) surrounded by <strong>electrons</strong> in shells.</p><p><strong>Relative masses:</strong> proton = 1, neutron = 1, electron = negligible (1/1836)</p><p><strong>Relative charges:</strong> proton = +1, neutron = 0, electron = −1</p><p>The <strong>atomic number</strong> (Z) gives the number of protons. The <strong>mass number</strong> (A) gives the total number of protons + neutrons.</p>',
+        },
+        {
+          id: id(), type: 'figure' as const,
+          size: 'small' as const,
+          caption: 'Figure 1 — Diagram of a lithium-7 atom showing its electron arrangement',
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Use Figure 1 and your knowledge. Complete the table for a lithium-7 atom (<sup>7</sup><sub>3</sub>Li).</p>',
+          marks: 3, lines: 0,
+          parts: [
+            { id: id(), label: 'a', stem: '<p>Number of protons</p>', marks: 1, lines: 2, markScheme: '<p>3 <strong>[1]</strong></p>', numericalAnswer: '3' },
+            { id: id(), label: 'b', stem: '<p>Number of neutrons</p>', marks: 1, lines: 2, markScheme: '<p>4 (= 7 − 3) <strong>[1]</strong></p>', numericalAnswer: '4' },
+            { id: id(), label: 'c', stem: '<p>Number of electrons</p>', marks: 1, lines: 2, markScheme: '<p>3 (same as protons in neutral atom) <strong>[1]</strong></p>', numericalAnswer: '3' },
+          ],
+          markScheme: '',
+        },
+        {
+          id: id(), type: 'worked_example' as const,
+          title: 'Worked example — writing electronic configurations',
+          steps: [
+            '<p>Identify the atomic number: for sodium (Na), Z = 11, so 11 electrons.</p>',
+            '<p>Fill the first shell: max 2 electrons → 2</p>',
+            '<p>Fill the second shell: max 8 electrons → 8</p>',
+            '<p>Remaining electrons go in the third shell: 11 − 2 − 8 = <strong>1</strong></p>',
+            '<p>Electronic configuration of Na: <strong>2, 8, 1</strong></p>',
+          ],
+        },
+        {
+          id: id(), type: 'multiple_choice' as const,
+          stem: '<p>An element has the symbol <sup>23</sup><sub>11</sub>Na. How many neutrons does this atom contain?</p>',
+          marks: 1,
+          options: ['<p>11</p>', '<p>12</p>', '<p>23</p>', '<p>34</p>'],
+          correctIndex: 1,
+          markScheme: '<p><strong>B — 12</strong></p><p>Neutrons = mass number − atomic number = 23 − 11 = 12. Common error: confusing mass number with neutron number.</p>',
+        },
+        {
+          id: id(), type: 'multiple_choice' as const,
+          stem: '<p>Which statement correctly describes isotopes?</p>',
+          marks: 1,
+          options: [
+            '<p>Atoms of different elements with the same number of neutrons</p>',
+            '<p>Atoms of the same element with different numbers of electrons</p>',
+            '<p>Atoms of the same element with different numbers of neutrons</p>',
+            '<p>Atoms of different elements with the same mass number</p>',
+          ],
+          correctIndex: 2,
+          markScheme: '<p><strong>C</strong> — Isotopes are atoms of the same element (same atomic number / proton number) with different mass numbers (different numbers of neutrons). They have identical chemical properties but different physical properties.</p>',
+        },
+        {
+          id: id(), type: 'question' as const,
+          stem: '<p>Chlorine has two naturally occurring isotopes: <sup>35</sup>Cl (75%) and <sup>37</sup>Cl (25%). Calculate the relative atomic mass of chlorine to one decimal place.</p>',
+          marks: 2, lines: 4, parts: [],
+          markScheme: '<p>A<sub>r</sub> = (35 × 75 + 37 × 25) ÷ 100 <strong>[1]</strong> = (2625 + 925) ÷ 100 = 3550 ÷ 100 = <strong>35.5</strong> <strong>[1]</strong></p>',
+          numericalAnswer: '35.5',
+        },
+        {
+          id: id(), type: 'spacer' as const, size: 'small' as const,
+        },
+        {
+          id: id(), type: 'numerical_answers' as const,
+          heading: 'Numerical answers',
         },
       ],
     },
