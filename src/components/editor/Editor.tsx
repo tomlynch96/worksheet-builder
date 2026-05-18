@@ -6,7 +6,7 @@ import { AddBlockMenu } from './AddBlockMenu'
 import { AIDialog } from './AIDialog'
 import { ActiveEditorProvider } from './ActiveEditorContext'
 import { RTEToolbar } from './RTEToolbar'
-import { generateBlock } from '../../utils/generateWorksheet'
+import { generateBlock, generateVariation, generateWorkedExample } from '../../utils/generateWorksheet'
 import './Editor.css'
 
 const BLOCK_LABELS: Record<BlockType, string> = {
@@ -60,6 +60,8 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const selectedIdx = selectedBlock ? blocks.indexOf(selectedBlock) : -1
   const [showAIDialog, setShowAIDialog] = useState(false)
   const [blockAI, setBlockAI] = useState<BlockAIState | null>(null)
+  const [addingVariation, setAddingVariation] = useState(false)
+  const [addingWorkedEx, setAddingWorkedEx] = useState(false)
 
   const header = blocks.find(b => b.type === 'header') as HeaderBlock | undefined
   const worksheetContext = [
@@ -87,6 +89,35 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
     }
   }
 
+  async function handleAddVariation() {
+    if (!selectedBlock) return
+    setAddingVariation(true)
+    try {
+      const varied = await generateVariation(selectedBlock, worksheetContext)
+      dispatch({ type: 'ADD_BLOCK', block: varied, afterId: selectedBlock.id })
+    } catch (err) {
+      console.error('Variation failed:', err)
+    } finally {
+      setAddingVariation(false)
+    }
+  }
+
+  async function handleAddWorkedExample() {
+    if (!selectedBlock) return
+    setAddingWorkedEx(true)
+    try {
+      const we = await generateWorkedExample(selectedBlock, worksheetContext)
+      // Find the index of the current block and insert the worked example just before it
+      const idx = blocks.findIndex(b => b.id === selectedBlock.id)
+      const afterId = idx > 0 ? blocks[idx - 1].id : undefined
+      dispatch({ type: 'ADD_BLOCK', block: we, afterId })
+    } catch (err) {
+      console.error('Worked example failed:', err)
+    } finally {
+      setAddingWorkedEx(false)
+    }
+  }
+
   return (
     <ActiveEditorProvider>
       {selectedBlock && <RTEToolbar />}
@@ -107,32 +138,26 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
               </button>
               <span className="editor-focused-type">{BLOCK_LABELS[selectedBlock.type]}</span>
               <div className="editor-focused-controls">
+                <button type="button" className="ctrl-btn ctrl-btn--ai" onClick={() => setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })} title="AI fill this block" disabled={addingVariation || addingWorkedEx}>✦</button>
                 <button
                   type="button"
-                  className="ctrl-btn ctrl-btn--ai"
-                  onClick={() => setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })}
-                  title="AI fill this block"
-                >✦</button>
-                <button
-                  type="button"
-                  className="ctrl-btn"
-                  disabled={selectedIdx === 0}
-                  onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'up' })}
-                  aria-label="Move up"
-                >↑</button>
-                <button
-                  type="button"
-                  className="ctrl-btn"
-                  disabled={selectedIdx === blocks.length - 1}
-                  onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'down' })}
-                  aria-label="Move down"
-                >↓</button>
-                <button
-                  type="button"
-                  className="ctrl-btn ctrl-btn--danger"
-                  onClick={() => { dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id }); onSelect(null) }}
-                  aria-label="Delete block"
-                >×</button>
+                  className="ctrl-btn ctrl-btn--vary"
+                  onClick={handleAddVariation}
+                  disabled={addingVariation || addingWorkedEx || blockAI !== null}
+                  title="Add another like this"
+                >{addingVariation ? <span className="ctrl-spinner" /> : '↳'}</button>
+                {(selectedBlock.type === 'question' || selectedBlock.type === 'multiple_choice') && (
+                  <button
+                    type="button"
+                    className="ctrl-btn ctrl-btn--we"
+                    onClick={handleAddWorkedExample}
+                    disabled={addingVariation || addingWorkedEx || blockAI !== null}
+                    title="Add worked example before this question"
+                  >{addingWorkedEx ? <span className="ctrl-spinner" /> : 'WE'}</button>
+                )}
+                <button type="button" className="ctrl-btn" disabled={selectedIdx === 0 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'up' })} aria-label="Move up">↑</button>
+                <button type="button" className="ctrl-btn" disabled={selectedIdx === blocks.length - 1 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'down' })} aria-label="Move down">↓</button>
+                <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={() => { dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id }); onSelect(null) }} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
               </div>
             </div>
 

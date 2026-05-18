@@ -92,6 +92,25 @@ export async function generateBlock(params: {
   return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
 }
 
+export async function generateVariation(block: Block, context: string): Promise<Block> {
+  const raw = await callAPI({ mode: 'vary', block, context })
+  const parsed = JSON.parse(raw) as Block
+  if (!parsed.type) throw new Error('Invalid block returned by AI.')
+  return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
+}
+
+export async function generateWorkedExample(block: Block, context: string): Promise<Block> {
+  const raw = await callAPI({
+    mode: 'block',
+    blockType: 'worked_example',
+    context,
+    request: `Generate a worked example that demonstrates how to answer a question like this: ${JSON.stringify(block)}`,
+  })
+  const parsed = JSON.parse(raw) as Block
+  if (!parsed.type) throw new Error('Invalid block returned by AI.')
+  return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
+}
+
 export async function editWorksheetWithAI(params: {
   worksheet: Worksheet
   request: string

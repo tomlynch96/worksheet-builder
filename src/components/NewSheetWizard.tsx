@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getSpecTopics, offeringLabel } from '../data/qualifications'
 import { generateWorksheet } from '../utils/generateWorksheet'
@@ -45,6 +45,121 @@ function CourseButton({
       <span className="wizard-course-board">{course.exam_board}</span>
       <span className="wizard-course-name">{offering?.label ?? course.qualification_id}</span>
     </button>
+  )
+}
+
+const PHRASES: Record<WorksheetType, string[]> = {
+  maths: [
+    'Selecting realistic numerical values…',
+    'Building the worked example…',
+    'Scaffolding calculation questions…',
+    'Setting question difficulty…',
+    'Calibrating unit conversions…',
+    'Writing multi-step problems…',
+    'Adding mark scheme working…',
+    'Checking significant figures…',
+    'Composing the information block…',
+    'Populating numerical answers…',
+  ],
+  knowledge: [
+    'Analysing the spec point…',
+    'Crafting the match-up activity…',
+    'Writing the cloze passage…',
+    'Generating recall questions…',
+    'Building progressively harder questions…',
+    'Checking command words…',
+    'Writing mark scheme points…',
+    'Applying exam board style…',
+    'Composing key facts…',
+    'Formatting definitions…',
+  ],
+  practical: [
+    'Generating experimental scatter data…',
+    'Building the results table…',
+    'Writing graph analysis questions…',
+    'Creating the evaluation question…',
+    'Checking method steps…',
+    'Writing the conclusion question…',
+    'Applying mark scheme structure…',
+    'Adding graph plotting task…',
+    'Reviewing variable identification…',
+    'Composing the information block…',
+  ],
+}
+
+const GENERIC_PHRASES = [
+  'Thinking through the topic…',
+  'Applying exam board guidelines…',
+  'Structuring the worksheet…',
+  'Reviewing question quality…',
+  'Cross-referencing the spec…',
+]
+
+function AtomGraphic() {
+  return (
+    <svg className="gen-atom" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      {/* Nucleus */}
+      <circle cx="60" cy="60" r="8" fill="#4f46e5" className="gen-nucleus" />
+      {/* Orbit 1 */}
+      <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="#c7d2fe" strokeWidth="1.5" className="gen-orbit gen-orbit--1" />
+      <circle r="5" fill="#818cf8" className="gen-electron gen-electron--1">
+        <animateMotion dur="1.8s" repeatCount="indefinite">
+          <mpath href="#orbit1path" />
+        </animateMotion>
+      </circle>
+      {/* Orbit 2 */}
+      <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="#c7d2fe" strokeWidth="1.5"
+        transform="rotate(60 60 60)" className="gen-orbit gen-orbit--2" />
+      <circle r="4" fill="#a5b4fc" className="gen-electron gen-electron--2">
+        <animateMotion dur="2.4s" repeatCount="indefinite">
+          <mpath href="#orbit2path" />
+        </animateMotion>
+      </circle>
+      {/* Orbit 3 */}
+      <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="#c7d2fe" strokeWidth="1.5"
+        transform="rotate(120 60 60)" className="gen-orbit gen-orbit--3" />
+      <circle r="4" fill="#6366f1" className="gen-electron gen-electron--3">
+        <animateMotion dur="3.1s" repeatCount="indefinite" keyTimes="0;1" keyPoints="1;0">
+          <mpath href="#orbit3path" />
+        </animateMotion>
+      </circle>
+      {/* Hidden motion paths */}
+      <defs>
+        <path id="orbit1path" d="M 108,60 A 48,18 0 1,1 107.99,60.01" />
+        <path id="orbit2path" d="M 84,19.6 A 48,18 60 1,1 83.99,19.61" />
+        <path id="orbit3path" d="M 36,19.6 A 48,18 120 1,1 35.99,19.61" />
+      </defs>
+    </svg>
+  )
+}
+
+function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
+  const [progress, setProgress] = useState(0)
+  const [phraseIdx, setPhraseIdx] = useState(0)
+  const phrases = [...(PHRASES[worksheetType] ?? []), ...GENERIC_PHRASES]
+  const shuffledRef = useRef<string[]>([...phrases].sort(() => Math.random() - 0.5))
+
+  useEffect(() => {
+    // Progress bar: reaches ~95% in about 28s
+    const progressTimer = setInterval(() => {
+      setProgress(p => Math.min(p + 100 / 56, 95))
+    }, 500)
+    // Cycle phrases every 3s
+    const phraseTimer = setInterval(() => {
+      setPhraseIdx(i => (i + 1) % shuffledRef.current.length)
+    }, 3000)
+    return () => { clearInterval(progressTimer); clearInterval(phraseTimer) }
+  }, [])
+
+  return (
+    <div className="gen-screen">
+      <AtomGraphic />
+      <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
+      <div className="gen-bar-track">
+        <div className="gen-bar-fill" style={{ width: `${progress}%` }} />
+      </div>
+      <p className="gen-subtext">Usually takes 15–30 seconds</p>
+    </div>
   )
 }
 
@@ -149,8 +264,13 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
           <button className="wizard-close" onClick={onCancel} aria-label="Close">✕</button>
         </div>
 
+        {/* Generating screen — replaces all steps */}
+        {generating && (
+          <GeneratingScreen worksheetType={worksheetType ?? 'knowledge'} />
+        )}
+
         {/* Step 1: course */}
-        {step === 'course' && (
+        {!generating && step === 'course' && (
           <div className="wizard-body">
             <p className="wizard-hint">Which course is this worksheet for?</p>
             {courses.length === 0 ? (
@@ -166,7 +286,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         )}
 
         {/* Step 2: spec point */}
-        {step === 'spec' && selectedCourse && (
+        {!generating && step === 'spec' && selectedCourse && (
           <div className="wizard-body">
             <p className="wizard-hint">Which spec point does this cover?</p>
 
@@ -227,7 +347,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         )}
 
         {/* Step 3: blank vs AI */}
-        {step === 'mode' && (
+        {!generating && step === 'mode' && (
           <div className="wizard-body">
             <p className="wizard-hint">How do you want to start?</p>
 

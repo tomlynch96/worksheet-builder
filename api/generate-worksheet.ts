@@ -92,7 +92,7 @@ function buildMathsPrompt(difficulty: number, equations: string[]): string {
 ${eqList}
 PEDAGOGICAL RULES — follow exactly:
 
-1. Open with an information block listing every equation, symbol definition, and constant needed.
+1. Open with ONE information block. It must contain ONLY: the equation(s) being practised, the meaning of each symbol with units (e.g. F = force in N), and any required constants. Nothing else — no background science, no context, no applications.
 2. Include one worked_example block immediately before the questions begin.
 3. Question sequence — produce AT LEAST ${total} questions with this distribution:
    First ${d.simple} questions : Single-step substitution only. Values given explicitly. No rearranging. No unit conversions.
@@ -104,6 +104,7 @@ PEDAGOGICAL RULES — follow exactly:
 6. All markScheme fields must show full working with [marks].
 7. Every calculation question MUST have a "numericalAnswer" field set to the plain numeric answer (no units).
 8. End the worksheet with a numerical_answers block: { "id":"id-na", "type":"numerical_answers", "heading":"Numerical answers" }
+9. The worksheet structure must be EXACTLY: header → instructions → information → worked_example → [calculation question blocks] → numerical_answers. Do NOT add any other block types (cloze, match_them_up, information, order_steps, etc.) anywhere in the worksheet.
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 }
@@ -135,6 +136,12 @@ ${WORKSHEET_FORMAT}`
 
 const SYSTEM_BLOCK = `You are generating a single content block for a science worksheet.
 Output ONLY the raw JSON object for that one block — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
+Use "id": "ai-block-001" as the id. Follow the exact JSON structure shown in the format guide below.
+${FORMATTING_RULES}
+${WORKSHEET_FORMAT}`
+
+const SYSTEM_VARY = `You are varying a single science worksheet block. Generate a new block of the same type that tests the same knowledge or skill but uses different numbers, different wording, or a slightly different scenario. Keep the same difficulty level and mark allocation.
+Output ONLY the raw JSON for that one block — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
 Use "id": "ai-block-001" as the id. Follow the exact JSON structure shown in the format guide below.
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
@@ -189,6 +196,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `Generate a single "${blockType}" block.`,
       context ? `Worksheet context: ${context}` : '',
       request ? `Teacher's request: ${request}` : '',
+    ].filter(Boolean).join('\n')
+
+  } else if (mode === 'vary') {
+    const { block, context } = params as { block: unknown; context: string }
+    systemPrompt = SYSTEM_VARY
+    userMessage = [
+      'Generate a variation of this block:',
+      context ? `Worksheet context: ${context}` : '',
+      `Block JSON:\n${JSON.stringify(block)}`,
     ].filter(Boolean).join('\n')
 
   } else if (mode === 'edit') {

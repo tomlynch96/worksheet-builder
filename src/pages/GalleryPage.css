@@ -38,6 +38,30 @@
   margin: 0;
 }
 
+.gallery-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+.gallery-section-toggle:hover .gallery-section-title { color: #4f46e5; }
+
+.gallery-collapse-chevron {
+  font-size: 16px;
+  color: #9ca3af;
+  margin-left: auto;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.gallery-collapse-chevron--closed {
+  transform: rotate(-90deg);
+}
+
 .gallery-divider {
   border: none;
   border-top: 1px solid #e2e0ea;
