@@ -193,7 +193,7 @@ function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: numb
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
         <span className="pr-q-text">
-          {block.heading || <em className="pr-placeholder">Match each term to its definition.</em>}
+          {block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Match each term to its definition.</em>}
         </span>
       </div>
       <div className="pr-match-table">
@@ -225,7 +225,7 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
         <span className="pr-q-text">
-          {block.heading || <em className="pr-placeholder">Fill in the blanks.</em>}
+          {block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Fill in the blanks.</em>}
         </span>
       </div>
       {block.showWordBank && words.length > 0 && (
@@ -241,7 +241,9 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
           : parts.map((part, i) =>
               part.type === 'blank'
                 ? <span key={i} className="pr-cloze-blank">{'_'.repeat(Math.max(part.value.length + 4, 8))}</span>
-                : <span key={i}>{part.value}</span>
+                : <span key={i}>{part.value.split('\n').map((line, j, arr) => (
+                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                  ))}</span>
             )
         }
       </p>
@@ -256,7 +258,7 @@ function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
         <span className="pr-q-text">
-          {block.heading || <em className="pr-placeholder">Number these steps in the correct order.</em>}
+          {block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Number these steps in the correct order.</em>}
         </span>
       </div>
       <div className="pr-steps-list">
@@ -588,7 +590,7 @@ function PreviewClozeMS({ block, num }: { block: ClozeBlock; num: number }) {
     <div className="pr-cloze">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.heading || <em className="pr-placeholder">Fill in the blanks.</em>}</span>
+        <span className="pr-q-text">{block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Fill in the blanks.</em>}</span>
       </div>
       <p className="pr-cloze-text">
         {parts.length === 0
@@ -609,7 +611,7 @@ function PreviewMatchThemUpMS({ block, num }: { block: MatchThemUpBlock; num: nu
     <div className="pr-match">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.heading || <em className="pr-placeholder">Match each term to its definition.</em>}</span>
+        <span className="pr-q-text">{block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Match each term to its definition.</em>}</span>
       </div>
       <div className="pr-match-table">
         <div className="pr-match-col">
@@ -639,7 +641,7 @@ function PreviewOrderStepsMS({ block, num }: { block: OrderStepsBlock; num: numb
     <div className="pr-order-steps">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
-        <span className="pr-q-text">{block.heading || <em className="pr-placeholder">Number these steps in the correct order.</em>}</span>
+        <span className="pr-q-text">{block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Number these steps in the correct order.</em>}</span>
       </div>
       <div className="pr-steps-list">
         {block.steps.map((step, i) => (
