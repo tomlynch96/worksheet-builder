@@ -111,7 +111,7 @@ const s = StyleSheet.create({
   stepBox: { width: 17, height: 17, borderWidth: 1.5, borderColor: '#374151', borderRadius: 2, flexShrink: 0 },
 
   // Figure
-  figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14, backgroundColor: '#f9fafb' },
+  figure: { justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14 },
   figureLabel: { fontSize: 9, color: '#6b7280', fontStyle: 'italic' },
 
   // Mark scheme
