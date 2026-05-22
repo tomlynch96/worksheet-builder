@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Worksheet, BlockType, HeaderBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
@@ -62,28 +62,38 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const [blockAI, setBlockAI] = useState<BlockAIState | null>(null)
   const [addingVariation, setAddingVariation] = useState(false)
   const [addingWorkedEx, setAddingWorkedEx] = useState(false)
-  const [deleteBlocked, setDeleteBlocked] = useState<string | null>(null)
-
-  useEffect(() => { setDeleteBlocked(null) }, [selectedId])
+  function isDataReferenced(id: string, excludeId?: string) {
+    return blocks.some(b => {
+      if (b.id === excludeId) return false
+      if (b.type === 'question') {
+        if (b.attachedDataId === id) return true
+        if (b.parts.some(p => p.attachedDataId === id)) return true
+      }
+      if (b.type === 'data' && b.id !== id && b.graph.linkedDataId === id) return true
+      return false
+    })
+  }
 
   function handleDelete() {
     if (!selectedBlock) return
+
     if (selectedBlock.type === 'data') {
-      const id = selectedBlock.id
-      const referenced = blocks.some(b => {
-        if (b.type === 'question') {
-          if (b.attachedDataId === id) return true
-          if (b.parts.some(p => p.attachedDataId === id)) return true
+      // If referenced elsewhere, keep alive (invisible as standalone) — just deselect
+      if (isDataReferenced(selectedBlock.id)) { onSelect(null); return }
+    }
+
+    if (selectedBlock.type === 'question') {
+      // Cascade-delete attached data blocks that have no other references
+      const dataIds: string[] = []
+      if (selectedBlock.attachedDataId) dataIds.push(selectedBlock.attachedDataId)
+      selectedBlock.parts.forEach(p => { if (p.attachedDataId) dataIds.push(p.attachedDataId) })
+      for (const dataId of dataIds) {
+        if (!isDataReferenced(dataId, selectedBlock.id)) {
+          dispatch({ type: 'DELETE_BLOCK', id: dataId })
         }
-        if (b.type === 'data' && b.id !== id && b.graph.linkedDataId === id) return true
-        return false
-      })
-      if (referenced) {
-        setDeleteBlocked('This data block is attached to a question — detach it there first.')
-        return
       }
     }
-    setDeleteBlocked(null)
+
     dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id })
     onSelect(null)
   }
@@ -185,10 +195,6 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
                 <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={handleDelete} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
               </div>
             </div>
-
-            {deleteBlocked && (
-              <div className="editor-delete-blocked">{deleteBlocked}</div>
-            )}
 
             {blockAI && (
               <div className="editor-block-ai">

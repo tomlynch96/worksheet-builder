@@ -94,7 +94,7 @@ function Attachments({
         fitType: 'none',
         linkedDataId: null,
       },
-      hiddenColumns: [],
+      hiddenCells: [],
     }
     dispatch({ type: 'ADD_BLOCK', block: newBlock, afterId })
     onChangeDataId(newBlock.id)

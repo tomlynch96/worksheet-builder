@@ -141,7 +141,7 @@ export interface DataBlock {
   rows: string[][]
   display: DataDisplay
   graph: GraphOptions
-  hiddenColumns?: number[]
+  hiddenCells?: string[]   // "r,c" keys for cells blank on worksheet
 }
 
 export interface NumericalAnswersBlock {

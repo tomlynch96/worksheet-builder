@@ -293,7 +293,7 @@ function PreviewSpacer({ block }: { block: SpacerBlock }) {
 
 function PreviewDataTable({ block, markScheme = false }: { block: DataBlock; markScheme?: boolean }) {
   const { columns, rows, heading } = block
-  const hiddenCols = markScheme ? new Set<number>() : new Set(block.hiddenColumns ?? [])
+  const hiddenCells = markScheme ? new Set<string>() : new Set(block.hiddenCells ?? [])
   return (
     <div className="pr-data-table">
       {heading && <p className="pr-data-heading">{heading}</p>}
@@ -310,7 +310,7 @@ function PreviewDataTable({ block, markScheme = false }: { block: DataBlock; mar
         <tbody>
           {rows.map((row, r) => (
             <tr key={r}>
-              {row.map((cell, c) => <td key={c} className="pr-td">{hiddenCols.has(c) ? '' : cell}</td>)}
+              {row.map((cell, c) => <td key={c} className="pr-td">{hiddenCells.has(`${r},${c}`) ? '' : cell}</td>)}
             </tr>
           ))}
         </tbody>
@@ -496,7 +496,7 @@ function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] }, hiddenColumns: [] } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] }, hiddenCells: [] } : found
   return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
 }
 

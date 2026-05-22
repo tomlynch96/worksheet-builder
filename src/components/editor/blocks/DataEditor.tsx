@@ -47,16 +47,17 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
       xCol: Math.min(graph.xCol, newCols.length - 1),
       yCol: Math.min(graph.yCol, newCols.length - 1),
     }
-    const newHidden = (block.hiddenColumns ?? [])
-      .filter(i => i !== c)
-      .map(i => i > c ? i - 1 : i)
-    up(block, dispatch, { columns: newCols, rows: newRows, graph: newGraph, hiddenColumns: newHidden })
+    const newHidden = (block.hiddenCells ?? [])
+      .filter(key => parseInt(key.split(',')[1]) !== c)
+      .map(key => { const [r, col] = key.split(',').map(Number); return col > c ? `${r},${col - 1}` : key })
+    up(block, dispatch, { columns: newCols, rows: newRows, graph: newGraph, hiddenCells: newHidden })
   }
 
-  function toggleHideColumn(c: number) {
-    const hidden = block.hiddenColumns ?? []
-    const newHidden = hidden.includes(c) ? hidden.filter(i => i !== c) : [...hidden, c]
-    up(block, dispatch, { hiddenColumns: newHidden })
+  function toggleHideCell(r: number, c: number) {
+    const key = `${r},${c}`
+    const hidden = block.hiddenCells ?? []
+    const newHidden = hidden.includes(key) ? hidden.filter(k => k !== key) : [...hidden, key]
+    up(block, dispatch, { hiddenCells: newHidden })
   }
 
   function addRow() {
@@ -67,7 +68,10 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
     if (rows.length <= 1) return
     const newRows = rows.filter((_, ri) => ri !== r)
     const newOmit = graph.omitRows.filter(i => i !== r).map(i => i > r ? i - 1 : i)
-    up(block, dispatch, { rows: newRows, graph: { ...graph, omitRows: newOmit } })
+    const newHidden = (block.hiddenCells ?? [])
+      .filter(key => parseInt(key.split(',')[0]) !== r)
+      .map(key => { const [row, c] = key.split(',').map(Number); return row > r ? `${row - 1},${c}` : key })
+    up(block, dispatch, { rows: newRows, graph: { ...graph, omitRows: newOmit }, hiddenCells: newHidden })
   }
 
   function updateGraph(updates: Partial<typeof graph>) {
@@ -133,14 +137,6 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
               <div key={c} className="de-col-editor">
                 <input className="de-input de-col-label-input" value={col.label} onChange={e => updateColumnLabel(c, e.target.value)} placeholder="Label" />
                 <input className="de-input de-col-unit-input" value={col.unit} onChange={e => updateColumnUnit(c, e.target.value)} placeholder="Unit" />
-                {display === 'table' && (
-                  <button
-                    type="button"
-                    className={`de-eye-btn${(block.hiddenColumns ?? []).includes(c) ? ' de-eye-btn--hidden' : ''}`}
-                    onClick={() => toggleHideColumn(c)}
-                    title={(block.hiddenColumns ?? []).includes(c) ? 'Hidden on worksheet — click to show' : 'Visible on worksheet — click to hide'}
-                  >👁</button>
-                )}
                 {activeColumns.length > 1 && <button type="button" className="de-remove-btn" onClick={() => removeColumn(c)} title="Remove column">×</button>}
               </div>
             ))}
@@ -170,14 +166,25 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
                     <input type="checkbox" checked={!graph.omitRows.includes(r)} onChange={() => toggleOmitRow(r)} />
                   </td>
                 )}
-                {row.map((cell, c) => (
-                  <td key={c} className={`de-td${(display === 'table' && (block.hiddenColumns ?? []).includes(c)) ? ' de-td--hidden' : ''}`}>
-                    {linkedBlock
-                      ? <span className="de-cell-readonly">{cell}</span>
-                      : <input ref={r === rows.length - 1 && c === row.length - 1 ? lastInputRef : undefined} className="de-cell-input" value={cell} onChange={e => updateCell(r, c, e.target.value)} />
-                    }
-                  </td>
-                ))}
+                {row.map((cell, c) => {
+                  const hidden = display === 'table' && (block.hiddenCells ?? []).includes(`${r},${c}`)
+                  return (
+                    <td key={c} className={`de-td${hidden ? ' de-td--hidden' : ''}`}>
+                      {linkedBlock
+                        ? <span className="de-cell-readonly">{cell}</span>
+                        : <input ref={r === rows.length - 1 && c === row.length - 1 ? lastInputRef : undefined} className="de-cell-input" value={cell} onChange={e => updateCell(r, c, e.target.value)} />
+                      }
+                      {display === 'table' && !linkedBlock && (
+                        <button
+                          type="button"
+                          className={`de-cell-eye${hidden ? ' de-cell-eye--on' : ''}`}
+                          onClick={() => toggleHideCell(r, c)}
+                          title={hidden ? 'Hidden on worksheet — click to show' : 'Click to hide on worksheet'}
+                        >👁</button>
+                      )}
+                    </td>
+                  )
+                })}
                 {!linkedBlock && (
                   <td className="de-td de-td-del">
                     {rows.length > 1 && <button type="button" className="de-remove-btn" onClick={() => removeRow(r)} title="Remove row">×</button>}
