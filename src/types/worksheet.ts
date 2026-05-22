@@ -141,6 +141,7 @@ export interface DataBlock {
   rows: string[][]
   display: DataDisplay
   graph: GraphOptions
+  hiddenColumns?: number[]
 }
 
 export interface NumericalAnswersBlock {

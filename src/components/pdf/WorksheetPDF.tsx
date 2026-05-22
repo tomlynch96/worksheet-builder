@@ -370,6 +370,7 @@ function PDFSpacer({ block }: { block: SpacerBlock }) {
 
 function PDFDataTable({ block }: { block: DataBlock }) {
   const { columns, rows, heading } = block
+  const hiddenCols = new Set(block.hiddenColumns ?? [])
   const colW = Math.floor(493 / columns.length)
   return (
     <View style={{ marginBottom: 14 }}>
@@ -387,7 +388,7 @@ function PDFDataTable({ block }: { block: DataBlock }) {
         <View key={r} style={{ flexDirection: 'row', borderLeftWidth: 1, borderColor: '#d1d5db' }}>
           {row.map((cell, c) => (
             <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5' }}>
-              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{cell}</Text>
+              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{hiddenCols.has(c) ? '' : cell}</Text>
             </View>
           ))}
         </View>
@@ -515,7 +516,7 @@ function PDFData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function PDFInlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] } } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] }, hiddenColumns: [] } : found
   return <View style={{ marginLeft: 15, marginTop: 4, marginBottom: 4 }}><PDFData block={block} blocks={blocks} /></View>
 }
 

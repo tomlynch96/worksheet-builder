@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Worksheet, BlockType, HeaderBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
@@ -62,6 +62,31 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const [blockAI, setBlockAI] = useState<BlockAIState | null>(null)
   const [addingVariation, setAddingVariation] = useState(false)
   const [addingWorkedEx, setAddingWorkedEx] = useState(false)
+  const [deleteBlocked, setDeleteBlocked] = useState<string | null>(null)
+
+  useEffect(() => { setDeleteBlocked(null) }, [selectedId])
+
+  function handleDelete() {
+    if (!selectedBlock) return
+    if (selectedBlock.type === 'data') {
+      const id = selectedBlock.id
+      const referenced = blocks.some(b => {
+        if (b.type === 'question') {
+          if (b.attachedDataId === id) return true
+          if (b.parts.some(p => p.attachedDataId === id)) return true
+        }
+        if (b.type === 'data' && b.id !== id && b.graph.linkedDataId === id) return true
+        return false
+      })
+      if (referenced) {
+        setDeleteBlocked('This data block is attached to a question — detach it there first.')
+        return
+      }
+    }
+    setDeleteBlocked(null)
+    dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id })
+    onSelect(null)
+  }
 
   const header = blocks.find(b => b.type === 'header') as HeaderBlock | undefined
   const worksheetContext = [
@@ -157,9 +182,13 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
                 )}
                 <button type="button" className="ctrl-btn" disabled={selectedIdx === 0 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'up' })} aria-label="Move up">↑</button>
                 <button type="button" className="ctrl-btn" disabled={selectedIdx === blocks.length - 1 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'down' })} aria-label="Move down">↓</button>
-                <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={() => { dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id }); onSelect(null) }} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
+                <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={handleDelete} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
               </div>
             </div>
+
+            {deleteBlocked && (
+              <div className="editor-delete-blocked">{deleteBlocked}</div>
+            )}
 
             {blockAI && (
               <div className="editor-block-ai">

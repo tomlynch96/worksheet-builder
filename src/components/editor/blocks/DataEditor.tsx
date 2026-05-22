@@ -47,7 +47,16 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
       xCol: Math.min(graph.xCol, newCols.length - 1),
       yCol: Math.min(graph.yCol, newCols.length - 1),
     }
-    up(block, dispatch, { columns: newCols, rows: newRows, graph: newGraph })
+    const newHidden = (block.hiddenColumns ?? [])
+      .filter(i => i !== c)
+      .map(i => i > c ? i - 1 : i)
+    up(block, dispatch, { columns: newCols, rows: newRows, graph: newGraph, hiddenColumns: newHidden })
+  }
+
+  function toggleHideColumn(c: number) {
+    const hidden = block.hiddenColumns ?? []
+    const newHidden = hidden.includes(c) ? hidden.filter(i => i !== c) : [...hidden, c]
+    up(block, dispatch, { hiddenColumns: newHidden })
   }
 
   function addRow() {
@@ -124,6 +133,14 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
               <div key={c} className="de-col-editor">
                 <input className="de-input de-col-label-input" value={col.label} onChange={e => updateColumnLabel(c, e.target.value)} placeholder="Label" />
                 <input className="de-input de-col-unit-input" value={col.unit} onChange={e => updateColumnUnit(c, e.target.value)} placeholder="Unit" />
+                {display === 'table' && (
+                  <button
+                    type="button"
+                    className={`de-eye-btn${(block.hiddenColumns ?? []).includes(c) ? ' de-eye-btn--hidden' : ''}`}
+                    onClick={() => toggleHideColumn(c)}
+                    title={(block.hiddenColumns ?? []).includes(c) ? 'Hidden on worksheet — click to show' : 'Visible on worksheet — click to hide'}
+                  >👁</button>
+                )}
                 {activeColumns.length > 1 && <button type="button" className="de-remove-btn" onClick={() => removeColumn(c)} title="Remove column">×</button>}
               </div>
             ))}
@@ -154,7 +171,7 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
                   </td>
                 )}
                 {row.map((cell, c) => (
-                  <td key={c} className="de-td">
+                  <td key={c} className={`de-td${(display === 'table' && (block.hiddenColumns ?? []).includes(c)) ? ' de-td--hidden' : ''}`}>
                     {linkedBlock
                       ? <span className="de-cell-readonly">{cell}</span>
                       : <input ref={r === rows.length - 1 && c === row.length - 1 ? lastInputRef : undefined} className="de-cell-input" value={cell} onChange={e => updateCell(r, c, e.target.value)} />
