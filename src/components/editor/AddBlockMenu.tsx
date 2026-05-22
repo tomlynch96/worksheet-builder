@@ -59,7 +59,7 @@ function makeBlock(type: BlockType): Block {
       return { id, type: 'data', heading: 'Results', columns: [
         { label: 'x', unit: '' }, { label: 'y', unit: '' }
       ], rows: [['', ''], ['', ''], ['', ''], ['', '']], display: 'table',
-      graph: { xCol: 0, yCol: 1, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true, omitRows: [], fitType: 'none', linkedDataId: null }, hiddenCells: [] }
+      graph: { xCol: 0, yCol: 1, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true, omitRows: [], fitType: 'none', showFitLine: true, linkedDataId: null }, hiddenCells: [] }
     case 'numerical_answers':
       return { id, type: 'numerical_answers', heading: 'Numerical answers' }
   }

@@ -229,6 +229,12 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
                 ))}
               </div>
             )}
+            {display === 'graph' && graph.fitType !== 'none' && (
+              <label className="de-check de-check--fit-visibility">
+                <input type="checkbox" checked={graph.showFitLine} onChange={e => updateGraph({ showFitLine: e.target.checked })} />
+                Show line on worksheet <span className="de-check-hint">(always shown on mark scheme)</span>
+              </label>
+            )}
           </div>
         </div>
       )}

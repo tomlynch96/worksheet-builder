@@ -389,7 +389,7 @@ export const PRESETS: Preset[] = [
             xCol: 0, yCol: 1,
             showXLabel: true, showYLabel: true,
             showXScale: true, showYScale: true,
-            omitRows: [], fitType: 'none' as const, linkedDataId: null,
+            omitRows: [], fitType: 'none' as const, showFitLine: true, linkedDataId: null,
           },
         },
         {
@@ -406,7 +406,7 @@ export const PRESETS: Preset[] = [
             xCol: 0, yCol: 1,
             showXLabel: true, showYLabel: true,
             showXScale: true, showYScale: true,
-            omitRows: [], fitType: 'none' as const, linkedDataId: _rateTableId,
+            omitRows: [], fitType: 'none' as const, showFitLine: true, linkedDataId: _rateTableId,
           },
         },
         {
@@ -490,7 +490,7 @@ export const PRESETS: Preset[] = [
             xCol: 0, yCol: 1,
             showXLabel: true, showYLabel: true,
             showXScale: true, showYScale: true,
-            omitRows: [], fitType: 'none' as const, linkedDataId: null,
+            omitRows: [], fitType: 'none' as const, showFitLine: true, linkedDataId: null,
           },
         },
         // Graph block — attached to question part (a); not rendered standalone
@@ -515,7 +515,7 @@ export const PRESETS: Preset[] = [
             xCol: 0, yCol: 1,
             showXLabel: true, showYLabel: true,
             showXScale: true, showYScale: true,
-            omitRows: [0, 1, 2, 3, 4, 5],
+            omitRows: [0, 1, 2, 3, 4, 5], showFitLine: true,
             fitType: 'linear' as const,
             linkedDataId: null,
           },
@@ -696,7 +696,7 @@ export const PRESETS: Preset[] = [
             xCol: 0, yCol: 1,
             showXLabel: true, showYLabel: true,
             showXScale: true, showYScale: true,
-            omitRows: [], fitType: 'none' as const, linkedDataId: null,
+            omitRows: [], fitType: 'none' as const, showFitLine: true, linkedDataId: null,
           },
         },
         {

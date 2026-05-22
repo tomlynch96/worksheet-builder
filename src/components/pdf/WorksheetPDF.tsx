@@ -443,8 +443,8 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
         {graph.showYScale && yTicks.map((t, i) => { const p = px(xMin, t.value); return <Text key={`ys${i}`} x={String(PDF_ML - 3)} y={String(p.y + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text> })}
         {graph.showXLabel && <Text x={String(PDF_ML + PDF_PW / 2)} y={String(PDF_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xCol.label}{xCol.unit ? ` (${xCol.unit})` : ''}</Text>}
         {graph.showYLabel && <Text x="8" y={String(PDF_MT + PDF_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_MT + PDF_PH / 2})`}>{yCol.label}{yCol.unit ? ` (${yCol.unit})` : ''}</Text>}
-        {graph.fitType === 'linear' && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" /> })()}
-        {graph.fitType === 'curve' && <Path d={catmullRomPath(points, layout, PDF_PW, PDF_PH, PDF_ML, PDF_MT)} stroke="#dc2626" strokeWidth="1.5" fill="none" />}
+        {graph.fitType === 'linear' && graph.showFitLine !== false && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" /> })()}
+        {graph.fitType === 'curve' && graph.showFitLine !== false && <Path d={catmullRomPath(points, layout, PDF_PW, PDF_PH, PDF_ML, PDF_MT)} stroke="#dc2626" strokeWidth="1.5" fill="none" />}
         {points.map((pt, i) => { const p = px(pt.x, pt.y); const d = 3.5; return <G key={i}><Line x1={String(p.x - d)} y1={String(p.y - d)} x2={String(p.x + d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /><Line x1={String(p.x + d)} y1={String(p.y - d)} x2={String(p.x - d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /></G> })}
       </Svg>
     </View>
@@ -516,7 +516,7 @@ function PDFData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function PDFInlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] }, hiddenCells: [] } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true }, hiddenCells: [] as string[] } : found
   return <View style={{ marginLeft: 15, marginTop: 4, marginBottom: 4 }}><PDFData block={block} blocks={blocks} /></View>
 }
 

@@ -127,6 +127,7 @@ export interface GraphOptions {
   showYScale: boolean
   omitRows: number[]
   fitType: FitType
+  showFitLine: boolean
   linkedDataId: string | null
 }
 

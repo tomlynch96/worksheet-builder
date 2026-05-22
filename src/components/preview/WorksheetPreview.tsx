@@ -407,12 +407,12 @@ function PreviewDataGraph({ block }: { block: DataBlock }) {
           </text>
         )}
         {/* Best fit */}
-        {graph.fitType === 'linear' && bestFitLine && (() => {
+        {graph.fitType === 'linear' && graph.showFitLine !== false && bestFitLine && (() => {
           const p1 = toS(bestFitLine.x1, bestFitLine.y1)
           const p2 = toS(bestFitLine.x2, bestFitLine.y2)
           return <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy} stroke="#dc2626" strokeWidth="1.5" />
         })()}
-        {graph.fitType === 'curve' && (
+        {graph.fitType === 'curve' && graph.showFitLine !== false && (
           <path d={catmullRomPath(points, layout, PLOT_W, PLOT_H, ML, MT)} fill="none" stroke="#dc2626" strokeWidth="1.5" />
         )}
         {/* Data points (×) */}
@@ -496,7 +496,7 @@ function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] }, hiddenCells: [] } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true }, hiddenCells: [] as string[] } : found
   return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
 }
 

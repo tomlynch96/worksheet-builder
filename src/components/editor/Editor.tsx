@@ -77,11 +77,6 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   function handleDelete() {
     if (!selectedBlock) return
 
-    if (selectedBlock.type === 'data') {
-      // If referenced elsewhere, keep alive (invisible as standalone) — just deselect
-      if (isDataReferenced(selectedBlock.id)) { onSelect(null); return }
-    }
-
     if (selectedBlock.type === 'question') {
       // Cascade-delete attached data blocks that have no other references
       const dataIds: string[] = []

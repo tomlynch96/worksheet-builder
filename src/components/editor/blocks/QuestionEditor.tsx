@@ -92,6 +92,7 @@ function Attachments({
         showXScale: true, showYScale: true,
         omitRows: [0, 1, 2, 3, 4],
         fitType: 'none',
+        showFitLine: true,
         linkedDataId: null,
       },
       hiddenCells: [],
