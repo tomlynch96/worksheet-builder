@@ -8,6 +8,8 @@ import type { UserCourse } from '../types/profile'
 import './ProfilePage.css'
 
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
+const boardQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length > 1)
+const singleQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length === 1)
 
 export function ProfilePage() {
   const { profile, signOut, updateProfile } = useProfileContext()
@@ -122,7 +124,7 @@ export function ProfilePage() {
                   ))}
                 </div>
 
-                {QUALIFICATION_OFFERINGS.map(qual => (
+                {boardQuals.map(qual => (
                   <div key={qual.id} className="profile-qual-row">
                     <span className="profile-qual-name">{qual.label}</span>
                     {EXAM_BOARDS.map(board => {
@@ -143,6 +145,30 @@ export function ProfilePage() {
                   </div>
                 ))}
               </div>
+
+              {singleQuals.length > 0 && (
+                <div className="profile-ks3-section">
+                  <p className="profile-ks3-label">KS3</p>
+                  {singleQuals.map(qual => {
+                    const board = qual.examBoards[0]
+                    const key = `${qual.id}:${board}`
+                    const checked = selected.has(key)
+                    return (
+                      <div key={qual.id} className="profile-ks3-row">
+                        <span className="profile-qual-name">{qual.label}</span>
+                        <button
+                          type="button"
+                          className={`profile-board-btn${checked ? ' profile-board-btn--on' : ''}`}
+                          onClick={() => toggle(qual.id, board)}
+                          aria-pressed={checked}
+                        >
+                          {checked ? '✓' : ''}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {error && <p className="profile-error">{error}</p>}

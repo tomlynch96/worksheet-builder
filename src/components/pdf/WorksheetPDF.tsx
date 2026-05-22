@@ -111,7 +111,7 @@ const s = StyleSheet.create({
   stepBox: { width: 17, height: 17, borderWidth: 1.5, borderColor: '#374151', borderRadius: 2, flexShrink: 0 },
 
   // Figure
-  figure: { borderWidth: 1.5, borderColor: '#9ca3af', borderStyle: 'dashed', borderRadius: 3, justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14, backgroundColor: '#f9fafb' },
+  figure: { justifyContent: 'flex-end', alignItems: 'center', padding: 6, marginBottom: 14 },
   figureLabel: { fontSize: 9, color: '#6b7280', fontStyle: 'italic' },
 
   // Mark scheme
@@ -193,7 +193,7 @@ function PDFInstructions({ block }: { block: InstructionsBlock }) {
   )
 }
 
-function PDFQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Block[]; num: number }) {
+function PDFQuestion({ block, blocks, num, showLines }: { block: QuestionBlock; blocks: Block[]; num: number; showLines: boolean }) {
   const hasParts = block.parts.length > 0
   return (
     <View style={s.question}>
@@ -206,7 +206,7 @@ function PDFQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Blo
       </View>
       {block.attachedDataId && <PDFInlineData dataId={block.attachedDataId} blocks={blocks} />}
       {block.attachedFigureId && <PDFInlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
-      {!hasParts && <AnswerLinesPDF count={block.lines} />}
+      {!hasParts && showLines && <AnswerLinesPDF count={block.lines} />}
       {hasParts && (
         <View style={s.parts}>
           {block.parts.map(part => (
@@ -220,7 +220,7 @@ function PDFQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: Blo
               </View>
               {part.attachedDataId && <PDFInlineData dataId={part.attachedDataId} blocks={blocks} />}
               {part.attachedFigureId && <PDFInlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
-              <AnswerLinesPDF count={part.lines} />
+              {showLines && <AnswerLinesPDF count={part.lines} />}
             </View>
           ))}
         </View>
@@ -268,7 +268,7 @@ function PDFWorkedExample({ block }: { block: WorkedExampleBlock }) {
 function PDFInformation({ block }: { block: InformationBlock }) {
   return (
     <View style={s.information}>
-      {block.heading ? <Text style={s.infoHeading}>{block.heading}</Text> : null}
+      {block.heading ? htmlToPdf(block.heading, s.infoHeading) : null}
       {htmlToPdf(block.content, s.infoContent)}
     </View>
   )
@@ -280,7 +280,7 @@ function PDFMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }
     <View style={s.match}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.heading || 'Match each term to its definition.'}</Text>
+        {block.heading ? htmlToPdf(block.heading, s.qText) : <Text style={s.qText}>Match each term to its definition.</Text>}
       </View>
       <View style={s.matchTable}>
         <View style={s.matchCol}>
@@ -310,7 +310,7 @@ function PDFCloze({ block, num }: { block: ClozeBlock; num: number }) {
     <View style={s.cloze}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.heading || 'Fill in the blanks.'}</Text>
+        {block.heading ? htmlToPdf(block.heading, s.qText) : <Text style={s.qText}>Fill in the blanks.</Text>}
       </View>
       {block.showWordBank && words.length > 0 && (
         <View style={s.wordBank}>
@@ -334,7 +334,7 @@ function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) 
     <View style={s.orderSteps}>
       <View style={s.questionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={s.qText}>{block.heading || 'Number these steps in the correct order.'}</Text>
+        {block.heading ? htmlToPdf(block.heading, s.qText) : <Text style={s.qText}>Number these steps in the correct order.</Text>}
       </View>
       {shuffled.map((step, i) => (
         <View key={i} style={s.stepRow}>
@@ -559,12 +559,12 @@ function PDFNumericalAnswers({ block, blocks }: { block: NumericalAnswersBlock; 
   )
 }
 
-function PDFBlock({ block, blocks }: { block: Block; blocks: Block[] }) {
+function PDFBlock({ block, blocks, showLines }: { block: Block; blocks: Block[]; showLines: boolean }) {
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   switch (block.type) {
     case 'header':          return <PDFHeader block={block} />
     case 'instructions':    return <PDFInstructions block={block} />
-    case 'question':        return <PDFQuestion block={block} blocks={blocks} num={num} />
+    case 'question':        return <PDFQuestion block={block} blocks={blocks} num={num} showLines={showLines} />
     case 'multiple_choice': return <PDFMultipleChoice block={block} num={num} />
     case 'worked_example':  return <PDFWorkedExample block={block} />
     case 'information':     return <PDFInformation block={block} />
@@ -652,7 +652,7 @@ function PDFMSCloze({ block, num }: { block: ClozeBlock; num: number }) {
     <View style={s.msQuestion} wrap={false}>
       <View style={s.msQuestionStem}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={{ flex: 1, fontSize: 10.5 }}>{block.heading || 'Fill in the blanks.'}</Text>
+        {block.heading ? htmlToPdf(block.heading, { flex: 1, fontSize: 10.5 }) : <Text style={{ flex: 1, fontSize: 10.5 }}>Fill in the blanks.</Text>}
       </View>
       <Text style={s.msClozeText}>
         {parts.map((part, i) =>
@@ -670,7 +670,7 @@ function PDFMSMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number
     <View style={s.msQuestion} wrap={false}>
       <View style={[s.msQuestionStem, { marginBottom: 6 }]}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={{ flex: 1, fontSize: 10.5 }}>{block.heading || 'Match each term to its definition.'}</Text>
+        {block.heading ? htmlToPdf(block.heading, { flex: 1, fontSize: 10.5 }) : <Text style={{ flex: 1, fontSize: 10.5 }}>Match each term to its definition.</Text>}
       </View>
       <View style={{ marginLeft: 15 }}>
         {block.items.map(item => (
@@ -690,7 +690,7 @@ function PDFMSOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }
     <View style={s.msQuestion} wrap={false}>
       <View style={[s.msQuestionStem, { marginBottom: 6 }]}>
         <Text style={s.qNum}>{num}.</Text>
-        <Text style={{ flex: 1, fontSize: 10.5 }}>{block.heading || 'Number these steps in the correct order.'}</Text>
+        {block.heading ? htmlToPdf(block.heading, { flex: 1, fontSize: 10.5 }) : <Text style={{ flex: 1, fontSize: 10.5 }}>Number these steps in the correct order.</Text>}
       </View>
       <View style={{ marginLeft: 15 }}>
         {block.steps.map((step, i) => (
@@ -749,12 +749,13 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
 
 export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
+  const showLines = worksheet.showLines !== false
   return (
     <Document>
       <Page size="A4" style={s.page}>
         {renderableBlocks.map(block => (
           <View key={block.id} wrap={false}>
-            <PDFBlock block={block} blocks={worksheet.blocks} />
+            <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
           </View>
         ))}
       </Page>

@@ -396,15 +396,12 @@
 
 /* ── Figure ──────────────────────────────────────────────── */
 .pr-figure {
-  border: 1.5px dashed #9ca3af;
-  border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   padding: 8px;
   margin-bottom: 18px;
-  background: #f9fafb;
 }
 
 .pr-figure-label {

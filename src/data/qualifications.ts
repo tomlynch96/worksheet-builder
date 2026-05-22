@@ -31,6 +31,20 @@ export const QUALIFICATION_OFFERINGS: QualificationOffering[] = [
     examBoards: ['AQA', 'OCR', 'Edexcel', 'WJEC'],
     specDataId: (b) => b === 'Edexcel' ? 'edexcel-alevel-physics' : null,
   },
+  {
+    id: 'exploring-science-y7',
+    label: 'Exploring Science Year 7',
+    shortLabel: 'Exp. Sci Y7',
+    examBoards: ['Hodder'],
+    specDataId: () => null,
+  },
+  {
+    id: 'exploring-science-y8',
+    label: 'Exploring Science Year 8',
+    shortLabel: 'Exp. Sci Y8',
+    examBoards: ['Hodder'],
+    specDataId: () => null,
+  },
 ]
 
 export function getOffering(id: string): QualificationOffering | undefined {
