@@ -707,9 +707,19 @@ function PDFMSOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }
 
 function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
   const header = worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined
+  const attachedIds = new Set(
+    worksheet.blocks.flatMap(b =>
+      b.type === 'question'
+        ? [b.attachedDataId, b.attachedFigureId, ...b.parts.map(p => p.attachedDataId), ...b.parts.map(p => p.attachedFigureId)].filter(Boolean) as string[]
+        : []
+    )
+  )
   const msBlocks = worksheet.blocks.filter(b =>
     ['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'].includes(b.type)
   )
+  const standaloneDataWithHidden = worksheet.blocks.filter(b =>
+    b.type === 'data' && !attachedIds.has(b.id) && ((b as DataBlock).hiddenCells ?? []).length > 0
+  ) as DataBlock[]
 
   return (
     <>
@@ -729,6 +739,11 @@ function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
           default: return null
         }
       })}
+      {standaloneDataWithHidden.map(block => (
+        <View key={block.id} style={s.msQuestion} wrap={false}>
+          <PDFData block={{ ...block, hiddenCells: [] }} blocks={worksheet.blocks} />
+        </View>
+      ))}
     </>
   )
 }

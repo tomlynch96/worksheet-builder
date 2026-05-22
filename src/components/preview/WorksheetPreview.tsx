@@ -705,6 +705,11 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
       case 'cloze':           return <PreviewClozeMS block={block} num={num} />
       case 'match_them_up':   return <PreviewMatchThemUpMS block={block} num={num} />
       case 'order_steps':     return <PreviewOrderStepsMS block={block} num={num} />
+      case 'data': {
+        const b = block as DataBlock
+        if ((b.hiddenCells ?? []).length === 0) return null
+        return <PreviewData block={{ ...b, hiddenCells: [] }} blocks={blocks} />
+      }
       default: break
     }
   }
