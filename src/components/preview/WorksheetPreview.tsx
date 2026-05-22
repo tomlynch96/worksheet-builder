@@ -496,7 +496,7 @@ function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true }, hiddenCells: [] as string[] } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true }, hiddenCells: [] as string[] } : found
   return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
 }
 
