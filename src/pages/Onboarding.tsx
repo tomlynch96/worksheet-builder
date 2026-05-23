@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
@@ -8,8 +8,13 @@ import './Onboarding.css'
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
 
 export function Onboarding() {
-  const { authUserId, sendMagicLink, createProfile } = useProfileContext()
+  const { authUserId, profile, loading, sendMagicLink, createProfile } = useProfileContext()
   const navigate = useNavigate()
+
+  // If the user already has a profile, skip the setup form and go home
+  useEffect(() => {
+    if (profile) navigate('/', { replace: true })
+  }, [profile, navigate])
 
   // Magic-link form
   const [email, setEmail] = useState('')
@@ -95,8 +100,19 @@ export function Onboarding() {
     )
   }
 
+  // Signed in — wait for profile fetch before deciding what to show
+  if (authUserId && loading) {
+    return (
+      <div className="onboarding-layout">
+        <div className="onboarding-card" style={{ alignItems: 'center' }}>
+          <div className="app-loading-spinner" />
+        </div>
+      </div>
+    )
+  }
+
   // Signed in but no profile yet — show course selection
-  if (authUserId) {
+  if (authUserId && !profile) {
     return (
       <div className="onboarding-layout">
         <form className="onboarding-card" onSubmit={handleCreateProfile}>
@@ -119,6 +135,7 @@ export function Onboarding() {
           <div className="onboarding-courses">
             <div className="onboarding-label">Which courses do you teach?</div>
             <div className="onboarding-board-key">
+              <span />
               {EXAM_BOARDS.map(b => (
                 <span key={b} className="onboarding-board-label">{b}</span>
               ))}
