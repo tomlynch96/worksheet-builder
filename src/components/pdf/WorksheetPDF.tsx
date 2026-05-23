@@ -397,8 +397,8 @@ function PDFDataTable({ block }: { block: DataBlock }) {
   )
 }
 
-const PDF_W = 440, PDF_H = 260
-const PDF_ML = 44, PDF_MR = 12, PDF_MT = 12, PDF_MB = 38
+const PDF_W = 330, PDF_H = 225
+const PDF_ML = 36, PDF_MR = 12, PDF_MT = 12, PDF_MB = 33
 const PDF_PW = PDF_W - PDF_ML - PDF_MR
 const PDF_PH = PDF_H - PDF_MT - PDF_MB
 
@@ -451,8 +451,8 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
   )
 }
 
-const PDF_BAR_W = 440, PDF_BAR_H = 240
-const PDF_BAR_ML = 44, PDF_BAR_MR = 12, PDF_BAR_MT = 12, PDF_BAR_MB = 44
+const PDF_BAR_W = 330, PDF_BAR_H = 210
+const PDF_BAR_ML = 36, PDF_BAR_MR = 12, PDF_BAR_MT = 12, PDF_BAR_MB = 36
 const PDF_BAR_PW = PDF_BAR_W - PDF_BAR_ML - PDF_BAR_MR
 const PDF_BAR_PH = PDF_BAR_H - PDF_BAR_MT - PDF_BAR_MB
 
