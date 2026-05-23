@@ -291,8 +291,9 @@ function PreviewSpacer({ block }: { block: SpacerBlock }) {
   return <div style={{ height: heights[block.size] }} />
 }
 
-function PreviewDataTable({ block }: { block: DataBlock }) {
+function PreviewDataTable({ block, markScheme = false }: { block: DataBlock; markScheme?: boolean }) {
   const { columns, rows, heading } = block
+  const hiddenCells = markScheme ? new Set<string>() : new Set(block.hiddenCells ?? [])
   return (
     <div className="pr-data-table">
       {heading && <p className="pr-data-heading">{heading}</p>}
@@ -309,7 +310,7 @@ function PreviewDataTable({ block }: { block: DataBlock }) {
         <tbody>
           {rows.map((row, r) => (
             <tr key={r}>
-              {row.map((cell, c) => <td key={c} className="pr-td">{cell}</td>)}
+              {row.map((cell, c) => <td key={c} className="pr-td">{hiddenCells.has(`${r},${c}`) ? '' : cell}</td>)}
             </tr>
           ))}
         </tbody>
@@ -406,12 +407,12 @@ function PreviewDataGraph({ block }: { block: DataBlock }) {
           </text>
         )}
         {/* Best fit */}
-        {graph.fitType === 'linear' && bestFitLine && (() => {
+        {graph.fitType === 'linear' && graph.showFitLine !== false && bestFitLine && (() => {
           const p1 = toS(bestFitLine.x1, bestFitLine.y1)
           const p2 = toS(bestFitLine.x2, bestFitLine.y2)
           return <line x1={p1.cx} y1={p1.cy} x2={p2.cx} y2={p2.cy} stroke="#dc2626" strokeWidth="1.5" />
         })()}
-        {graph.fitType === 'curve' && (
+        {graph.fitType === 'curve' && graph.showFitLine !== false && (
           <path d={catmullRomPath(points, layout, PLOT_W, PLOT_H, ML, MT)} fill="none" stroke="#dc2626" strokeWidth="1.5" />
         )}
         {/* Data points (×) */}
@@ -495,7 +496,7 @@ function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] } } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true }, hiddenCells: [] as string[] } : found
   return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
 }
 
@@ -704,6 +705,11 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
       case 'cloze':           return <PreviewClozeMS block={block} num={num} />
       case 'match_them_up':   return <PreviewMatchThemUpMS block={block} num={num} />
       case 'order_steps':     return <PreviewOrderStepsMS block={block} num={num} />
+      case 'data': {
+        const b = block as DataBlock
+        if ((b.hiddenCells ?? []).length === 0) return null
+        return <PreviewData block={{ ...b, hiddenCells: [] }} blocks={blocks} />
+      }
       default: break
     }
   }

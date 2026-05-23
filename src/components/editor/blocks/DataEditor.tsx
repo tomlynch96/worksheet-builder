@@ -47,7 +47,17 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
       xCol: Math.min(graph.xCol, newCols.length - 1),
       yCol: Math.min(graph.yCol, newCols.length - 1),
     }
-    up(block, dispatch, { columns: newCols, rows: newRows, graph: newGraph })
+    const newHidden = (block.hiddenCells ?? [])
+      .filter(key => parseInt(key.split(',')[1]) !== c)
+      .map(key => { const [r, col] = key.split(',').map(Number); return col > c ? `${r},${col - 1}` : key })
+    up(block, dispatch, { columns: newCols, rows: newRows, graph: newGraph, hiddenCells: newHidden })
+  }
+
+  function toggleHideCell(r: number, c: number) {
+    const key = `${r},${c}`
+    const hidden = block.hiddenCells ?? []
+    const newHidden = hidden.includes(key) ? hidden.filter(k => k !== key) : [...hidden, key]
+    up(block, dispatch, { hiddenCells: newHidden })
   }
 
   function addRow() {
@@ -58,7 +68,10 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
     if (rows.length <= 1) return
     const newRows = rows.filter((_, ri) => ri !== r)
     const newOmit = graph.omitRows.filter(i => i !== r).map(i => i > r ? i - 1 : i)
-    up(block, dispatch, { rows: newRows, graph: { ...graph, omitRows: newOmit } })
+    const newHidden = (block.hiddenCells ?? [])
+      .filter(key => parseInt(key.split(',')[0]) !== r)
+      .map(key => { const [row, c] = key.split(',').map(Number); return row > r ? `${row - 1},${c}` : key })
+    up(block, dispatch, { rows: newRows, graph: { ...graph, omitRows: newOmit }, hiddenCells: newHidden })
   }
 
   function updateGraph(updates: Partial<typeof graph>) {
@@ -153,14 +166,25 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
                     <input type="checkbox" checked={!graph.omitRows.includes(r)} onChange={() => toggleOmitRow(r)} />
                   </td>
                 )}
-                {row.map((cell, c) => (
-                  <td key={c} className="de-td">
-                    {linkedBlock
-                      ? <span className="de-cell-readonly">{cell}</span>
-                      : <input ref={r === rows.length - 1 && c === row.length - 1 ? lastInputRef : undefined} className="de-cell-input" value={cell} onChange={e => updateCell(r, c, e.target.value)} />
-                    }
-                  </td>
-                ))}
+                {row.map((cell, c) => {
+                  const hidden = display === 'table' && (block.hiddenCells ?? []).includes(`${r},${c}`)
+                  return (
+                    <td key={c} className={`de-td${hidden ? ' de-td--hidden' : ''}`}>
+                      {linkedBlock
+                        ? <span className="de-cell-readonly">{cell}</span>
+                        : <input ref={r === rows.length - 1 && c === row.length - 1 ? lastInputRef : undefined} className="de-cell-input" value={cell} onChange={e => updateCell(r, c, e.target.value)} />
+                      }
+                      {display === 'table' && !linkedBlock && (
+                        <button
+                          type="button"
+                          className={`de-cell-eye${hidden ? ' de-cell-eye--on' : ''}`}
+                          onClick={() => toggleHideCell(r, c)}
+                          title={hidden ? 'Hidden on worksheet — click to show' : 'Click to hide on worksheet'}
+                        >👁</button>
+                      )}
+                    </td>
+                  )
+                })}
                 {!linkedBlock && (
                   <td className="de-td de-td-del">
                     {rows.length > 1 && <button type="button" className="de-remove-btn" onClick={() => removeRow(r)} title="Remove row">×</button>}
@@ -204,6 +228,12 @@ export function DataEditor({ block, dispatch, blocks }: Props) {
                   </label>
                 ))}
               </div>
+            )}
+            {display === 'graph' && graph.fitType !== 'none' && (
+              <label className="de-check de-check--fit-visibility">
+                <input type="checkbox" checked={graph.showFitLine} onChange={e => updateGraph({ showFitLine: e.target.checked })} />
+                Show line on worksheet <span className="de-check-hint">(always shown on mark scheme)</span>
+              </label>
             )}
           </div>
         </div>

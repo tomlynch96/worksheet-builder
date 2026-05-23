@@ -370,6 +370,7 @@ function PDFSpacer({ block }: { block: SpacerBlock }) {
 
 function PDFDataTable({ block }: { block: DataBlock }) {
   const { columns, rows, heading } = block
+  const hiddenCells = new Set(block.hiddenCells ?? [])
   const colW = Math.floor(493 / columns.length)
   return (
     <View style={{ marginBottom: 14 }}>
@@ -387,7 +388,7 @@ function PDFDataTable({ block }: { block: DataBlock }) {
         <View key={r} style={{ flexDirection: 'row', borderLeftWidth: 1, borderColor: '#d1d5db' }}>
           {row.map((cell, c) => (
             <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5' }}>
-              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{cell}</Text>
+              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{hiddenCells.has(`${r},${c}`) ? '' : cell}</Text>
             </View>
           ))}
         </View>
@@ -442,8 +443,8 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
         {graph.showYScale && yTicks.map((t, i) => { const p = px(xMin, t.value); return <Text key={`ys${i}`} x={String(PDF_ML - 3)} y={String(p.y + 2.5)} style={{ fontSize: 7, textAnchor: 'end' }}>{t.label}</Text> })}
         {graph.showXLabel && <Text x={String(PDF_ML + PDF_PW / 2)} y={String(PDF_H - 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }}>{xCol.label}{xCol.unit ? ` (${xCol.unit})` : ''}</Text>}
         {graph.showYLabel && <Text x="8" y={String(PDF_MT + PDF_PH / 2)} style={{ fontSize: 8, fontWeight: 'bold', textAnchor: 'middle' }} transform={`rotate(-90, 8, ${PDF_MT + PDF_PH / 2})`}>{yCol.label}{yCol.unit ? ` (${yCol.unit})` : ''}</Text>}
-        {graph.fitType === 'linear' && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" /> })()}
-        {graph.fitType === 'curve' && <Path d={catmullRomPath(points, layout, PDF_PW, PDF_PH, PDF_ML, PDF_MT)} stroke="#dc2626" strokeWidth="1.5" fill="none" />}
+        {graph.fitType === 'linear' && graph.showFitLine !== false && bestFitLine && (() => { const p1 = px(bestFitLine.x1, bestFitLine.y1); const p2 = px(bestFitLine.x2, bestFitLine.y2); return <Line x1={String(p1.x)} y1={String(p1.y)} x2={String(p2.x)} y2={String(p2.y)} stroke="#dc2626" strokeWidth="1.5" /> })()}
+        {graph.fitType === 'curve' && graph.showFitLine !== false && <Path d={catmullRomPath(points, layout, PDF_PW, PDF_PH, PDF_ML, PDF_MT)} stroke="#dc2626" strokeWidth="1.5" fill="none" />}
         {points.map((pt, i) => { const p = px(pt.x, pt.y); const d = 3.5; return <G key={i}><Line x1={String(p.x - d)} y1={String(p.y - d)} x2={String(p.x + d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /><Line x1={String(p.x + d)} y1={String(p.y - d)} x2={String(p.x - d)} y2={String(p.y + d)} stroke="#1e3a5f" strokeWidth="1.5" /></G> })}
       </Svg>
     </View>
@@ -515,7 +516,7 @@ function PDFData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
 function PDFInlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [] } } : found
+  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true }, hiddenCells: [] as string[] } : found
   return <View style={{ marginLeft: 15, marginTop: 4, marginBottom: 4 }}><PDFData block={block} blocks={blocks} /></View>
 }
 
@@ -706,9 +707,19 @@ function PDFMSOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }
 
 function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
   const header = worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined
+  const attachedIds = new Set(
+    worksheet.blocks.flatMap(b =>
+      b.type === 'question'
+        ? [b.attachedDataId, b.attachedFigureId, ...b.parts.map(p => p.attachedDataId), ...b.parts.map(p => p.attachedFigureId)].filter(Boolean) as string[]
+        : []
+    )
+  )
   const msBlocks = worksheet.blocks.filter(b =>
     ['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'].includes(b.type)
   )
+  const standaloneDataWithHidden = worksheet.blocks.filter(b =>
+    b.type === 'data' && !attachedIds.has(b.id) && ((b as DataBlock).hiddenCells ?? []).length > 0
+  ) as DataBlock[]
 
   return (
     <>
@@ -728,6 +739,11 @@ function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
           default: return null
         }
       })}
+      {standaloneDataWithHidden.map(block => (
+        <View key={block.id} style={s.msQuestion} wrap={false}>
+          <PDFData block={{ ...block, hiddenCells: [] }} blocks={worksheet.blocks} />
+        </View>
+      ))}
     </>
   )
 }

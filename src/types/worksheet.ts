@@ -127,6 +127,7 @@ export interface GraphOptions {
   showYScale: boolean
   omitRows: number[]
   fitType: FitType
+  showFitLine: boolean
   linkedDataId: string | null
 }
 
@@ -141,6 +142,7 @@ export interface DataBlock {
   rows: string[][]
   display: DataDisplay
   graph: GraphOptions
+  hiddenCells?: string[]   // "r,c" keys for cells blank on worksheet
 }
 
 export interface NumericalAnswersBlock {

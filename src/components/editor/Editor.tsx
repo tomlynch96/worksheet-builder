@@ -62,6 +62,36 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const [blockAI, setBlockAI] = useState<BlockAIState | null>(null)
   const [addingVariation, setAddingVariation] = useState(false)
   const [addingWorkedEx, setAddingWorkedEx] = useState(false)
+  function isDataReferenced(id: string, excludeId?: string) {
+    return blocks.some(b => {
+      if (b.id === excludeId) return false
+      if (b.type === 'question') {
+        if (b.attachedDataId === id) return true
+        if (b.parts.some(p => p.attachedDataId === id)) return true
+      }
+      if (b.type === 'data' && b.id !== id && b.graph.linkedDataId === id) return true
+      return false
+    })
+  }
+
+  function handleDelete() {
+    if (!selectedBlock) return
+
+    if (selectedBlock.type === 'question') {
+      // Cascade-delete attached data blocks that have no other references
+      const dataIds: string[] = []
+      if (selectedBlock.attachedDataId) dataIds.push(selectedBlock.attachedDataId)
+      selectedBlock.parts.forEach(p => { if (p.attachedDataId) dataIds.push(p.attachedDataId) })
+      for (const dataId of dataIds) {
+        if (!isDataReferenced(dataId, selectedBlock.id)) {
+          dispatch({ type: 'DELETE_BLOCK', id: dataId })
+        }
+      }
+    }
+
+    dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id })
+    onSelect(null)
+  }
 
   const header = blocks.find(b => b.type === 'header') as HeaderBlock | undefined
   const worksheetContext = [
@@ -157,7 +187,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
                 )}
                 <button type="button" className="ctrl-btn" disabled={selectedIdx === 0 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'up' })} aria-label="Move up">↑</button>
                 <button type="button" className="ctrl-btn" disabled={selectedIdx === blocks.length - 1 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'down' })} aria-label="Move down">↓</button>
-                <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={() => { dispatch({ type: 'DELETE_BLOCK', id: selectedBlock.id }); onSelect(null) }} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
+                <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={handleDelete} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
               </div>
             </div>
 
