@@ -10,6 +10,7 @@ import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useEditTracking } from '../hooks/useEditTracking'
 import { useProfileContext } from '../context/ProfileContext'
 import { PRESETS } from '../data/presets'
+import { LAYOUT_TEST_WORKSHEET } from '../data/layoutTest'
 import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
 import './EditorPage.css'
 
@@ -191,6 +192,14 @@ export function EditorPage() {
         title="Toggle answer lines"
       >
         {worksheet.showLines === false ? 'Show lines' : 'Hide lines'}
+      </button>
+
+      <button
+        className="btn-topbar"
+        onClick={() => { dispatch({ type: 'LOAD_WORKSHEET', worksheet: LAYOUT_TEST_WORKSHEET }); setSelectedId(null) }}
+        title="Load a calibration worksheet to compare PDF vs preview dimensions"
+      >
+        Layout Test
       </button>
 
       <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
