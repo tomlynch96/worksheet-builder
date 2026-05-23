@@ -373,12 +373,12 @@ function PDFDataTable({ block }: { block: DataBlock }) {
   const hiddenCells = new Set(block.hiddenCells ?? [])
   const colW = Math.floor(493 / columns.length)
   return (
-    <View style={{ marginBottom: 14 }}>
-      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5 }}>{heading}</Text> : null}
+    <View style={{ marginBottom: 9 }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, lineHeight: 1.0 }}>{heading}</Text> : null}
       <View style={{ flexDirection: 'row', borderTopWidth: 1, borderLeftWidth: 1, borderColor: '#d1d5db' }}>
         {columns.map((col, c) => (
           <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5', backgroundColor: '#f3f4f6' }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', textAlign: 'center' }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', textAlign: 'center', lineHeight: 1.2 }}>
               {col.label}{col.unit ? ` (${col.unit})` : ''}
             </Text>
           </View>
@@ -388,7 +388,7 @@ function PDFDataTable({ block }: { block: DataBlock }) {
         <View key={r} style={{ flexDirection: 'row', borderLeftWidth: 1, borderColor: '#d1d5db' }}>
           {row.map((cell, c) => (
             <View key={c} style={{ width: colW, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#d1d5db', padding: '3 5' }}>
-              <Text style={{ fontSize: 8.5, textAlign: 'center' }}>{hiddenCells.has(`${r},${c}`) ? '' : cell}</Text>
+              <Text style={{ fontSize: 8.5, textAlign: 'center', lineHeight: 1.2 }}>{hiddenCells.has(`${r},${c}`) ? '' : cell}</Text>
             </View>
           ))}
         </View>
@@ -430,8 +430,8 @@ function PDFDataGraph({ block }: { block: DataBlock }) {
   }
 
   return (
-    <View style={{ marginBottom: 14, alignItems: 'center' }}>
-      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, alignSelf: 'flex-start' }}>{heading}</Text> : null}
+    <View style={{ marginBottom: 9, alignItems: 'center' }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, lineHeight: 1.0, alignSelf: 'flex-start' }}>{heading}</Text> : null}
       <Svg width={PDF_W} height={PDF_H}>
         {xMinor.map((v, i) => { const p = px(v, yMin); return <Line key={`xm${i}`} x1={String(p.x)} y1={String(PDF_MT)} x2={String(p.x)} y2={String(PDF_MT + PDF_PH)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
         {yMinor.map((v, i) => { const p = px(xMin, v); return <Line key={`ym${i}`} x1={String(PDF_ML)} y1={String(p.y)} x2={String(PDF_ML + PDF_PW)} y2={String(p.y)} stroke="#e5e7eb" strokeWidth="0.5" /> })}
@@ -474,8 +474,8 @@ function PDFDataBar({ block }: { block: DataBlock }) {
   }
   function barY(val: number) { return PDF_BAR_MT + PDF_BAR_PH - (yMax > 0 ? (val / yMax) * PDF_BAR_PH : 0) }
   return (
-    <View style={{ marginBottom: 14, alignItems: 'center' }}>
-      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, alignSelf: 'flex-start' }}>{heading}</Text> : null}
+    <View style={{ marginBottom: 9, alignItems: 'center' }}>
+      {heading ? <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 5, lineHeight: 1.0, alignSelf: 'flex-start' }}>{heading}</Text> : null}
       <Svg width={PDF_BAR_W} height={PDF_BAR_H}>
         {yMinorLines.map((v, i) => <Line key={`bym${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(v))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(v))} stroke="#e5e7eb" strokeWidth="0.5" />)}
         {yTicks.map((t, i) => <Line key={`byM${i}`} x1={String(PDF_BAR_ML)} y1={String(barY(t.value))} x2={String(PDF_BAR_ML + PDF_BAR_PW)} y2={String(barY(t.value))} stroke="#d1d5db" strokeWidth="0.8" />)}
