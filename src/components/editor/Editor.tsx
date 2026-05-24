@@ -109,6 +109,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
         blockType: selectedBlock.type,
         context: worksheetContext,
         request: blockAI.prompt,
+        currentBlock: selectedBlock,
       })
       // Merge generated content into current block, preserving id and type
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

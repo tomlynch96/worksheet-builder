@@ -190,11 +190,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ].filter(Boolean).join('\n')
 
   } else if (mode === 'block') {
-    const { blockType, context, request } = params as Record<string, string>
+    const { blockType, context, request, currentBlock } = params as Record<string, unknown>
     systemPrompt = SYSTEM_BLOCK
     userMessage = [
       `Generate a single "${blockType}" block.`,
       context ? `Worksheet context: ${context}` : '',
+      currentBlock
+        ? `Current block content (the teacher has already filled in some fields — preserve any content they have written and use it as the basis; only fill in what is missing or explicitly requested):\n${JSON.stringify(currentBlock)}`
+        : '',
       request ? `Teacher's request: ${request}` : '',
     ].filter(Boolean).join('\n')
 

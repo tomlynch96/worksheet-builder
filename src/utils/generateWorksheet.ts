@@ -85,6 +85,7 @@ export async function generateBlock(params: {
   blockType: string
   context?: string
   request: string
+  currentBlock?: Block
 }): Promise<Block> {
   const raw = await callAPI({ mode: 'block', ...params })
   const parsed = JSON.parse(raw) as Block
