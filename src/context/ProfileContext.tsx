@@ -9,7 +9,7 @@ interface ProfileContextValue {
   sendMagicLink: (email: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   createProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
-  updateProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
+  updateProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[], teachingPhilosophy?: string) => Promise<boolean>
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)

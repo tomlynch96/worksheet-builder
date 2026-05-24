@@ -63,6 +63,7 @@ export async function generateWorksheet(params: {
   specPoint?: string
   worksheetType: 'maths' | 'knowledge' | 'practical'
   extraNotes?: string
+  teachingPhilosophy?: string
 }): Promise<Worksheet> {
   const raw = await callAPI({ mode: 'worksheet', ...params })
   const parsed = JSON.parse(raw) as Worksheet

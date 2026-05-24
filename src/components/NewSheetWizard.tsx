@@ -114,6 +114,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         specPoint: selectedPoint || freeText,
         worksheetType,
         extraNotes: extraNotes.trim() || undefined,
+        teachingPhilosophy: profile?.teaching_philosophy || undefined,
       })
       onGenerated(worksheet)
     } catch (err) {

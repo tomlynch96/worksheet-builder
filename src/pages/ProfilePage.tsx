@@ -14,6 +14,7 @@ export function ProfilePage() {
   const navigate = useNavigate()
 
   const [name, setName] = useState(profile?.name ?? '')
+  const [philosophy, setPhilosophy] = useState(profile?.teaching_philosophy ?? '')
   const [selected, setSelected] = useState<Set<string>>(new Set(
     profile?.user_courses.map(c => `${c.qualification_id}:${c.exam_board}`) ?? []
   ))
@@ -38,6 +39,7 @@ export function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setName(profile.name)
+      setPhilosophy(profile.teaching_philosophy ?? '')
       setSelected(new Set(profile.user_courses.map(c => `${c.qualification_id}:${c.exam_board}`)))
     }
   }, [profile])
@@ -62,7 +64,7 @@ export function ProfilePage() {
       return { qualification_id, exam_board }
     })
 
-    const ok = await updateProfile(name.trim() || 'Teacher', courses)
+    const ok = await updateProfile(name.trim() || 'Teacher', courses, philosophy)
     setSaving(false)
     if (ok) {
       setSaved(true)
@@ -106,6 +108,20 @@ export function ProfilePage() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. Mr Smith"
               />
+            </div>
+
+            <div className="profile-field">
+              <label className="profile-label">Your teaching approach</label>
+              <textarea
+                className="profile-textarea"
+                rows={5}
+                value={philosophy}
+                onChange={e => setPhilosophy(e.target.value)}
+                placeholder="Describe your approach so the AI generates worksheets that fit your style. For example: I teach mixed-ability Year 10 and 11. My students struggle with rearranging equations. I like questions that build confidence before increasing demand. Mark schemes should always note common misconceptions. Worked examples should show algebra before substituting numbers."
+              />
+              <p className="profile-field-hint">
+                This is included in every AI generation — the more specific, the better the output.
+              </p>
             </div>
 
             <div className="profile-field">

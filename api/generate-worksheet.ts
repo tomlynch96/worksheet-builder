@@ -141,10 +141,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let systemPrompt: string
   let userMessage: string
 
+  const { teachingPhilosophy } = params as Record<string, string>
+  const philosophySection = teachingPhilosophy?.trim()
+    ? `\n## This teacher's approach\n${teachingPhilosophy.trim()}\n`
+    : ''
+
   if (mode === 'worksheet') {
     const { topic, examBoard, tier, qualification, specPoint, worksheetType, extraNotes } = params as Record<string, string>
     const typeMap: Record<string, string> = { maths: SYSTEM_MATHS, knowledge: SYSTEM_KNOWLEDGE, practical: SYSTEM_PRACTICAL }
-    systemPrompt = typeMap[worksheetType] ?? SYSTEM_KNOWLEDGE
+    const basePrompt = typeMap[worksheetType] ?? SYSTEM_KNOWLEDGE
+    systemPrompt = philosophySection
+      ? basePrompt.replace('\nPEDAGOGICAL RULES', `${philosophySection}\nPEDAGOGICAL RULES`)
+      : basePrompt
     userMessage = [
       'Generate a worksheet with these parameters:',
       `Topic: ${topic}`,
@@ -157,7 +165,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } else if (mode === 'block') {
     const { blockType, context, request } = params as Record<string, string>
-    systemPrompt = SYSTEM_BLOCK
+    systemPrompt = philosophySection ? SYSTEM_BLOCK + philosophySection : SYSTEM_BLOCK
     userMessage = [
       `Generate a single "${blockType}" block.`,
       context ? `Worksheet context: ${context}` : '',
@@ -166,7 +174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } else if (mode === 'edit') {
     const { worksheet, request } = params as { worksheet: unknown; request: string }
-    systemPrompt = SYSTEM_EDIT
+    systemPrompt = philosophySection ? SYSTEM_EDIT + philosophySection : SYSTEM_EDIT
     userMessage = `Teacher's request: ${request}\n\nCurrent worksheet:\n${JSON.stringify(worksheet)}`
 
   } else {

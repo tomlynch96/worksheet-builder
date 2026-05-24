@@ -9,5 +9,6 @@ export interface Profile {
   id: string
   name: string
   created_at: string
+  teaching_philosophy?: string
   user_courses: UserCourse[]
 }
