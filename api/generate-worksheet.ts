@@ -56,11 +56,64 @@ order_steps: { "id":"...", "type":"order_steps", "heading":"Put these steps in o
 
 figure: { "id":"...", "type":"figure", "caption":"Figure 1: ...", "size":"medium" }
 
-data: { "id":"...", "type":"data", "heading":"Table 1: Results",
+data — represents a results table, line graph, or bar chart. One block can only display in one mode at a time.
+
+"display" controls what is rendered:
+  "table" — a results table. Use for data pupils read from or complete.
+  "graph" — a line graph grid for pupils to plot and/or draw a best-fit line.
+  "bar"   — a bar chart frame for pupils to complete or read from.
+
+"columns": array of { "label": string, "unit": string }
+"rows": 2D array of strings — the full data including any values pupils must work out.
+  Always include ALL data in rows, even values pupils must calculate — use hiddenCells to blank them on the worksheet.
+
+"hiddenCells": ["r,c", ...] — zero-based row,column indices to blank on the WORKSHEET.
+  The mark scheme always reveals the full table. Use this for "complete the table" tasks.
+  Example: hide the "Density" column when pupils must calculate it from Mass and Volume.
+  Example: hide every other row of a results column to create a partial dataset.
+
+"graph" object (used when display is "graph" or "bar"):
+  "xCol": 0         — 0-based column index for the x-axis / category axis
+  "yCol": 1         — 0-based column index for the y-axis / value axis
+  "showXLabel": true  — print the x-axis label (column name + unit). Set false to omit.
+  "showYLabel": true  — print the y-axis label. Set false to omit.
+  "showXScale": true  — print numerical tick values on the x-axis.
+    Set false to give pupils a completely blank x-axis to scale themselves.
+  "showYScale": true  — print numerical tick values on the y-axis.
+    Set false to give pupils a blank y-axis to scale themselves.
+  "omitRows": [0,1,2,...] — zero-based row indices NOT pre-plotted on the graph.
+    Points in omitRows are the ones PUPILS must plot. Points not in omitRows are pre-plotted.
+    For a practical worksheet where pupils plot everything: list all row indices, e.g. [0,1,2,3,4,5].
+    For a reference/worked-example graph with all points shown: use [].
+    For a partially-completed graph: omit a subset of rows.
+  "fitType": "none" | "linear" | "curve"
+    "none"   — no best-fit line. Use when pupils are not expected to draw one.
+    "linear" — straight line of best fit. Use for linear relationships (e.g. F=kx, V=IR).
+    "curve"  — smooth curve of best fit. Use for non-linear relationships (e.g. radioactive decay).
+  "showFitLine": true | false
+    Controls whether the best-fit line appears on the WORKSHEET.
+    The line ALWAYS appears on the mark scheme regardless of this setting.
+    Set false (typical for practical worksheets) so pupils draw their own line — the mark scheme shows the correct answer.
+    Set true only when showing pupils a completed reference graph or worked example.
+  "linkedDataId": null | "<id>"
+    If set to another data block's id, this graph takes its data from that block instead of its own rows.
+    Use when you want a table AND a graph of the same data as separate blocks — set the graph block's linkedDataId to the table block's id so you only maintain one set of data.
+
+Example — practical worksheet graph (pupils plot all points, draw their own best-fit line):
+{ "id":"...", "type":"data", "heading":"Table 1: Extension results",
   "columns":[ {"label":"Force","unit":"N"}, {"label":"Extension","unit":"cm"} ],
   "rows":[["1.0","2.1"],["2.0","4.0"],["3.0","6.2"],["4.0","7.9"],["5.0","10.1"]],
   "display":"graph",
-  "graph":{ "xCol":0, "yCol":1, "showXLabel":true, "showYLabel":true, "showXScale":true, "showYScale":true, "omitRows":[], "fitType":"linear", "linkedDataId":null } }
+  "hiddenCells":[],
+  "graph":{ "xCol":0, "yCol":1, "showXLabel":true, "showYLabel":true, "showXScale":true, "showYScale":true, "omitRows":[0,1,2,3,4], "fitType":"linear", "showFitLine":false, "linkedDataId":null } }
+
+Example — "complete the table" (density column hidden, pupils calculate it):
+{ "id":"...", "type":"data", "heading":"Table 2: Density calculations",
+  "columns":[ {"label":"Mass","unit":"g"}, {"label":"Volume","unit":"cm³"}, {"label":"Density","unit":"g/cm³"} ],
+  "rows":[["50","25","2.0"],["80","40","2.0"],["120","60","2.0"]],
+  "display":"table",
+  "hiddenCells":["0,2","1,2","2,2"],
+  "graph":{ "xCol":0, "yCol":1, "showXLabel":true, "showYLabel":true, "showXScale":true, "showYScale":true, "omitRows":[], "fitType":"none", "showFitLine":false, "linkedDataId":null } }
 
 spacer: { "id":"...", "type":"spacer", "size":"small" }
 
