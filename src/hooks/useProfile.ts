@@ -84,11 +84,13 @@ export function useProfile() {
     return true
   }
 
-  async function updateProfile(name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) {
+  async function updateProfile(name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[], teachingPhilosophy?: string) {
     if (!profile) return false
+    const updates: Record<string, unknown> = { name }
+    if (teachingPhilosophy !== undefined) updates.teaching_philosophy = teachingPhilosophy
     const { error } = await supabase
       .from('profiles')
-      .update({ name })
+      .update(updates)
       .eq('id', profile.id)
     if (error) return false
 
@@ -99,7 +101,7 @@ export function useProfile() {
         .insert(courses.map(c => ({ ...c, profile_id: profile.id })))
     }
     setProfile(p =>
-      p ? { ...p, name, user_courses: courses.map((c, i) => ({ ...c, id: String(i), profile_id: p.id })) } : p
+      p ? { ...p, name, teaching_philosophy: teachingPhilosophy ?? p.teaching_philosophy, user_courses: courses.map((c, i) => ({ ...c, id: String(i), profile_id: p.id })) } : p
     )
     return true
   }

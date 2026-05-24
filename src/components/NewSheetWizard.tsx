@@ -241,6 +241,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         worksheetType,
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
+        teachingPhilosophy: profile?.teaching_philosophy || undefined,
       })
       onGenerated(worksheet, worksheetType)
     } catch (err) {
