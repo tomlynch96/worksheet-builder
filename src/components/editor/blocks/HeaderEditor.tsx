@@ -2,14 +2,14 @@ import { useMemo } from 'react'
 import type { HeaderBlock, ExamBoard, Tier } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row, CheckRow } from '../EditorPrimitives'
-import { QUALIFICATIONS, getAllPoints } from '../../../data/specs'
+import { QUALIFICATIONS, getQualification } from '../../../data/specs'
 
 interface Props {
   block: HeaderBlock
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-const EXAM_BOARDS: ExamBoard[] = ['AQA', 'OCR', 'Edexcel', 'WJEC']
+const EXAM_BOARDS: ExamBoard[] = ['AQA', 'OCR', 'Edexcel', 'WJEC', 'Hodder']
 const TIERS: { value: Tier; label: string }[] = [
   { value: 'higher', label: 'Higher' },
   { value: 'foundation', label: 'Foundation' },
@@ -21,9 +21,9 @@ export function HeaderEditor({ block, dispatch }: Props) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
 
-  const allPoints = useMemo(() => {
+  const qualTopics = useMemo(() => {
     if (!block.qualification) return []
-    return getAllPoints(block.qualification)
+    return getQualification(block.qualification)?.topics ?? []
   }, [block.qualification])
 
   return (
@@ -57,17 +57,21 @@ export function HeaderEditor({ block, dispatch }: Props) {
           ))}
         </select>
       </Field>
-      {block.qualification && (
-        <Field label="Spec point">
+      {block.qualification && qualTopics.length > 0 && (
+        <Field label="Spec point / lesson">
           <select
             value={block.specPoint ?? ''}
             onChange={e => update({ specPoint: e.target.value || undefined })}
           >
             <option value="">— Select spec point —</option>
-            {allPoints.map(({ topic, point }) => (
-              <option key={point.ref} value={point.ref}>
-                {point.ref} — {topic.title}: {point.title}
-              </option>
+            {qualTopics.map(topic => (
+              <optgroup key={topic.ref} label={`${topic.ref} — ${topic.title}`}>
+                {topic.points.map(point => (
+                  <option key={point.ref} value={point.ref}>
+                    {point.ref} — {point.title}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </Field>

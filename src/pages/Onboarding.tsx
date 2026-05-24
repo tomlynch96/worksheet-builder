@@ -6,6 +6,8 @@ import { isConfigured, supabase } from '../lib/supabase'
 import './Onboarding.css'
 
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
+const boardQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length > 1)
+const singleQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length === 1)
 
 export function Onboarding() {
   const { authUserId, profile, loading, sendMagicLink, createProfile } = useProfileContext()
@@ -140,7 +142,7 @@ export function Onboarding() {
                 <span key={b} className="onboarding-board-label">{b}</span>
               ))}
             </div>
-            {QUALIFICATION_OFFERINGS.map(qual => (
+            {boardQuals.map(qual => (
               <div key={qual.id} className="onboarding-qual-row">
                 <span className="onboarding-qual-name">{qual.label}</span>
                 <div className="onboarding-boards">
@@ -162,6 +164,29 @@ export function Onboarding() {
                 </div>
               </div>
             ))}
+            {singleQuals.length > 0 && (
+              <div className="onboarding-single-section">
+                <div className="onboarding-single-label">KS3</div>
+                {singleQuals.map(qual => {
+                  const board = qual.examBoards[0]
+                  const key = `${qual.id}:${board}`
+                  const checked = selected.has(key)
+                  return (
+                    <div key={qual.id} className="onboarding-single-row">
+                      <span className="onboarding-qual-name">{qual.label}</span>
+                      <button
+                        type="button"
+                        className={`onboarding-board-btn${checked ? ' onboarding-board-btn--on' : ''}`}
+                        onClick={() => toggle(qual.id, board)}
+                        aria-pressed={checked}
+                      >
+                        {checked ? '✓' : ''}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {profileError && <p className="onboarding-error">{profileError}</p>}

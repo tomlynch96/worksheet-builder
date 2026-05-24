@@ -229,3 +229,30 @@
   padding: 4px 0;
   text-decoration: underline;
 }
+
+/* ── KS3 / single-board section ── */
+.onboarding-single-section {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.onboarding-single-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 4px;
+}
+
+.onboarding-single-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f9fafb;
+}

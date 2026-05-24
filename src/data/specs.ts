@@ -337,6 +337,349 @@ const aLevelPhysicsTopics: SpecTopic[] = [
   },
 ]
 
+// ── Exploring Science Year 7 (Pearson/Hodder) ────────────────────────────────
+
+const exploringScience7Topics: SpecTopic[] = [
+  {
+    ref: '7A', title: 'Cells',
+    points: [
+      { ref: '7A.1', title: 'Life processes and characteristics of living things' },
+      { ref: '7A.2', title: 'Plant and animal cells — structure and function' },
+      { ref: '7A.3', title: 'Specialised cells' },
+      { ref: '7A.4', title: 'Diffusion' },
+      { ref: '7A.5', title: 'Organisation: cells → tissues → organs → organ systems' },
+    ],
+  },
+  {
+    ref: '7B', title: 'Reproduction',
+    points: [
+      { ref: '7B.1', title: 'Asexual reproduction' },
+      { ref: '7B.2', title: 'Sexual reproduction' },
+      { ref: '7B.3', title: 'Adolescence and the menstrual cycle' },
+      { ref: '7B.4', title: 'Fertilisation and development in humans' },
+      { ref: '7B.5', title: 'Plant reproduction (pollination, fertilisation, seed dispersal)' },
+    ],
+  },
+  {
+    ref: '7C', title: 'Environment and ecology',
+    points: [
+      { ref: '7C.1', title: 'Habitats and adaptation' },
+      { ref: '7C.2', title: 'Food chains and food webs' },
+      { ref: '7C.3', title: 'Competition and predator–prey relationships' },
+      { ref: '7C.4', title: 'Sampling techniques (quadrats, transects)' },
+    ],
+  },
+  {
+    ref: '7D', title: 'Variation and classification',
+    points: [
+      { ref: '7D.1', title: 'Variation within a species' },
+      { ref: '7D.2', title: 'Inherited and environmental causes of variation' },
+      { ref: '7D.3', title: 'Classification of vertebrates and invertebrates' },
+      { ref: '7D.4', title: 'Classification keys (dichotomous keys)' },
+    ],
+  },
+  {
+    ref: '7E', title: 'Acids and alkalis',
+    points: [
+      { ref: '7E.1', title: 'Acids and alkalis in everyday life' },
+      { ref: '7E.2', title: 'Indicators and the pH scale' },
+      { ref: '7E.3', title: 'Neutralisation reactions' },
+      { ref: '7E.4', title: 'Salts and their uses' },
+    ],
+  },
+  {
+    ref: '7F', title: 'Simple chemical reactions',
+    points: [
+      { ref: '7F.1', title: 'Chemical reactions — reactants and products' },
+      { ref: '7F.2', title: 'Word equations' },
+      { ref: '7F.3', title: 'Combustion' },
+      { ref: '7F.4', title: 'Thermal decomposition and oxidation' },
+    ],
+  },
+  {
+    ref: '7G', title: 'Particle model',
+    points: [
+      { ref: '7G.1', title: 'States of matter' },
+      { ref: '7G.2', title: 'Changes of state (melting, boiling, condensing, freezing)' },
+      { ref: '7G.3', title: 'Particle model and physical properties' },
+      { ref: '7G.4', title: 'Diffusion through gases and liquids' },
+    ],
+  },
+  {
+    ref: '7H', title: 'Solutions',
+    points: [
+      { ref: '7H.1', title: 'Dissolving — solutes, solvents and solutions' },
+      { ref: '7H.2', title: 'Solubility and factors affecting it' },
+      { ref: '7H.3', title: 'Chromatography' },
+      { ref: '7H.4', title: 'Distillation' },
+    ],
+  },
+  {
+    ref: '7I', title: 'Energy',
+    points: [
+      { ref: '7I.1', title: 'Energy resources — renewable and non-renewable' },
+      { ref: '7I.2', title: 'Energy stores and transfers' },
+      { ref: '7I.3', title: 'Conservation of energy' },
+      { ref: '7I.4', title: 'Energy efficiency' },
+    ],
+  },
+  {
+    ref: '7J', title: 'Electrical circuits',
+    points: [
+      { ref: '7J.1', title: 'Circuit components and symbols' },
+      { ref: '7J.2', title: 'Series and parallel circuits' },
+      { ref: '7J.3', title: 'Voltage and current' },
+      { ref: '7J.4', title: 'Resistance' },
+    ],
+  },
+  {
+    ref: '7K', title: 'Forces',
+    points: [
+      { ref: '7K.1', title: 'Types of forces (contact and non-contact)' },
+      { ref: '7K.2', title: 'Friction and air resistance' },
+      { ref: '7K.3', title: 'Pressure' },
+      { ref: '7K.4', title: 'Gravity and weight' },
+    ],
+  },
+  {
+    ref: '7L', title: 'The Solar System and beyond',
+    points: [
+      { ref: '7L.1', title: 'The Solar System — planets and structure' },
+      { ref: '7L.2', title: 'Day, night and the seasons' },
+      { ref: '7L.3', title: 'The Moon and eclipses' },
+      { ref: '7L.4', title: 'Space exploration and the universe' },
+    ],
+  },
+]
+
+// ── Exploring Science Year 8 (Pearson/Hodder) ────────────────────────────────
+
+const exploringScience8Topics: SpecTopic[] = [
+  {
+    ref: '8A', title: 'Food and digestion',
+    points: [
+      { ref: '8A.1', title: 'Nutrients and a balanced diet' },
+      { ref: '8A.2', title: 'The digestive system' },
+      { ref: '8A.3', title: 'Enzymes and chemical digestion' },
+      { ref: '8A.4', title: 'Absorption and the villi' },
+    ],
+  },
+  {
+    ref: '8B', title: 'Respiration',
+    points: [
+      { ref: '8B.1', title: 'Aerobic respiration' },
+      { ref: '8B.2', title: 'Anaerobic respiration' },
+      { ref: '8B.3', title: 'The respiratory system' },
+      { ref: '8B.4', title: 'Gas exchange in the lungs' },
+    ],
+  },
+  {
+    ref: '8C', title: 'Microbes and disease',
+    points: [
+      { ref: '8C.1', title: 'Types of microorganism (bacteria, viruses, fungi)' },
+      { ref: '8C.2', title: 'How diseases spread' },
+      { ref: '8C.3', title: 'The body\'s defences and the immune system' },
+      { ref: '8C.4', title: 'Medicines and vaccination' },
+    ],
+  },
+  {
+    ref: '8D', title: 'Ecological relationships',
+    points: [
+      { ref: '8D.1', title: 'Ecosystems and biomes' },
+      { ref: '8D.2', title: 'Population size and factors affecting it' },
+      { ref: '8D.3', title: 'Interdependence and the carbon cycle' },
+      { ref: '8D.4', title: 'Human impact and pollution' },
+    ],
+  },
+  {
+    ref: '8E', title: 'Atoms and elements',
+    points: [
+      { ref: '8E.1', title: 'Atomic structure — protons, neutrons and electrons' },
+      { ref: '8E.2', title: 'Elements and the periodic table' },
+      { ref: '8E.3', title: 'Electronic structure and valency' },
+      { ref: '8E.4', title: 'Isotopes and relative atomic mass' },
+    ],
+  },
+  {
+    ref: '8F', title: 'Compounds and mixtures',
+    points: [
+      { ref: '8F.1', title: 'Compounds and chemical formulae' },
+      { ref: '8F.2', title: 'Mixtures and methods of separation' },
+      { ref: '8F.3', title: 'Filtration and evaporation to dryness' },
+      { ref: '8F.4', title: 'Chromatography and distillation' },
+    ],
+  },
+  {
+    ref: '8G', title: 'Rocks and weathering',
+    points: [
+      { ref: '8G.1', title: 'Types of rock — igneous, sedimentary and metamorphic' },
+      { ref: '8G.2', title: 'The rock cycle' },
+      { ref: '8G.3', title: 'Weathering — physical, chemical and biological' },
+      { ref: '8G.4', title: 'Erosion, transport and deposition' },
+    ],
+  },
+  {
+    ref: '8H', title: 'Heating and cooling',
+    points: [
+      { ref: '8H.1', title: 'Temperature and thermometers' },
+      { ref: '8H.2', title: 'Conduction' },
+      { ref: '8H.3', title: 'Convection' },
+      { ref: '8H.4', title: 'Radiation and the factors affecting it' },
+    ],
+  },
+  {
+    ref: '8I', title: 'Magnets and electromagnets',
+    points: [
+      { ref: '8I.1', title: 'Magnetic fields and poles' },
+      { ref: '8I.2', title: 'Making and using electromagnets' },
+      { ref: '8I.3', title: 'The motor effect' },
+      { ref: '8I.4', title: 'Generators and electromagnetic induction' },
+    ],
+  },
+  {
+    ref: '8J', title: 'Light',
+    points: [
+      { ref: '8J.1', title: 'Reflection and the law of reflection' },
+      { ref: '8J.2', title: 'Refraction of light' },
+      { ref: '8J.3', title: 'Colour and the visible spectrum' },
+      { ref: '8J.4', title: 'The eye and seeing' },
+    ],
+  },
+  {
+    ref: '8K', title: 'Sound and hearing',
+    points: [
+      { ref: '8K.1', title: 'How sound is produced and travels' },
+      { ref: '8K.2', title: 'Properties of sound waves (amplitude, frequency, pitch)' },
+      { ref: '8K.3', title: 'The ear and how we hear' },
+      { ref: '8K.4', title: 'Ultrasound and its uses' },
+    ],
+  },
+  {
+    ref: '8L', title: 'Space and Earth',
+    points: [
+      { ref: '8L.1', title: 'The Earth\'s structure (crust, mantle, core)' },
+      { ref: '8L.2', title: 'Plate tectonics and continental drift' },
+      { ref: '8L.3', title: 'Earthquakes and volcanoes' },
+      { ref: '8L.4', title: 'Gravity, tides and the Moon' },
+    ],
+  },
+]
+
+// ── Edexcel GCSE Chemistry (1CH0) ─────────────────────────────────────────────
+
+const edexcelGCSEChemTopics: SpecTopic[] = [
+  {
+    ref: 'T1', title: 'Key concepts in chemistry',
+    points: [
+      { ref: '1.1', title: 'Atomic structure (protons, neutrons, electrons)' },
+      { ref: '1.2', title: 'The periodic table — groups, periods and properties' },
+      { ref: '1.3', title: 'Relative atomic mass and isotopes' },
+      { ref: '1.4', title: 'Electronic structure' },
+      { ref: '1.5', title: 'Ionic bonding — electron transfer and ionic lattices' },
+      { ref: '1.6', title: 'Covalent bonding — electron sharing and molecular structures' },
+      { ref: '1.7', title: 'Metallic bonding and properties of metals' },
+      { ref: '1.8', title: 'Giant covalent structures (diamond, graphite, graphene)' },
+      { ref: '1.9', title: 'States of matter and changes of state' },
+      { ref: '1.10', title: 'Pure substances and mixtures — Rf values and melting points' },
+    ],
+  },
+  {
+    ref: 'T2', title: 'States of matter and mixtures',
+    points: [
+      { ref: '2.1', title: 'The particle model — solids, liquids and gases' },
+      { ref: '2.2', title: 'Heating and cooling curves' },
+      { ref: '2.3', title: 'Filtration, crystallisation and evaporation' },
+      { ref: '2.4', title: 'Simple and fractional distillation' },
+      { ref: '2.5', title: 'Paper and thin layer chromatography' },
+      { ref: '2.6', title: 'Formulations and their uses' },
+    ],
+  },
+  {
+    ref: 'T3', title: 'Chemical changes',
+    points: [
+      { ref: '3.1', title: 'The reactivity series of metals' },
+      { ref: '3.2', title: 'Reactions of metals with water and dilute acids' },
+      { ref: '3.3', title: 'Displacement reactions' },
+      { ref: '3.4', title: 'Oxidation and reduction (redox)' },
+      { ref: '3.5', title: 'Acids and alkalis — pH scale and indicators' },
+      { ref: '3.6', title: 'Neutralisation and the preparation of salts' },
+      { ref: '3.7', title: 'Reactions of acids with metals, bases and carbonates' },
+      { ref: '3.8', title: 'Electrolysis — principles and half equations' },
+      { ref: '3.9', title: 'Electrolysis of solutions (copper sulfate, brine)' },
+    ],
+  },
+  {
+    ref: 'T4', title: 'Extracting metals and equilibria',
+    points: [
+      { ref: '4.1', title: 'Extraction of iron in the blast furnace' },
+      { ref: '4.2', title: 'Extraction of aluminium by electrolysis' },
+      { ref: '4.3', title: 'Rusting of iron and methods of prevention' },
+      { ref: '4.4', title: 'Alloys and their uses (steel, brass, bronze)' },
+      { ref: '4.5', title: 'Life cycle assessment and recycling of materials' },
+      { ref: '4.6', title: 'Dynamic equilibrium and Le Chatelier\'s principle (Higher)' },
+    ],
+  },
+  {
+    ref: 'T5', title: 'Separate chemistry 1 (Higher tier)',
+    points: [
+      { ref: '5.1', title: 'Moles and the mole concept (Avogadro\'s number)' },
+      { ref: '5.2', title: 'Calculations from equations — reacting quantities' },
+      { ref: '5.3', title: 'Percentage yield' },
+      { ref: '5.4', title: 'Atom economy' },
+      { ref: '5.5', title: 'Concentration of solutions (mol/dm³)' },
+      { ref: '5.6', title: 'Acid–base titrations and calculations' },
+    ],
+  },
+  {
+    ref: 'T6', title: 'Groups in the periodic table',
+    points: [
+      { ref: '6.1', title: 'The noble gases (Group 0) — properties and uses' },
+      { ref: '6.2', title: 'The alkali metals (Group 1) — reactions and trends' },
+      { ref: '6.3', title: 'The halogens (Group 7) — reactions and trends' },
+      { ref: '6.4', title: 'Displacement reactions of halogens' },
+      { ref: '6.5', title: 'Transition metals — properties and catalysts' },
+    ],
+  },
+  {
+    ref: 'T7', title: 'Rates of reaction and energy changes',
+    points: [
+      { ref: '7.1', title: 'Rates of reaction — measuring and calculating' },
+      { ref: '7.2', title: 'Collision theory' },
+      { ref: '7.3', title: 'Effect of temperature on rate of reaction' },
+      { ref: '7.4', title: 'Effect of concentration and pressure on rate' },
+      { ref: '7.5', title: 'Effect of surface area and catalysts' },
+      { ref: '7.6', title: 'Exothermic and endothermic reactions' },
+      { ref: '7.7', title: 'Energy profile diagrams and activation energy' },
+      { ref: '7.8', title: 'Bond energies — calculating energy changes' },
+    ],
+  },
+  {
+    ref: 'T8', title: 'Fuels and Earth science',
+    points: [
+      { ref: '8.1', title: 'Fossil fuels and crude oil' },
+      { ref: '8.2', title: 'Fractional distillation of crude oil' },
+      { ref: '8.3', title: 'Alkanes — naming, formulae and combustion' },
+      { ref: '8.4', title: 'Incomplete combustion and atmospheric pollutants' },
+      { ref: '8.5', title: 'Cracking of hydrocarbons (thermal and catalytic)' },
+      { ref: '8.6', title: 'The greenhouse effect and climate change' },
+      { ref: '8.7', title: 'The carbon cycle' },
+      { ref: '8.8', title: 'Potable water — treatment and purification' },
+    ],
+  },
+  {
+    ref: 'T9', title: 'Separate chemistry 2 (Higher tier)',
+    points: [
+      { ref: '9.1', title: 'Alcohols — properties, reactions and uses' },
+      { ref: '9.2', title: 'Carboxylic acids — properties and reactions' },
+      { ref: '9.3', title: 'Esters — formation and uses' },
+      { ref: '9.4', title: 'Addition polymerisation' },
+      { ref: '9.5', title: 'Condensation polymerisation' },
+      { ref: '9.6', title: 'Natural polymers — proteins, starch and DNA' },
+      { ref: '9.7', title: 'Nanoparticles — properties and uses' },
+    ],
+  },
+]
+
 // ── Exported qualifications ───────────────────────────────────────────────────
 
 export const QUALIFICATIONS: Qualification[] = [
@@ -357,6 +700,24 @@ export const QUALIFICATIONS: Qualification[] = [
     label: 'Edexcel A Level Physics (9PH0)',
     shortLabel: 'A Level Physics',
     topics: aLevelPhysicsTopics,
+  },
+  {
+    id: 'exploring-science-y7',
+    label: 'Exploring Science Year 7',
+    shortLabel: 'Exp. Sci Y7',
+    topics: exploringScience7Topics,
+  },
+  {
+    id: 'exploring-science-y8',
+    label: 'Exploring Science Year 8',
+    shortLabel: 'Exp. Sci Y8',
+    topics: exploringScience8Topics,
+  },
+  {
+    id: 'edexcel-gcse-chemistry',
+    label: 'Edexcel GCSE Chemistry (9-1)',
+    shortLabel: 'GCSE Chemistry',
+    topics: edexcelGCSEChemTopics,
   },
 ]
 

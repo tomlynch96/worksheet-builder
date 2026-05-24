@@ -25,6 +25,13 @@ export const QUALIFICATION_OFFERINGS: QualificationOffering[] = [
     specDataId: (b) => b === 'Edexcel' ? 'edexcel-gcse-combined' : null,
   },
   {
+    id: 'gcse-chemistry',
+    label: 'GCSE Chemistry',
+    shortLabel: 'GCSE Chemistry',
+    examBoards: ['AQA', 'OCR', 'Edexcel', 'WJEC'],
+    specDataId: (b) => b === 'Edexcel' ? 'edexcel-gcse-chemistry' : null,
+  },
+  {
     id: 'alevel-physics',
     label: 'A Level Physics',
     shortLabel: 'A Level Physics',
@@ -36,14 +43,14 @@ export const QUALIFICATION_OFFERINGS: QualificationOffering[] = [
     label: 'Exploring Science Year 7',
     shortLabel: 'Exp. Sci Y7',
     examBoards: ['Hodder'],
-    specDataId: () => null,
+    specDataId: () => 'exploring-science-y7',
   },
   {
     id: 'exploring-science-y8',
     label: 'Exploring Science Year 8',
     shortLabel: 'Exp. Sci Y8',
     examBoards: ['Hodder'],
-    specDataId: () => null,
+    specDataId: () => 'exploring-science-y8',
   },
 ]
 
