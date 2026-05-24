@@ -6,7 +6,7 @@ import { AddBlockMenu } from './AddBlockMenu'
 import { AIDialog } from './AIDialog'
 import { ActiveEditorProvider } from './ActiveEditorContext'
 import { RTEToolbar } from './RTEToolbar'
-import { generateBlock, generateVariation, generateWorkedExample } from '../../utils/generateWorksheet'
+import { generateBlock, generateVariation, generateWorkedExample, generateExtraPart } from '../../utils/generateWorksheet'
 import './Editor.css'
 
 const BLOCK_LABELS: Record<BlockType, string> = {
@@ -124,8 +124,14 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
     if (!selectedBlock) return
     setAddingVariation(true)
     try {
-      const varied = await generateVariation(selectedBlock, worksheetContext)
-      dispatch({ type: 'ADD_BLOCK', block: varied, afterId: selectedBlock.id })
+      if (selectedBlock.type === 'question' && selectedBlock.parts.length > 0) {
+        // Multi-part question: add an extra sub-part rather than a whole new block
+        const { parts } = await generateExtraPart(selectedBlock, worksheetContext)
+        dispatch({ type: 'UPDATE_BLOCK', id: selectedBlock.id, updates: { parts } })
+      } else {
+        const varied = await generateVariation(selectedBlock, worksheetContext)
+        dispatch({ type: 'ADD_BLOCK', block: varied, afterId: selectedBlock.id })
+      }
     } catch (err) {
       console.error('Variation failed:', err)
     } finally {

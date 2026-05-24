@@ -25,12 +25,22 @@ instructions: { "id":"...", "type":"instructions", "items":["Answer all question
 
 question (multi-part):
 { "id":"...", "type":"question", "stem":"...", "marks":0, "lines":0,
-  "parts":[ { "id":"part-001", "label":"a", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"9.8" },
-            { "id":"part-002", "label":"b", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"" } ],
+  "attachedDataId": null,
+  "parts":[ { "id":"part-001", "label":"a", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"9.8", "attachedDataId": null },
+            { "id":"part-002", "label":"b", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"", "attachedDataId": null } ],
   "markScheme":"" }
 IMPORTANT: every part MUST have a "label" field set to "a", "b", "c" etc. and a unique "id".
 
-question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"...", "numericalAnswer":"15" }
+ATTACHING DATA BLOCKS TO QUESTIONS — use "attachedDataId" to display a table or graph inline with a question:
+- Set "attachedDataId" on the QUESTION block if ALL parts refer to the same data (e.g. "Use the table to answer parts a–d").
+- Set "attachedDataId" on a specific PART if only that sub-question uses the data (e.g. part c asks pupils to plot a graph).
+- The data block MUST also exist as a standalone block in the worksheet (so it appears in the mark scheme).
+- Set "attachedDataId": null when no data is attached.
+- Example: a practical question where part (a) asks pupils to identify variables, part (b) asks them to plot the data in Table 1, and part (c) asks them to draw a best-fit line:
+  Set "attachedDataId" on the QUESTION stem (shown above all parts). The data block id is the id of the separate data block.
+- Example: a question where part (d) alone uses a results table — set "attachedDataId" only on part d's object, leave it null on the others.
+
+question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"...", "numericalAnswer":"15", "attachedDataId": null }
 
 multiple_choice: { "id":"...", "type":"multiple_choice", "stem":"...", "marks":1, "options":["A","B","C","D"], "correctIndex":2, "markScheme":"C — ... [1]" }
 
@@ -199,6 +209,18 @@ Use "id": "ai-block-001" as the id. Follow the exact JSON structure shown in the
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
+const SYSTEM_ADD_PART = `You are extending a multi-part science worksheet question by adding one more sub-part.
+Return the COMPLETE question JSON with the new part appended to the parts array.
+The new part must:
+- Progress logically from the existing parts (e.g. if a=recall, b=apply, c=evaluate — add a c or d that goes one step further)
+- Use the same scenario, context, and equation as the existing parts
+- Use the same or slightly varied numbers — do NOT reuse identical values from earlier parts
+- Carry the correct next label ("c" if a and b exist, "d" if a, b, c exist, etc.)
+- Have a fully worked markScheme with [marks] notation
+Output ONLY the updated complete question JSON — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
+${FORMATTING_RULES}
+${WORKSHEET_FORMAT}`
+
 const SYSTEM_EDIT = `You are editing an existing science worksheet based on a teacher's instruction.
 You will receive the current worksheet JSON and the teacher's request.
 Output ONLY the updated complete worksheet as a raw JSON object — same id, same format, no markdown fences, no text before or after.
@@ -269,6 +291,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'Generate a variation of this block:',
       context ? `Worksheet context: ${context}` : '',
       `Block JSON:\n${JSON.stringify(block)}`,
+    ].filter(Boolean).join('\n')
+
+  } else if (mode === 'add_part') {
+    const { block, context } = params as { block: unknown; context: string }
+    systemPrompt = SYSTEM_ADD_PART
+    userMessage = [
+      'Add one more sub-part to this question:',
+      context ? `Worksheet context: ${context}` : '',
+      `Question JSON:\n${JSON.stringify(block)}`,
     ].filter(Boolean).join('\n')
 
   } else if (mode === 'edit') {

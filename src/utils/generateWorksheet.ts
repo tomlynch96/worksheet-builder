@@ -1,4 +1,4 @@
-import type { Worksheet, Block, QuestionBlock, MatchThemUpBlock, MatchItem } from '../types/worksheet'
+import type { Worksheet, Block, QuestionBlock, MatchThemUpBlock, MatchItem, QuestionPart } from '../types/worksheet'
 
 const API_URL = '/api/generate-worksheet'
 
@@ -102,15 +102,31 @@ export async function generateVariation(block: Block, context: string): Promise<
 }
 
 export async function generateWorkedExample(block: Block, context: string): Promise<Block> {
+  // For multi-part questions, only demonstrate part a — simpler and more useful as a model answer
+  let blockForWE = block
+  if (block.type === 'question') {
+    const q = block as QuestionBlock
+    if (q.parts.length > 1) {
+      blockForWE = { ...q, parts: q.parts.slice(0, 1) }
+    }
+  }
   const raw = await callAPI({
     mode: 'block',
     blockType: 'worked_example',
     context,
-    request: `Generate a worked example that demonstrates how to answer a question like this: ${JSON.stringify(block)}`,
+    request: `Generate a worked example demonstrating how to answer a question like this. Use similar but slightly different numbers or values so pupils cannot simply copy the answer directly: ${JSON.stringify(blockForWE)}`,
   })
   const parsed = JSON.parse(raw) as Block
   if (!parsed.type) throw new Error('Invalid block returned by AI.')
   return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
+}
+
+export async function generateExtraPart(block: QuestionBlock, context: string): Promise<{ parts: QuestionPart[] }> {
+  const raw = await callAPI({ mode: 'add_part', block, context })
+  const parsed = JSON.parse(raw) as QuestionBlock
+  if (!parsed.type || !Array.isArray(parsed.parts)) throw new Error('Invalid response from AI.')
+  const sanitised = sanitiseBlock({ ...parsed, id: block.id }) as QuestionBlock
+  return { parts: sanitised.parts }
 }
 
 export async function editWorksheetWithAI(params: {
