@@ -336,6 +336,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const raw = data.content[0]?.type === 'text' ? data.content[0].text : ''
     const cleaned = raw.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
 
+    // Validate the response is JSON before returning it — if the model returned plain
+    // text (e.g. a refusal or clarifying question) give the client a clear error.
+    try {
+      JSON.parse(cleaned)
+    } catch {
+      return res.status(502).json({
+        error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${cleaned.slice(0, 200)}${cleaned.length > 200 ? '…' : ''}"`,
+      })
+    }
+
     return res.status(200).json({ result: cleaned })
   } catch (err) {
     return res.status(500).json({ error: String(err) })
