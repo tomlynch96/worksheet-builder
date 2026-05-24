@@ -92,11 +92,14 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
     if (!aiFill || !aiFill.request.trim()) return
     setAiFill(s => s && { ...s, loading: true, error: null })
     try {
-      const block = await generateBlock({
+      const { block, attachedBlocks } = await generateBlock({
         blockType: aiFill.blockType,
         context: worksheetContext,
         request: aiFill.request,
       })
+      for (const attached of attachedBlocks) {
+        dispatch({ type: 'ADD_BLOCK', block: attached, afterId })
+      }
       dispatch({ type: 'ADD_BLOCK', block, afterId })
       onAdded?.(block.id)
       setAiFill(null)

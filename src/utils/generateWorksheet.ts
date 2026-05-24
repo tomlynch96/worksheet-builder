@@ -99,7 +99,7 @@ export async function generateBlock(params: {
     const primary = parsed[parsed.length - 1] as Block
     // Wire up attachedDataId using the new sanitised data block id
     if (attachedBlocks[0]?.type === 'data' && primary.type === 'question') {
-      (primary as Record<string, unknown>).attachedDataId = attachedBlocks[0].id
+      (primary as unknown as Record<string, unknown>).attachedDataId = attachedBlocks[0].id
     }
     const block = sanitiseBlock({ ...primary, id: primaryId })
     return { block, attachedBlocks }
