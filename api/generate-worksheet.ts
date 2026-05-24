@@ -190,16 +190,27 @@ const SYSTEM_PRACTICAL = `You are generating a practical/experimental science wo
 PEDAGOGICAL RULES — follow exactly:
 
 1. Open with an information block relevant to the experiment.
-2. Include a data block with realistic scattered data (±5–10% noise). Set ~40% of row indices in omitRows for pupils to plot.
-3. Graph questions: plot remaining points [2], draw best fit [1], extract a value [2–3].
-4. Follow-up: conclusion question, evaluation question.
-5. All markScheme fields must show full marking points with [marks].
+2. Create a data block with realistic scattered data (±5–10% noise). Assign it a unique id (e.g. "data-001").
+   Set ~40% of row indices in omitRows so pupils must plot those points themselves.
+3. The first question block MUST have "attachedDataId" set to the data block's id — this displays the table/graph inline above the question so pupils can see it while answering.
+   Set attachedDataId on the QUESTION (not on individual parts) when all parts refer to the same data.
+4. Graph questions inside that block: plot remaining points [2], draw best fit [1], extract a value [2–3].
+5. Follow-up: conclusion question, evaluation question.
+6. All markScheme fields must show full marking points with [marks].
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
-const SYSTEM_BLOCK = `You are generating a single content block for a science worksheet.
-Output ONLY the raw JSON object for that one block — no array wrapper, no worksheet wrapper, no markdown fences, no explanation.
-Use "id": "ai-block-001" as the id. Follow the exact JSON structure shown in the format guide below.
+const SYSTEM_BLOCK = `You are generating content for a science worksheet.
+
+NORMAL CASE — output a single JSON block object.
+
+EXCEPTION — if the teacher asks for a question that needs an accompanying data table or graph (e.g. "a question about this experiment with a results table", "a question using a graph of V against I"):
+  Output a JSON ARRAY containing exactly two blocks in this order:
+    1. The data block (type "data") with id "data-001"
+    2. The question block with "attachedDataId": "data-001" so the data displays inline above the question
+
+Use "id": "ai-block-001" for the primary block when returning a single block.
+No markdown fences, no explanation — raw JSON only.
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 

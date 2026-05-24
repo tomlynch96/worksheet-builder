@@ -105,12 +105,18 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
     if (!selectedBlock || !blockAI?.prompt.trim()) return
     setBlockAI(s => s && { ...s, loading: true, error: null })
     try {
-      const generated = await generateBlock({
+      const { block: generated, attachedBlocks } = await generateBlock({
         blockType: selectedBlock.type,
         context: worksheetContext,
         request: blockAI.prompt,
         currentBlock: selectedBlock,
       })
+      // Insert any attached data blocks (e.g. a data table/graph) before the current block
+      for (const attached of attachedBlocks) {
+        const idx = blocks.findIndex(b => b.id === selectedBlock.id)
+        const afterId = idx > 0 ? blocks[idx - 1].id : undefined
+        dispatch({ type: 'ADD_BLOCK', block: attached, afterId })
+      }
       // Merge generated content into current block, preserving id and type
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       dispatch({ type: 'UPDATE_BLOCK', id: selectedBlock.id, updates: { ...(generated as any), id: selectedBlock.id, type: selectedBlock.type } })

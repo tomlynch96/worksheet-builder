@@ -87,11 +87,26 @@ export async function generateBlock(params: {
   context?: string
   request: string
   currentBlock?: Block
-}): Promise<Block> {
+}): Promise<{ block: Block; attachedBlocks: Block[] }> {
   const raw = await callAPI({ mode: 'block', ...params })
-  const parsed = JSON.parse(raw) as Block
+  const parsed = JSON.parse(raw)
+
+  // The AI may return an array [dataBlock, questionBlock] when a data block is needed
+  if (Array.isArray(parsed)) {
+    if (parsed.length < 2) throw new Error('Invalid block array returned by AI.')
+    const attachedBlocks = parsed.slice(0, -1).map(b => sanitiseBlock({ ...b, id: crypto.randomUUID() }))
+    const primaryId = crypto.randomUUID()
+    const primary = parsed[parsed.length - 1] as Block
+    // Wire up attachedDataId using the new sanitised data block id
+    if (attachedBlocks[0]?.type === 'data' && primary.type === 'question') {
+      (primary as Record<string, unknown>).attachedDataId = attachedBlocks[0].id
+    }
+    const block = sanitiseBlock({ ...primary, id: primaryId })
+    return { block, attachedBlocks }
+  }
+
   if (!parsed.type) throw new Error('Invalid block returned by AI.')
-  return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
+  return { block: sanitiseBlock({ ...parsed, id: crypto.randomUUID() }), attachedBlocks: [] }
 }
 
 export async function generateVariation(block: Block, context: string): Promise<Block> {
