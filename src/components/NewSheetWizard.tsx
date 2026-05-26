@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getSpecTopics, offeringLabel } from '../data/qualifications'
-import { generateWorksheet } from '../utils/generateWorksheet'
+import { generateWorksheet, type OakContext } from '../utils/generateWorksheet'
 import { OakLessonPicker } from './OakLessonPicker'
+import { oakQuestionToBlock } from '../utils/oakConvert'
 import type { UserCourse } from '../types/profile'
 import type { Worksheet } from '../types/worksheet'
-import type { OakLesson, OakSubject } from '../types/oak'
+import type { OakLessonDetail, OakSubject } from '../types/oak'
 import './NewSheetWizard.css'
 
 interface WizardResult {
@@ -187,7 +188,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
   const isKS3 = selectedCourse?.qualification_id.startsWith('exploring-science') ?? false
 
-  const [oakLesson, setOakLesson] = useState<OakLesson | null>(null)
+  const [oakLesson, setOakLesson] = useState<OakLessonDetail | null>(null)
 
   function getOakSubject(qualId: string): OakSubject | null {
     if (qualId.startsWith('exploring-science')) return 'science'
@@ -239,6 +240,35 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
     setFreeText('')
   }
 
+  function handleOakImport(lesson: OakLessonDetail) {
+    if (!selectedCourse) return
+    // Build a worksheet directly from Oak exit quiz questions
+    const headerBlock = {
+      id: crypto.randomUUID(),
+      type: 'header' as const,
+      title: lesson.lessonTitle,
+      topic: lesson.lessonTitle,
+      examBoard: selectedCourse.exam_board,
+      tier: 'higher' as const,
+      qualification: selectedCourse.qualification_id,
+      specPoint: selectedPoint || freeText || '',
+      showName: true,
+      showDate: true,
+      showClass: true,
+    }
+    const instructionsBlock = {
+      id: crypto.randomUUID(),
+      type: 'instructions' as const,
+      items: ['Answer all questions.', 'Marks are shown in brackets.'],
+    }
+    const questionBlocks = lesson.exitQuiz.map(q => oakQuestionToBlock(q))
+    const worksheet: Worksheet = {
+      id: crypto.randomUUID(),
+      blocks: [headerBlock, instructionsBlock, ...questionBlocks],
+    }
+    onGenerated(worksheet, 'knowledge')
+  }
+
   function handleBlank() {
     if (!selectedCourse) return
     const topicTitle = topics?.find(t => t.ref === selectedTopic)?.title ?? freeText
@@ -265,12 +295,12 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
         teachingPhilosophy: profile?.teaching_philosophy || undefined,
-        oakContext: oakLesson ? {
+        oakContext: oakLesson ? ({
           lessonTitle: oakLesson.lessonTitle,
           learningPoints: oakLesson.keyLearningPoints,
           keywords: oakLesson.keywords,
           misconceptions: oakLesson.misconceptions,
-        } : undefined,
+        } satisfies OakContext) : undefined,
       })
       onGenerated(worksheet, worksheetType)
     } catch (err) {
@@ -417,16 +447,15 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
           <div className="wizard-body">
             {oakLesson && (
               <div className="wizard-oak-selected">
-                <span className="wizard-oak-selected-label">Oak lesson selected:</span>
+                <span className="wizard-oak-selected-label">Oak context:</span>
                 <span className="wizard-oak-selected-title">{oakLesson.lessonTitle}</span>
-                <button type="button" className="wizard-oak-selected-clear" onClick={() => setOakLesson(null)}>
-                  ✕
-                </button>
+                <button type="button" className="wizard-oak-selected-clear" onClick={() => setOakLesson(null)}>✕</button>
               </div>
             )}
             <OakLessonPicker
               subject={oakSubject}
-              onSelect={lesson => { setOakLesson(lesson); setStep('mode') }}
+              onImport={handleOakImport}
+              onSeed={lesson => { setOakLesson(lesson); setStep('mode') }}
               onSkip={() => { setOakLesson(null); setStep('mode') }}
             />
             <div className="wizard-actions">

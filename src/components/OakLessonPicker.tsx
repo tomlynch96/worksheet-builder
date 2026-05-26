@@ -1,129 +1,141 @@
-import { useState, useMemo } from 'react'
-import { useOakLessons } from '../hooks/useOakLessons'
-import type { OakLesson, OakSubject } from '../types/oak'
+import { useState } from 'react'
+import { useOakLessons, fetchOakLesson } from '../hooks/useOakLessons'
+import type { OakSubject, OakLessonDetail } from '../types/oak'
 import './OakLessonPicker.css'
 
 interface Props {
   subject: OakSubject
-  onSelect: (lesson: OakLesson) => void
+  onImport: (lesson: OakLessonDetail) => void
+  onSeed: (lesson: OakLessonDetail) => void
   onSkip: () => void
 }
 
-export function OakLessonPicker({ subject, onSelect, onSkip }: Props) {
-  const { data, loading, error } = useOakLessons(subject)
+export function OakLessonPicker({ subject, onImport, onSeed, onSkip }: Props) {
+  const { lessons, loading, error } = useOakLessons(subject)
   const [search, setSearch] = useState('')
-  const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set())
-  const [hoveredLesson, setHoveredLesson] = useState<OakLesson | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [detail, setDetail] = useState<OakLessonDetail | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
 
   const q = search.trim().toLowerCase()
+  const filtered = q ? lessons.filter(l => l.lessonTitle.toLowerCase().includes(q)) : lessons
 
-  const filteredUnits = useMemo(() => {
-    if (!data) return []
-    return data.units
-      .map(unit => ({
-        ...unit,
-        lessons: unit.lessons.filter(l =>
-          !q || l.lessonTitle.toLowerCase().includes(q)
-        ),
-      }))
-      .filter(unit => unit.lessons.length > 0)
-  }, [data, q])
-
-  function toggleUnit(slug: string) {
-    setExpandedUnits(prev => {
-      const next = new Set(prev)
-      next.has(slug) ? next.delete(slug) : next.add(slug)
-      return next
-    })
-  }
-
-  function getLessonData(lessonSlug: string): OakLesson | undefined {
-    return data?.lessons.find(l => l.lessonSlug === lessonSlug)
+  async function handleSelect(slug: string) {
+    if (selected === slug) return
+    setSelected(slug)
+    setDetail(null)
+    setDetailError(null)
+    setDetailLoading(true)
+    try {
+      const d = await fetchOakLesson(slug)
+      setDetail(d)
+    } catch (e) {
+      setDetailError(String(e))
+    } finally {
+      setDetailLoading(false)
+    }
   }
 
   const subjectLabel = subject === 'science' ? 'KS3 Science' : 'KS4 Physics'
+  const exitCount = detail?.exitQuiz.length ?? 0
 
   return (
     <div className="oak-picker">
       <div className="oak-picker-header">
-        <div className="oak-picker-badge">Oak National Academy</div>
+        <div className="oak-picker-badge">Oak National Academy · {subjectLabel}</div>
         <p className="oak-picker-hint">
-          Select a {subjectLabel} lesson to seed your worksheet with its learning points and keywords.
+          Find a lesson, then import its quiz questions directly or use it to seed AI generation.
         </p>
       </div>
 
-      {loading && <div className="oak-picker-status">Loading {subjectLabel} lessons…</div>}
-      {error && <div className="oak-picker-status oak-picker-status--error">Could not load Oak content: {error}</div>}
+      {loading && <div className="oak-picker-status">Loading lessons…</div>}
+      {error && <div className="oak-picker-status oak-picker-status--error">Could not load lessons: {error}</div>}
 
-      {data && (
+      {!loading && !error && (
         <>
           <input
             className="oak-picker-search"
             type="search"
-            placeholder="Search lessons…"
+            placeholder={`Search ${filtered.length} ${subjectLabel} lessons…`}
             value={search}
             onChange={e => setSearch(e.target.value)}
+            autoFocus
           />
 
           <div className="oak-picker-body">
             <div className="oak-picker-list">
-              {filteredUnits.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div className="oak-picker-empty">No lessons match your search.</div>
               ) : (
-                filteredUnits.map(unit => (
-                  <div key={unit.unitSlug} className="wizard-accordion-section">
-                    <button
-                      type="button"
-                      className={`wizard-accordion-header${expandedUnits.has(unit.unitSlug) ? ' wizard-accordion-header--open' : ''}`}
-                      onClick={() => toggleUnit(unit.unitSlug)}
-                    >
-                      <span className="wizard-accordion-ref oak-picker-year">
-                        {unit.yearSlug.replace('year-', 'Y')}
-                      </span>
-                      <span className="wizard-accordion-title">{unit.unitTitle}</span>
-                      <span className="wizard-accordion-chevron">
-                        {expandedUnits.has(unit.unitSlug) ? '▾' : '▸'}
-                      </span>
-                    </button>
-
-                    {expandedUnits.has(unit.unitSlug) && (
-                      <div className="wizard-accordion-body">
-                        {unit.lessons.map(l => {
-                          const full = getLessonData(l.lessonSlug)
-                          return (
-                            <button
-                              key={l.lessonSlug}
-                              type="button"
-                              className="wizard-accordion-lesson oak-picker-lesson"
-                              onClick={() => full && onSelect(full)}
-                              onMouseEnter={() => full && setHoveredLesson(full)}
-                              onMouseLeave={() => setHoveredLesson(null)}
-                            >
-                              <span>{l.lessonTitle}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
+                filtered.map(l => (
+                  <button
+                    key={l.lessonSlug}
+                    type="button"
+                    className={`oak-picker-lesson${selected === l.lessonSlug ? ' oak-picker-lesson--selected' : ''}`}
+                    onClick={() => handleSelect(l.lessonSlug)}
+                  >
+                    {l.lessonTitle}
+                  </button>
                 ))
               )}
             </div>
 
-            {hoveredLesson && (
-              <div className="oak-picker-preview">
-                <div className="oak-picker-preview-outcome">{hoveredLesson.pupilLessonOutcome}</div>
-                {hoveredLesson.keyLearningPoints.length > 0 && (
-                  <ul className="oak-picker-preview-points">
-                    {hoveredLesson.keyLearningPoints.slice(0, 3).map((p, i) => (
-                      <li key={i}>{p}</li>
-                    ))}
-                    {hoveredLesson.keyLearningPoints.length > 3 && (
-                      <li className="oak-picker-preview-more">
-                        +{hoveredLesson.keyLearningPoints.length - 3} more…
-                      </li>
+            {selected && (
+              <div className="oak-picker-detail">
+                {detailLoading && <div className="oak-picker-detail-loading">Loading lesson…</div>}
+                {detailError && <div className="oak-picker-status oak-picker-status--error">{detailError}</div>}
+                {detail && (
+                  <>
+                    <div className="oak-picker-detail-title">{detail.lessonTitle}</div>
+                    {detail.pupilLessonOutcome && (
+                      <div className="oak-picker-detail-outcome">{detail.pupilLessonOutcome}</div>
                     )}
-                  </ul>
+
+                    {detail.keyLearningPoints.length > 0 && (
+                      <div className="oak-picker-detail-section">
+                        <div className="oak-picker-detail-label">Learning points</div>
+                        <ul className="oak-picker-detail-list">
+                          {detail.keyLearningPoints.slice(0, 4).map((p, i) => <li key={i}>{p}</li>)}
+                          {detail.keyLearningPoints.length > 4 && (
+                            <li className="oak-picker-detail-more">+{detail.keyLearningPoints.length - 4} more</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {detail.exitQuiz.length > 0 && (
+                      <div className="oak-picker-detail-section">
+                        <div className="oak-picker-detail-label">Exit quiz preview</div>
+                        <div className="oak-picker-detail-q">{detail.exitQuiz[0].question}</div>
+                        {detail.exitQuiz.length > 1 && (
+                          <div className="oak-picker-detail-q">{detail.exitQuiz[1].question}</div>
+                        )}
+                        {detail.exitQuiz.length > 2 && (
+                          <div className="oak-picker-detail-more">+{detail.exitQuiz.length - 2} more questions</div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="oak-picker-detail-actions">
+                      {exitCount > 0 && (
+                        <button
+                          type="button"
+                          className="oak-picker-btn oak-picker-btn--import"
+                          onClick={() => onImport(detail)}
+                        >
+                          Import {exitCount} exit quiz questions
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="oak-picker-btn oak-picker-btn--seed"
+                        onClick={() => onSeed(detail)}
+                      >
+                        Seed AI generation
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )}

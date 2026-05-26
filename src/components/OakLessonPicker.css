@@ -1,7 +1,7 @@
 .oak-picker {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .oak-picker-header {
@@ -34,7 +34,7 @@
 }
 
 .oak-picker-hint {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
   margin: 0;
   line-height: 1.4;
@@ -43,11 +43,12 @@
 .oak-picker-status {
   font-size: 13px;
   color: #6b7280;
-  padding: 12px 0;
+  padding: 8px 0;
 }
 
 .oak-picker-status--error {
   color: #dc2626;
+  font-size: 12px;
 }
 
 .oak-picker-search {
@@ -69,25 +70,42 @@
 
 .oak-picker-body {
   display: flex;
-  gap: 12px;
-  min-height: 0;
+  gap: 10px;
+  min-height: 200px;
 }
 
 .oak-picker-list {
   flex: 1;
   overflow-y: auto;
-  max-height: 300px;
+  max-height: 260px;
   min-width: 0;
-}
-
-.oak-picker-year {
-  min-width: 28px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .oak-picker-lesson {
   width: 100%;
   text-align: left;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.1s;
+  line-height: 1.3;
+}
+
+.oak-picker-lesson:hover {
+  background: #f3f4f6;
+}
+
+.oak-picker-lesson--selected {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
 }
 
 .oak-picker-empty {
@@ -96,48 +114,130 @@
   padding: 12px 0;
 }
 
-.oak-picker-preview {
-  width: 200px;
+/* Detail panel */
+
+.oak-picker-detail {
+  width: 210px;
   flex-shrink: 0;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 12px;
   font-size: 12px;
-  line-height: 1.5;
-  align-self: flex-start;
+  line-height: 1.4;
+  overflow-y: auto;
+  max-height: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.oak-picker-preview-outcome {
-  color: #374151;
-  font-weight: 600;
-  margin-bottom: 8px;
+.oak-picker-detail-loading {
+  color: #9ca3af;
+  font-size: 12px;
 }
 
-.oak-picker-preview-points {
-  margin: 0;
-  padding-left: 16px;
-  color: #6b7280;
+.oak-picker-detail-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.oak-picker-detail-outcome {
+  font-size: 11.5px;
+  color: #4f46e5;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.oak-picker-detail-section {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.oak-picker-preview-more {
+.oak-picker-detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.oak-picker-detail-list {
+  margin: 0;
+  padding-left: 14px;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+}
+
+.oak-picker-detail-q {
+  font-size: 11.5px;
+  color: #374151;
+  padding: 4px 8px;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.oak-picker-detail-more {
+  font-size: 11px;
   color: #9ca3af;
   font-style: italic;
 }
 
-.oak-picker-footer {
-  padding-top: 4px;
-  border-top: 1px solid #f3f4f6;
+.oak-picker-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-top: 4px;
+}
+
+.oak-picker-btn {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: center;
+}
+
+.oak-picker-btn--import {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.oak-picker-btn--import:hover {
+  background: #4338ca;
+}
+
+.oak-picker-btn--seed {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.oak-picker-btn--seed:hover {
+  background: #e5e7eb;
+}
+
+/* Footer */
+
+.oak-picker-footer {
+  padding-top: 6px;
+  border-top: 1px solid #f3f4f6;
 }
 
 .oak-picker-skip {
   background: none;
   border: none;
-  font-size: 13px;
+  font-size: 12px;
   color: #9ca3af;
   cursor: pointer;
   padding: 0;
