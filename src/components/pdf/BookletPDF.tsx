@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
 import type { Worksheet } from '../../types/worksheet'
-import { WorksheetDocumentPages, getPDFRenderableBlocks } from './WorksheetPDF'
+import { WorksheetDocumentPages, WorksheetMarkSchemePage, getPDFRenderableBlocks } from './WorksheetPDF'
 import { splitIntoPages } from '../../utils/pagination'
 
 // ── Styles ────────────────────────────────────────────────
@@ -173,7 +173,7 @@ interface Props {
 function estimatePageCount(worksheet: Worksheet): number {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const pages = splitIntoPages(renderableBlocks)
-  return Math.max(1, pages.length)
+  return Math.max(1, pages.length) + 1 // +1 for mark scheme page
 }
 
 // ── Component ─────────────────────────────────────────────
@@ -235,13 +235,20 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
         />
       </Page>
 
-      {/* Worksheet pages */}
+      {/* Worksheet pages + mark schemes */}
       {entries.map(entry => (
-        <WorksheetDocumentPages
-          key={entry.id}
-          worksheet={entry.worksheet}
-          showPageNumbers
-        />
+        <>
+          <WorksheetDocumentPages
+            key={`ws-${entry.id}`}
+            worksheet={entry.worksheet}
+            showPageNumbers
+          />
+          <WorksheetMarkSchemePage
+            key={`ms-${entry.id}`}
+            worksheet={entry.worksheet}
+            showPageNumbers
+          />
+        </>
       ))}
     </Document>
   )

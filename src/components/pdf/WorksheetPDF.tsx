@@ -763,6 +763,22 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
   return worksheet.blocks.filter(b => !attachedIds.has(b.id))
 }
 
+// Export for use in BookletPDF — renders the mark scheme page without a Document wrapper
+export function WorksheetMarkSchemePage({ worksheet, showPageNumbers }: { worksheet: Worksheet; showPageNumbers?: boolean }) {
+  return (
+    <Page size="A4" style={s.page}>
+      {showPageNumbers && (
+        <Text
+          style={{ position: 'absolute', bottom: 24, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#9ca3af' }}
+          render={({ pageNumber }) => String(pageNumber)}
+          fixed
+        />
+      )}
+      <PDFMarkSchemeSection worksheet={worksheet} />
+    </Page>
+  )
+}
+
 // Export for use in BookletPDF — renders the worksheet pages without a Document wrapper
 export function WorksheetDocumentPages({ worksheet, showPageNumbers }: { worksheet: Worksheet; showPageNumbers?: boolean }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
