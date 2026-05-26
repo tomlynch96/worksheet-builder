@@ -23,6 +23,9 @@ export function Topbar({ actions }: TopbarProps) {
           <Link className={`topbar-nav-link${pathname === '/insights' ? ' topbar-nav-link--active' : ''}`} to="/insights">
             Insights
           </Link>
+          <Link className={`topbar-nav-link${pathname === '/booklet' ? ' topbar-nav-link--active' : ''}`} to="/booklet">
+            Booklet
+          </Link>
         </nav>
       )}
 

@@ -763,6 +763,30 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
   return worksheet.blocks.filter(b => !attachedIds.has(b.id))
 }
 
+// Export for use in BookletPDF — renders the worksheet pages without a Document wrapper
+export function WorksheetDocumentPages({ worksheet, showPageNumbers }: { worksheet: Worksheet; showPageNumbers?: boolean }) {
+  const renderableBlocks = getPDFRenderableBlocks(worksheet)
+  const showLines = worksheet.showLines !== false
+  return (
+    <Page size="A4" style={s.page}>
+      {showPageNumbers && (
+        <Text
+          style={{ position: 'absolute', bottom: 24, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#9ca3af' }}
+          render={({ pageNumber }) => String(pageNumber)}
+          fixed
+        />
+      )}
+      {renderableBlocks.map(block => (
+        <View key={block.id} wrap={false}>
+          <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
+        </View>
+      ))}
+    </Page>
+  )
+}
+
+export { getPDFRenderableBlocks }
+
 export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const showLines = worksheet.showLines !== false
