@@ -2,10 +2,28 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const OAK_BASE = 'https://open-api.thenational.academy'
 
-// Sequence slug candidates to try, in order, for each subject
-const SEQUENCE_SLUGS: Record<string, string[]> = {
-  science: ['science-secondary', 'science'],
-  physics: ['physics-secondary', 'physics'],
+// Candidate URL paths to try in order. We'll return the first successful one.
+const ENDPOINT_CANDIDATES = [
+  '/api/v0/curriculum/science-secondary',
+  '/api/v0/curriculum/science',
+  '/api/v1/curriculum/science-secondary',
+  '/api/v1/curriculum/science',
+  '/curriculum/science-secondary',
+  '/curriculum/science',
+]
+
+const PHYSICS_CANDIDATES = [
+  '/api/v0/curriculum/physics-secondary',
+  '/api/v0/curriculum/physics',
+  '/api/v1/curriculum/physics-secondary',
+  '/api/v1/curriculum/physics',
+  '/curriculum/physics-secondary',
+  '/curriculum/physics',
+]
+
+const SUBJECT_CANDIDATES: Record<string, string[]> = {
+  science: ENDPOINT_CANDIDATES,
+  physics: PHYSICS_CANDIDATES,
 }
 
 // The key stage we want for each subject
@@ -14,27 +32,49 @@ const TARGET_KEY_STAGE: Record<string, string> = {
   physics: 'ks4',
 }
 
-async function fetchOakSubject(subject: string, apiKey: string) {
-  const slugs = SEQUENCE_SLUGS[subject]
-  if (!slugs) throw new Error(`Unknown subject: ${subject}`)
+interface AttemptResult {
+  url: string
+  status: number
+  body: string
+}
 
-  let lastError: Error | null = null
-  for (const slug of slugs) {
-    const res = await fetch(`${OAK_BASE}/api/v0/curriculum/${slug}`, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    })
-    if (res.status === 404) continue
-    if (!res.ok) {
-      const text = await res.text()
-      lastError = new Error(`Oak API ${res.status}: ${text.slice(0, 200)}`)
+async function fetchOakSubject(subject: string, apiKey: string) {
+  const candidates = SUBJECT_CANDIDATES[subject]
+  if (!candidates) throw new Error(`Unknown subject: ${subject}`)
+
+  const attempts: AttemptResult[] = []
+
+  for (const path of candidates) {
+    const url = `${OAK_BASE}${path}`
+    let res: Response
+    try {
+      res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: 'application/json',
+        },
+      })
+    } catch (networkErr) {
+      attempts.push({ url, status: 0, body: String(networkErr) })
       continue
     }
-    return await res.json()
+
+    const body = await res.text()
+    attempts.push({ url, status: res.status, body: body.slice(0, 300) })
+
+    if (res.status === 404 || res.status === 405) continue
+    if (!res.ok) continue
+
+    try {
+      return JSON.parse(body)
+    } catch {
+      attempts.push({ url, status: res.status, body: 'Response was not valid JSON: ' + body.slice(0, 200) })
+      continue
+    }
   }
-  throw lastError ?? new Error(`No valid Oak endpoint found for subject: ${subject}`)
+
+  const summary = attempts.map(a => `  ${a.status} ${a.url}: ${a.body.slice(0, 120)}`).join('\n')
+  throw new Error(`Could not find a working Oak API endpoint for "${subject}". Tried:\n${summary}`)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -43,13 +83,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const subject = req.query.subject as string
-  if (!subject || !SEQUENCE_SLUGS[subject]) {
+  if (!subject || !SUBJECT_CANDIDATES[subject]) {
     return res.status(400).json({ error: 'subject must be "science" or "physics"' })
   }
 
   const apiKey = process.env.OAK_API_KEY
   if (!apiKey) {
-    return res.status(500).json({ error: 'OAK_API_KEY not configured' })
+    return res.status(500).json({ error: 'OAK_API_KEY not configured on the server' })
   }
 
   try {
@@ -83,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         misconceptions: l.misconceptionsAndCommonMistakes ?? [],
       }))
 
-    // Build unit list, filtering to target key stage and only published lessons
+    // Build unit list filtered to target key stage
     const lessonSlugsInResult = new Set(lessons.map((l: { lessonSlug: string }) => l.lessonSlug))
     const units = (raw.sequence ?? [])
       .filter((u: { keyStageSlug: string }) => u.keyStageSlug === targetKs)
