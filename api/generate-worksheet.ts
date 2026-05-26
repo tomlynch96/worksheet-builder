@@ -335,7 +335,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: `Unknown mode: ${mode}` })
   }
 
+  // Modes that always return a single JSON object — prefill forces immediate JSON output
+  const prefillChar = (mode === 'vary' || mode === 'add_part') ? '{' :
+                      (mode === 'block') ? '{' : null
+
   try {
+    const messages: { role: string; content: string }[] = [
+      { role: 'user', content: userMessage },
+    ]
+    if (prefillChar) messages.push({ role: 'assistant', content: prefillChar })
+
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -347,7 +356,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         model: 'claude-sonnet-4-6',
         max_tokens: 8192,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userMessage }],
+        messages,
       }),
     })
 
@@ -358,19 +367,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await anthropicRes.json() as { content: { type: string; text: string }[] }
     const raw = data.content[0]?.type === 'text' ? data.content[0].text : ''
-    const cleaned = raw.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
+    // When prefilling, the model continues from the prefill character — prepend it back
+    const withPrefill = prefillChar ? prefillChar + raw : raw
+    const cleaned = withPrefill.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
 
-    // Validate the response is JSON before returning it — if the model returned plain
-    // text (e.g. a refusal or clarifying question) give the client a clear error.
+    // Validate JSON. For block mode, the model might return an array [data, question]
+    // when data+question are needed — if the { prefill made that invalid, fall back to
+    // the raw response without the prefill and try again.
+    let finalJson = cleaned
     try {
       JSON.parse(cleaned)
     } catch {
-      return res.status(502).json({
-        error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${cleaned.slice(0, 200)}${cleaned.length > 200 ? '…' : ''}"`,
-      })
+      if (prefillChar) {
+        const rawCleaned = raw.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
+        try {
+          JSON.parse(rawCleaned)
+          finalJson = rawCleaned
+        } catch {
+          return res.status(502).json({
+            error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${raw.slice(0, 200)}${raw.length > 200 ? '…' : ''}"`,
+          })
+        }
+      } else {
+        return res.status(502).json({
+          error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${cleaned.slice(0, 200)}${cleaned.length > 200 ? '…' : ''}"`,
+        })
+      }
     }
 
-    return res.status(200).json({ result: cleaned })
+    return res.status(200).json({ result: finalJson })
   } catch (err) {
     return res.status(500).json({ error: String(err) })
   }
