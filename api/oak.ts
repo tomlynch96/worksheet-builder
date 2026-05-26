@@ -48,7 +48,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  // ── Mode 2: lesson detail (summary + quiz) ─────────────────────────────────
+  // ── Mode 2: units list for a key stage ────────────────────────────────────
+  // GET /api/oak?units&ks=ks3|ks4
+  if (req.query.units !== undefined) {
+    const ks = (req.query.ks as string) || 'ks3'
+    try {
+      const data = await oakFetch(`/key-stages/${ks}/subject/science/units`, apiKey)
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+      return res.status(200).json({ units: Array.isArray(data) ? data : [] })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return res.status(502).json({ error: message })
+    }
+  }
+
+  // ── Mode 3: unit summary (title, description, lessons list) ───────────────
+  // GET /api/oak?unit={slug}[&examBoard=aqa][&childSubject=physics]
+  if (req.query.unit) {
+    const slug = req.query.unit as string
+    try {
+      const params = new URLSearchParams()
+      if (req.query.examBoard) params.set('examBoard', req.query.examBoard as string)
+      if (req.query.childSubject) params.set('childSubject', req.query.childSubject as string)
+      if (req.query.tier) params.set('tier', req.query.tier as string)
+      const qs = params.toString() ? `?${params}` : ''
+      const data = await oakFetch(`/units/${slug}/summary${qs}`, apiKey)
+      return res.status(200).json(data)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return res.status(502).json({ error: message })
+    }
+  }
+
+  // ── Mode 4: lesson detail (summary + quiz) ─────────────────────────────────
   // GET /api/oak?lesson={slug}
   if (req.query.lesson) {
     const slug = req.query.lesson as string
