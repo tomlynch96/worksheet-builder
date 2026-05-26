@@ -8,6 +8,11 @@ async function oakFetch(path: string, apiKey: string) {
   })
   if (!res.ok) {
     const text = await res.text()
+    // Treat "not found" as empty rather than an error (search returns 404 for no results)
+    try {
+      const j = JSON.parse(text)
+      if (j.code === 'NOT_FOUND') return []
+    } catch { /* not JSON */ }
     throw new Error(`Oak API ${res.status} at ${path}: ${text.slice(0, 300)}`)
   }
   return res.json()
