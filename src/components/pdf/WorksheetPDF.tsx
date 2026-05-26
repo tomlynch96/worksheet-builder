@@ -778,8 +778,8 @@ const pageNumStyle = {
 export function WorksheetMarkSchemePage({ worksheet }: { worksheet: Worksheet }) {
   return (
     <Page size="A4" style={s.page}>
-      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
       <PDFMarkSchemeSection worksheet={worksheet} />
+      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
     </Page>
   )
 }
@@ -790,12 +790,12 @@ export function WorksheetDocumentPages({ worksheet }: { worksheet: Worksheet }) 
   const showLines = worksheet.showLines !== false
   return (
     <Page size="A4" style={s.page}>
-      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
       {renderableBlocks.map(block => (
         <View key={block.id} wrap={false}>
           <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
         </View>
       ))}
+      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
     </Page>
   )
 }
@@ -808,16 +808,16 @@ export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
         {renderableBlocks.map(block => (
           <View key={block.id} wrap={false}>
             <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
           </View>
         ))}
+        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
       </Page>
       <Page size="A4" style={s.page}>
-        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
         <PDFMarkSchemeSection worksheet={worksheet} />
+        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
       </Page>
     </Document>
   )
