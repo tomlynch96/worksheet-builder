@@ -2,11 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const OAK_BASE = 'https://open-api.thenational.academy/api/v0'
 
-const SUBJECT_KEY_STAGE: Record<string, string> = {
-  science: 'ks3',
-  physics: 'ks4',
-}
-
 async function oakFetch(path: string, apiKey: string) {
   const res = await fetch(`${OAK_BASE}${path}`, {
     headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
@@ -16,6 +11,30 @@ async function oakFetch(path: string, apiKey: string) {
     throw new Error(`Oak API ${res.status} at ${path}: ${text.slice(0, 300)}`)
   }
   return res.json()
+}
+
+// The key-stages endpoint only accepts top-level subject slugs ('science', not 'physics').
+// For KS4 Physics we try the sequences endpoint, with a fallback to KS4 science overall.
+async function fetchLessonList(subject: string, apiKey: string): Promise<Array<{ lessonSlug: string; lessonTitle: string }>> {
+  let data: unknown
+
+  if (subject === 'physics') {
+    // Try sequence endpoint for physics secondary first
+    try {
+      data = await oakFetch('/sequences/physics-secondary/questions?limit=300', apiKey)
+    } catch {
+      // Fallback: all KS4 science (includes physics, biology, chemistry)
+      data = await oakFetch('/key-stages/ks4/subject/science/questions?limit=300', apiKey)
+    }
+  } else {
+    // KS3 science — key-stages endpoint works fine
+    data = await oakFetch('/key-stages/ks3/subject/science/questions?limit=300', apiKey)
+  }
+
+  return (Array.isArray(data) ? data : []).map((l: { lessonSlug: string; lessonTitle: string }) => ({
+    lessonSlug: l.lessonSlug,
+    lessonTitle: l.lessonTitle,
+  }))
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -28,24 +47,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // GET /api/oak?subject=science|physics
   if (req.query.subject) {
     const subject = req.query.subject as string
-    const ks = SUBJECT_KEY_STAGE[subject]
-    if (!ks) return res.status(400).json({ error: 'subject must be "science" or "physics"' })
+    if (subject !== 'science' && subject !== 'physics') {
+      return res.status(400).json({ error: 'subject must be "science" or "physics"' })
+    }
 
     try {
-      // Use the questions endpoint to get lesson list — strip quiz data server-side
-      // so we don't send hundreds of questions to the browser
-      const data = await oakFetch(
-        `/key-stages/${ks}/subject/${subject}/questions?limit=300`,
-        apiKey
-      )
-
-      const lessons: Array<{ lessonSlug: string; lessonTitle: string }> = (
-        Array.isArray(data) ? data : []
-      ).map((l: { lessonSlug: string; lessonTitle: string }) => ({
-        lessonSlug: l.lessonSlug,
-        lessonTitle: l.lessonTitle,
-      }))
-
+      const lessons = await fetchLessonList(subject, apiKey)
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
       return res.status(200).json({ lessons })
     } catch (err) {
