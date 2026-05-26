@@ -5,13 +5,14 @@ import './OakLessonPicker.css'
 
 interface Props {
   subject: OakSubject
+  examBoard?: string
   onImport: (lesson: OakLessonDetail) => void
   onSeed: (lesson: OakLessonDetail) => void
   onSkip: () => void
 }
 
-export function OakLessonPicker({ subject, onImport, onSeed, onSkip }: Props) {
-  const { lessons, loading, error } = useOakLessons(subject)
+export function OakLessonPicker({ subject, examBoard, onImport, onSeed, onSkip }: Props) {
+  const { lessons, loading, error } = useOakLessons(subject, examBoard)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [detail, setDetail] = useState<OakLessonDetail | null>(null)

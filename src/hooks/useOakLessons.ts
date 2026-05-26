@@ -1,30 +1,31 @@
 import { useState, useEffect } from 'react'
 import type { OakSubject, OakLessonSummary, OakLessonDetail } from '../types/oak'
 
-const listCache = new Map<OakSubject, OakLessonSummary[]>()
+const listCache = new Map<string, OakLessonSummary[]>()
 const detailCache = new Map<string, OakLessonDetail>()
 
-export function useOakLessons(subject: OakSubject | null) {
-  const [lessons, setLessons] = useState<OakLessonSummary[]>(
-    subject ? (listCache.get(subject) ?? []) : []
-  )
+export function useOakLessons(subject: OakSubject | null, examBoard?: string) {
+  const cacheKey = `${subject}:${examBoard ?? ''}`
+  const [lessons, setLessons] = useState<OakLessonSummary[]>(listCache.get(cacheKey) ?? [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!subject) return
-    if (listCache.has(subject)) { setLessons(listCache.get(subject)!); return }
+    if (listCache.has(cacheKey)) { setLessons(listCache.get(cacheKey)!); return }
     setLoading(true)
     setError(null)
-    fetch(`/api/oak?subject=${subject}`)
-      .then(r => r.ok ? r.json() : r.json().then(j => Promise.reject(j.error ?? `HTTP ${r.status}`)))
+    const params = new URLSearchParams({ subject })
+    if (examBoard) params.set('examBoard', examBoard)
+    fetch(`/api/oak?${params}`)
+      .then(r => r.ok ? r.json() : r.json().then((j: { error?: string }) => Promise.reject(j.error ?? `HTTP ${r.status}`)))
       .then((d: { lessons: OakLessonSummary[] }) => {
-        listCache.set(subject, d.lessons)
+        listCache.set(cacheKey, d.lessons)
         setLessons(d.lessons)
       })
       .catch((e: unknown) => setError(String(e)))
       .finally(() => setLoading(false))
-  }, [subject])
+  }, [cacheKey, subject, examBoard])
 
   return { lessons, loading, error }
 }

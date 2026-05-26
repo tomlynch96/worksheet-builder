@@ -454,6 +454,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
             )}
             <OakLessonPicker
               subject={oakSubject}
+              examBoard={selectedCourse?.exam_board}
               onImport={handleOakImport}
               onSeed={lesson => { setOakLesson(lesson); setStep('mode') }}
               onSkip={() => { setOakLesson(null); setStep('mode') }}
