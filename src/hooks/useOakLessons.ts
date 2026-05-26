@@ -1,31 +1,40 @@
 import { useState, useEffect } from 'react'
-import type { OakSubject, OakLessonSummary, OakLessonDetail } from '../types/oak'
+import type { OakLessonSummary, OakLessonDetail } from '../types/oak'
 
-const listCache = new Map<string, OakLessonSummary[]>()
 const detailCache = new Map<string, OakLessonDetail>()
 
-export function useOakLessons(subject: OakSubject | null, examBoard?: string) {
-  const cacheKey = `${subject}:${examBoard ?? ''}`
-  const [lessons, setLessons] = useState<OakLessonSummary[]>(listCache.get(cacheKey) ?? [])
+// ks: 'ks3' for KS3 Science, 'ks4' for KS4 Physics
+export function useOakSearch(query: string, ks: string) {
+  const [lessons, setLessons] = useState<OakLessonSummary[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!subject) return
-    if (listCache.has(cacheKey)) { setLessons(listCache.get(cacheKey)!); return }
+    const q = query.trim()
+    if (!q) { setLessons([]); setLoading(false); return }
+
     setLoading(true)
-    setError(null)
-    const params = new URLSearchParams({ subject })
-    if (examBoard) params.set('examBoard', examBoard)
-    fetch(`/api/oak?${params}`)
-      .then(r => r.ok ? r.json() : r.json().then((j: { error?: string }) => Promise.reject(j.error ?? `HTTP ${r.status}`)))
-      .then((d: { lessons: OakLessonSummary[] }) => {
-        listCache.set(cacheKey, d.lessons)
-        setLessons(d.lessons)
-      })
-      .catch((e: unknown) => setError(String(e)))
-      .finally(() => setLoading(false))
-  }, [cacheKey, subject, examBoard])
+    const timer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ search: q, ks })
+        const r = await fetch(`/api/oak?${params}`)
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({})) as { error?: string }
+          throw new Error(j.error ?? `HTTP ${r.status}`)
+        }
+        const d = await r.json() as { lessons: OakLessonSummary[] }
+        setLessons(d.lessons ?? [])
+        setError(null)
+      } catch (e) {
+        setError(String(e))
+        setLessons([])
+      } finally {
+        setLoading(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [query, ks])
 
   return { lessons, loading, error }
 }
