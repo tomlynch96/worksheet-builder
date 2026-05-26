@@ -55,6 +55,13 @@ function sanitiseWorksheet(ws: Worksheet): Worksheet {
   return { ...ws, id: toUUID(ws.id), blocks: ws.blocks.map(sanitiseBlock) }
 }
 
+export interface OakContext {
+  lessonTitle: string
+  learningPoints: string[]
+  keywords: Array<{ keyword: string; description: string }>
+  misconceptions: Array<{ misconception: string; response: string }>
+}
+
 export async function generateWorksheet(params: {
   topic: string
   examBoard: string
@@ -66,6 +73,7 @@ export async function generateWorksheet(params: {
   difficulty?: number
   equations?: string[]
   teachingPhilosophy?: string
+  oakContext?: OakContext
 }): Promise<Worksheet> {
   const raw = await callAPI({ mode: 'worksheet', ...params })
   const parsed = JSON.parse(raw) as Worksheet

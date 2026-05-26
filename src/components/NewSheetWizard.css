@@ -552,3 +552,38 @@
   min-width: 36px;
   font-size: 11px;
 }
+
+/* Oak selected indicator */
+.wizard-oak-selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.wizard-oak-selected-label {
+  color: #166534;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.wizard-oak-selected-title {
+  color: #15803d;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wizard-oak-selected-clear {
+  background: none;
+  border: none;
+  color: #16a34a;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  flex-shrink: 0;
+}

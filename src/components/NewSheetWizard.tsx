@@ -2,8 +2,10 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getSpecTopics, offeringLabel } from '../data/qualifications'
 import { generateWorksheet } from '../utils/generateWorksheet'
+import { OakLessonPicker } from './OakLessonPicker'
 import type { UserCourse } from '../types/profile'
 import type { Worksheet } from '../types/worksheet'
+import type { OakLesson, OakSubject } from '../types/oak'
 import './NewSheetWizard.css'
 
 interface WizardResult {
@@ -167,7 +169,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
   const { profile } = useProfileContext()
   const courses = profile?.user_courses ?? []
 
-  const [step, setStep] = useState<'course' | 'spec' | 'mode'>('course')
+  const [step, setStep] = useState<'course' | 'spec' | 'oak' | 'mode'>('course')
   const [selectedCourse, setSelectedCourse] = useState<UserCourse | null>(null)
   const [selectedTopic, setSelectedTopic] = useState('')
   const [selectedPoint, setSelectedPoint] = useState('')
@@ -184,6 +186,15 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
   }, [selectedCourse])
 
   const isKS3 = selectedCourse?.qualification_id.startsWith('exploring-science') ?? false
+
+  const [oakLesson, setOakLesson] = useState<OakLesson | null>(null)
+
+  function getOakSubject(qualId: string): OakSubject | null {
+    if (qualId.startsWith('exploring-science')) return 'science'
+    if (qualId === 'gcse-physics') return 'physics'
+    return null
+  }
+  const oakSubject = selectedCourse ? getOakSubject(selectedCourse.qualification_id) : null
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
 
   function toggleTopicExpand(ref: string) {
@@ -220,7 +231,8 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
   }
 
   function handleBack() {
-    if (step === 'mode') { setStep('spec'); setGenError(null); return }
+    if (step === 'mode') { setStep(oakSubject ? 'oak' : 'spec'); setGenError(null); return }
+    if (step === 'oak') { setStep('spec'); return }
     setStep('course')
     setSelectedTopic('')
     setSelectedPoint('')
@@ -253,6 +265,12 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
         teachingPhilosophy: profile?.teaching_philosophy || undefined,
+        oakContext: oakLesson ? {
+          lessonTitle: oakLesson.lessonTitle,
+          learningPoints: oakLesson.keyLearningPoints,
+          keywords: oakLesson.keywords,
+          misconceptions: oakLesson.misconceptions,
+        } : undefined,
       })
       onGenerated(worksheet, worksheetType)
     } catch (err) {
@@ -387,9 +405,32 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
             <div className="wizard-actions">
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
-              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep('mode') }}>
+              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep(oakSubject ? 'oak' : 'mode') }}>
                 Next →
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2b: Oak lesson picker */}
+        {!generating && step === 'oak' && oakSubject && (
+          <div className="wizard-body">
+            {oakLesson && (
+              <div className="wizard-oak-selected">
+                <span className="wizard-oak-selected-label">Oak lesson selected:</span>
+                <span className="wizard-oak-selected-title">{oakLesson.lessonTitle}</span>
+                <button type="button" className="wizard-oak-selected-clear" onClick={() => setOakLesson(null)}>
+                  ✕
+                </button>
+              </div>
+            )}
+            <OakLessonPicker
+              subject={oakSubject}
+              onSelect={lesson => { setOakLesson(lesson); setStep('mode') }}
+              onSkip={() => { setOakLesson(null); setStep('mode') }}
+            />
+            <div className="wizard-actions">
+              <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
             </div>
           </div>
         )}

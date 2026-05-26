@@ -1,0 +1,150 @@
+.oak-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oak-picker-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oak-picker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 3px 10px;
+  width: fit-content;
+}
+
+.oak-picker-badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.oak-picker-hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.oak-picker-status {
+  font-size: 13px;
+  color: #6b7280;
+  padding: 12px 0;
+}
+
+.oak-picker-status--error {
+  color: #dc2626;
+}
+
+.oak-picker-search {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #111827;
+  background: #f9fafb;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.oak-picker-search:focus {
+  border-color: #6366f1;
+  background: #fff;
+}
+
+.oak-picker-body {
+  display: flex;
+  gap: 12px;
+  min-height: 0;
+}
+
+.oak-picker-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+  min-width: 0;
+}
+
+.oak-picker-year {
+  min-width: 28px;
+  text-align: center;
+}
+
+.oak-picker-lesson {
+  width: 100%;
+  text-align: left;
+}
+
+.oak-picker-empty {
+  font-size: 13px;
+  color: #9ca3af;
+  padding: 12px 0;
+}
+
+.oak-picker-preview {
+  width: 200px;
+  flex-shrink: 0;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  align-self: flex-start;
+}
+
+.oak-picker-preview-outcome {
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.oak-picker-preview-points {
+  margin: 0;
+  padding-left: 16px;
+  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oak-picker-preview-more {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.oak-picker-footer {
+  padding-top: 4px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 4px;
+}
+
+.oak-picker-skip {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.oak-picker-skip:hover {
+  color: #6b7280;
+}
