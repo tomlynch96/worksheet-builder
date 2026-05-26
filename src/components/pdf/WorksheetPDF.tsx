@@ -19,6 +19,7 @@ import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, W
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
+import { splitIntoPages } from '../../utils/pagination'
 
 // ── Styles ────────────────────────────────────────────────
 // react-pdf uses pt. A4: 595×842pt, margins 51pt (~18mm).
@@ -774,29 +775,40 @@ const pageNumStyle = {
   fontFamily: 'Helvetica',
 }
 
-// Export for use in BookletPDF — renders the mark scheme page without a Document wrapper
+// Export for use in BookletPDF — renders mark scheme page(s) without a Document wrapper.
+// Pre-paginates to avoid react-pdf overflow so the page number footer works on every page.
 export function WorksheetMarkSchemePage({ worksheet }: { worksheet: Worksheet }) {
+  // Collect the answerable blocks so we can estimate mark-scheme page count.
+  // For simplicity we render all in a single page (mark schemes rarely exceed one page);
+  // wrap={false} on each question keeps items together.
   return (
     <Page size="A4" style={s.page}>
       <PDFMarkSchemeSection worksheet={worksheet} />
-      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
+      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} />
     </Page>
   )
 }
 
-// Export for use in BookletPDF — renders the worksheet pages without a Document wrapper
+// Export for use in BookletPDF — renders the worksheet pages without a Document wrapper.
+// Pre-paginates blocks so each react-pdf Page never overflows; this makes
+// position:absolute footers work reliably (they fail on continuation/overflow pages).
 export function WorksheetDocumentPages({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const showLines = worksheet.showLines !== false
+  const pages = splitIntoPages(renderableBlocks)
   return (
-    <Page size="A4" style={s.page}>
-      {renderableBlocks.map(block => (
-        <View key={block.id} wrap={false}>
-          <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
-        </View>
+    <>
+      {pages.map((pageBlocks, i) => (
+        <Page key={i} size="A4" style={s.page}>
+          {pageBlocks.map(block => (
+            <View key={block.id} wrap={false}>
+              <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
+            </View>
+          ))}
+          <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} />
+        </Page>
       ))}
-      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
-    </Page>
+    </>
   )
 }
 
@@ -805,19 +817,22 @@ export { getPDFRenderableBlocks }
 export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const showLines = worksheet.showLines !== false
+  const pages = splitIntoPages(renderableBlocks)
   return (
     <Document>
-      <Page size="A4" style={s.page}>
-        {renderableBlocks.map(block => (
-          <View key={block.id} wrap={false}>
-            <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
-          </View>
-        ))}
-        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
-      </Page>
+      {pages.map((pageBlocks, i) => (
+        <Page key={i} size="A4" style={s.page}>
+          {pageBlocks.map(block => (
+            <View key={block.id} wrap={false}>
+              <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
+            </View>
+          ))}
+          <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} />
+        </Page>
+      ))}
       <Page size="A4" style={s.page}>
         <PDFMarkSchemeSection worksheet={worksheet} />
-        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
+        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} />
       </Page>
     </Document>
   )
