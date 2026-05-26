@@ -57,7 +57,6 @@ export function oakQuestionToBlock(q: OakQuizQuestion): Block {
         parts: [],
         markScheme: acceptable.length > 0 ? `${acceptable.join(' / ')} [1]` : '',
         numericalAnswer: '',
-        attachedDataId: null,
       }
     }
   }

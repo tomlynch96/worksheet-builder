@@ -248,7 +248,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
       type: 'header' as const,
       title: lesson.lessonTitle,
       topic: lesson.lessonTitle,
-      examBoard: selectedCourse.exam_board,
+      examBoard: selectedCourse.exam_board as import('../types/worksheet').ExamBoard,
       tier: 'higher' as const,
       qualification: selectedCourse.qualification_id,
       specPoint: selectedPoint || freeText || '',
