@@ -140,17 +140,6 @@ const s = StyleSheet.create({
     paddingTop: 1,
   },
 
-  // Shared page number footer
-  pageNumber: {
-    position: 'absolute',
-    bottom: 18,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 9,
-    color: '#6b7280',
-    fontFamily: 'Helvetica',
-  },
 })
 
 // ── Types ─────────────────────────────────────────────────
@@ -209,11 +198,6 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
         <View style={s.titlePageFooter}>
           <Text style={s.titlePageFooterText}>Worksheet Booklet</Text>
         </View>
-        <Text
-          fixed
-          style={s.pageNumber}
-          render={({ pageNumber }) => String(pageNumber)}
-        />
       </Page>
 
       {/* Contents page */}
@@ -243,11 +227,6 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
             <Text style={s.contentsPageNum}>{markSchemesStartPage}</Text>
           </View>
         )}
-        <Text
-          fixed
-          style={s.pageNumber}
-          render={({ pageNumber }) => String(pageNumber)}
-        />
       </Page>
 
       {/* All worksheet pages */}

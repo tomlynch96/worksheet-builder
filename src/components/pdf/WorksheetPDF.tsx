@@ -19,7 +19,6 @@ import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, W
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { htmlToPdf } from '../../utils/htmlToPdf'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
-import { splitIntoPages } from '../../utils/pagination'
 
 // ── Styles ────────────────────────────────────────────────
 // react-pdf uses pt. A4: 595×842pt, margins 51pt (~18mm).
@@ -37,36 +36,6 @@ const s = StyleSheet.create({
     paddingBottom: 51,
     paddingLeft: 51,
     paddingRight: 51,
-  },
-  // Page variant used when we want a guaranteed footer row at the physical bottom.
-  // paddingBottom: 0 lets the footer View own the bottom space.
-  pageWithFooter: {
-    fontFamily: 'Helvetica',
-    fontSize: 11,
-    lineHeight: 1.45,
-    color: '#000',
-    paddingTop: 51,
-    paddingBottom: 0,
-    paddingLeft: 51,
-    paddingRight: 51,
-  },
-  // Wraps the main content inside a pageWithFooter page.
-  // flex:1 expands it to fill all space above the footer.
-  // paddingBottom matches the original 51pt bottom margin.
-  pageContent: {
-    flex: 1,
-    paddingBottom: 20,
-  },
-  // Fixed-height footer row — always at the physical bottom of the page.
-  pageFooter: {
-    height: 31,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pageFooterText: {
-    fontSize: 9,
-    color: '#6b7280',
-    fontFamily: 'Helvetica',
   },
 
   // Header
@@ -794,48 +763,27 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
   return worksheet.blocks.filter(b => !attachedIds.has(b.id))
 }
 
-function PageFooter() {
-  return (
-    <View style={s.pageFooter}>
-      <Text style={s.pageFooterText} render={({ pageNumber }) => String(pageNumber)} />
-    </View>
-  )
-}
-
 // Export for use in BookletPDF — renders mark scheme page without a Document wrapper.
 export function WorksheetMarkSchemePage({ worksheet }: { worksheet: Worksheet }) {
   return (
-    <Page size="A4" style={s.pageWithFooter}>
-      <View style={s.pageContent}>
-        <PDFMarkSchemeSection worksheet={worksheet} />
-      </View>
-      <PageFooter />
+    <Page size="A4" style={s.page}>
+      <PDFMarkSchemeSection worksheet={worksheet} />
     </Page>
   )
 }
 
 // Export for use in BookletPDF — renders the worksheet pages without a Document wrapper.
-// Pre-paginates blocks so each Page never overflows; the footer View is then always
-// the last flex child, guaranteeing it sits at the physical bottom of every page.
 export function WorksheetDocumentPages({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const showLines = worksheet.showLines !== false
-  const pages = splitIntoPages(renderableBlocks)
   return (
-    <>
-      {pages.map((pageBlocks, i) => (
-        <Page key={i} size="A4" style={s.pageWithFooter}>
-          <View style={s.pageContent}>
-            {pageBlocks.map(block => (
-              <View key={block.id} wrap={false}>
-                <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
-              </View>
-            ))}
-          </View>
-          <PageFooter />
-        </Page>
+    <Page size="A4" style={s.page}>
+      {renderableBlocks.map(block => (
+        <View key={block.id} wrap={false}>
+          <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
+        </View>
       ))}
-    </>
+    </Page>
   )
 }
 
@@ -844,26 +792,17 @@ export { getPDFRenderableBlocks }
 export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const showLines = worksheet.showLines !== false
-  const pages = splitIntoPages(renderableBlocks)
   return (
     <Document>
-      {pages.map((pageBlocks, i) => (
-        <Page key={i} size="A4" style={s.pageWithFooter}>
-          <View style={s.pageContent}>
-            {pageBlocks.map(block => (
-              <View key={block.id} wrap={false}>
-                <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
-              </View>
-            ))}
+      <Page size="A4" style={s.page}>
+        {renderableBlocks.map(block => (
+          <View key={block.id} wrap={false}>
+            <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
           </View>
-          <PageFooter />
-        </Page>
-      ))}
-      <Page size="A4" style={s.pageWithFooter}>
-        <View style={s.pageContent}>
-          <PDFMarkSchemeSection worksheet={worksheet} />
-        </View>
-        <PageFooter />
+        ))}
+      </Page>
+      <Page size="A4" style={s.page}>
+        <PDFMarkSchemeSection worksheet={worksheet} />
       </Page>
     </Document>
   )
