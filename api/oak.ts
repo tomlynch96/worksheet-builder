@@ -15,26 +15,34 @@ async function oakFetch(path: string, apiKey: string) {
 
 // The key-stages endpoint only accepts top-level subject slugs ('science', not 'physics').
 // For KS4 Physics we try the sequences endpoint, with a fallback to KS4 science overall.
-async function fetchLessonList(subject: string, apiKey: string): Promise<Array<{ lessonSlug: string; lessonTitle: string }>> {
-  let data: unknown
+async function fetchAllLessons(path: string, apiKey: string): Promise<Array<{ lessonSlug: string; lessonTitle: string }>> {
+  const PAGE = 100
+  const results: Array<{ lessonSlug: string; lessonTitle: string }> = []
+  let offset = 0
 
-  if (subject === 'physics') {
-    // Try sequence endpoint for physics secondary first
-    try {
-      data = await oakFetch('/sequences/physics-secondary/questions?limit=300', apiKey)
-    } catch {
-      // Fallback: all KS4 science (includes physics, biology, chemistry)
-      data = await oakFetch('/key-stages/ks4/subject/science/questions?limit=300', apiKey)
+  for (let page = 0; page < 10; page++) { // max 1000 lessons safety cap
+    const sep = path.includes('?') ? '&' : '?'
+    const data = await oakFetch(`${path}${sep}limit=${PAGE}&offset=${offset}`, apiKey)
+    const batch = Array.isArray(data) ? data : []
+    for (const l of batch as Array<{ lessonSlug: string; lessonTitle: string }>) {
+      results.push({ lessonSlug: l.lessonSlug, lessonTitle: l.lessonTitle })
     }
-  } else {
-    // KS3 science — key-stages endpoint works fine
-    data = await oakFetch('/key-stages/ks3/subject/science/questions?limit=300', apiKey)
+    if (batch.length < PAGE) break // last page
+    offset += PAGE
   }
 
-  return (Array.isArray(data) ? data : []).map((l: { lessonSlug: string; lessonTitle: string }) => ({
-    lessonSlug: l.lessonSlug,
-    lessonTitle: l.lessonTitle,
-  }))
+  return results
+}
+
+async function fetchLessonList(subject: string, apiKey: string): Promise<Array<{ lessonSlug: string; lessonTitle: string }>> {
+  if (subject === 'physics') {
+    try {
+      return await fetchAllLessons('/sequences/physics-secondary/questions', apiKey)
+    } catch {
+      return await fetchAllLessons('/key-stages/ks4/subject/science/questions', apiKey)
+    }
+  }
+  return await fetchAllLessons('/key-stages/ks3/subject/science/questions', apiKey)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
