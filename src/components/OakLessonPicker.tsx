@@ -6,14 +6,15 @@ import './OakLessonPicker.css'
 interface Props {
   subject: OakSubject
   examBoard?: string
+  initialSearch?: string
   onImport: (lesson: OakLessonDetail) => void
   onSeed: (lesson: OakLessonDetail) => void
   onSkip: () => void
 }
 
-export function OakLessonPicker({ subject, examBoard, onImport, onSeed, onSkip }: Props) {
+export function OakLessonPicker({ subject, examBoard, initialSearch, onImport, onSeed, onSkip }: Props) {
   const { lessons, loading, error } = useOakLessons(subject, examBoard)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(initialSearch ?? '')
   const [selected, setSelected] = useState<string | null>(null)
   const [detail, setDetail] = useState<OakLessonDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -58,7 +59,7 @@ export function OakLessonPicker({ subject, examBoard, onImport, onSeed, onSkip }
           <input
             className="oak-picker-search"
             type="search"
-            placeholder={`Search ${filtered.length} ${subjectLabel} lessons…`}
+            placeholder={`Search ${lessons.length} ${subjectLabel} lessons…`}
             value={search}
             onChange={e => setSearch(e.target.value)}
             autoFocus
