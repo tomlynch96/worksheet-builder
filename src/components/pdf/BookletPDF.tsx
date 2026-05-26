@@ -143,12 +143,13 @@ const s = StyleSheet.create({
   // Shared page number footer
   pageNumber: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 18,
     left: 0,
     right: 0,
     textAlign: 'center',
-    fontSize: 8,
-    color: '#9ca3af',
+    fontSize: 9,
+    color: '#6b7280',
+    fontFamily: 'Helvetica',
   },
 })
 
@@ -251,20 +252,12 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
 
       {/* All worksheet pages */}
       {entries.map(entry => (
-        <WorksheetDocumentPages
-          key={entry.id}
-          worksheet={entry.worksheet}
-          showPageNumbers
-        />
+        <WorksheetDocumentPages key={entry.id} worksheet={entry.worksheet} />
       ))}
 
       {/* All mark schemes at the end */}
       {entries.map(entry => (
-        <WorksheetMarkSchemePage
-          key={entry.id}
-          worksheet={entry.worksheet}
-          showPageNumbers
-        />
+        <WorksheetMarkSchemePage key={entry.id} worksheet={entry.worksheet} />
       ))}
     </Document>
   )

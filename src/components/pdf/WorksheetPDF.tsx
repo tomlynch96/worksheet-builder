@@ -763,35 +763,34 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
   return worksheet.blocks.filter(b => !attachedIds.has(b.id))
 }
 
+const pageNumStyle = {
+  position: 'absolute' as const,
+  bottom: 18,
+  left: 0,
+  right: 0,
+  textAlign: 'center' as const,
+  fontSize: 9,
+  color: '#6b7280',
+  fontFamily: 'Helvetica',
+}
+
 // Export for use in BookletPDF — renders the mark scheme page without a Document wrapper
-export function WorksheetMarkSchemePage({ worksheet, showPageNumbers }: { worksheet: Worksheet; showPageNumbers?: boolean }) {
+export function WorksheetMarkSchemePage({ worksheet }: { worksheet: Worksheet }) {
   return (
     <Page size="A4" style={s.page}>
-      {showPageNumbers && (
-        <Text
-          style={{ position: 'absolute', bottom: 24, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#9ca3af' }}
-          render={({ pageNumber }) => String(pageNumber)}
-          fixed
-        />
-      )}
+      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
       <PDFMarkSchemeSection worksheet={worksheet} />
     </Page>
   )
 }
 
 // Export for use in BookletPDF — renders the worksheet pages without a Document wrapper
-export function WorksheetDocumentPages({ worksheet, showPageNumbers }: { worksheet: Worksheet; showPageNumbers?: boolean }) {
+export function WorksheetDocumentPages({ worksheet }: { worksheet: Worksheet }) {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const showLines = worksheet.showLines !== false
   return (
     <Page size="A4" style={s.page}>
-      {showPageNumbers && (
-        <Text
-          style={{ position: 'absolute', bottom: 24, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#9ca3af' }}
-          render={({ pageNumber }) => String(pageNumber)}
-          fixed
-        />
-      )}
+      <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
       {renderableBlocks.map(block => (
         <View key={block.id} wrap={false}>
           <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
@@ -809,6 +808,7 @@ export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
   return (
     <Document>
       <Page size="A4" style={s.page}>
+        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
         {renderableBlocks.map(block => (
           <View key={block.id} wrap={false}>
             <PDFBlock block={block} blocks={worksheet.blocks} showLines={showLines} />
@@ -816,6 +816,7 @@ export function WorksheetPDF({ worksheet }: { worksheet: Worksheet }) {
         ))}
       </Page>
       <Page size="A4" style={s.page}>
+        <Text style={pageNumStyle} render={({ pageNumber }) => String(pageNumber)} fixed />
         <PDFMarkSchemeSection worksheet={worksheet} />
       </Page>
     </Document>
