@@ -8,7 +8,7 @@ import { splitIntoPages } from '../../utils/pagination'
 const s = StyleSheet.create({
   // Title page
   titlePage: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#ffffff',
     paddingTop: 0,
     paddingBottom: 0,
     paddingLeft: 0,
@@ -28,7 +28,7 @@ const s = StyleSheet.create({
   },
   titleBookletLabel: {
     fontSize: 10,
-    color: '#64748b',
+    color: '#9ca3af',
     fontFamily: 'Helvetica',
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -43,14 +43,14 @@ const s = StyleSheet.create({
   titleText: {
     fontFamily: 'Helvetica-Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: '#111827',
     textAlign: 'center',
     lineHeight: 1.3,
     marginBottom: 16,
   },
   subtitleText: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#6b7280',
     fontFamily: 'Helvetica',
     textAlign: 'center',
     lineHeight: 1.5,
@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   },
   titlePageFooterText: {
     fontSize: 9,
-    color: '#334155',
+    color: '#9ca3af',
     fontFamily: 'Helvetica',
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -173,13 +173,13 @@ interface Props {
 function estimatePageCount(worksheet: Worksheet): number {
   const renderableBlocks = getPDFRenderableBlocks(worksheet)
   const pages = splitIntoPages(renderableBlocks)
-  return Math.max(1, pages.length) + 1 // +1 for mark scheme page
+  return Math.max(1, pages.length)
 }
 
 // ── Component ─────────────────────────────────────────────
 
 export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
-  // Page 1 = title page, page 2 = contents page, worksheets start at page 3
+  // Page 1 = title, page 2 = contents, worksheets start at page 3
   const contentsRows = entries.reduce<Array<{ entry: BookletEntry; startPage: number }>>(
     (acc, entry, i) => {
       const prev = acc[i - 1]
@@ -188,6 +188,10 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
     },
     [],
   )
+
+  // Mark schemes follow all worksheets
+  const totalWorksheetPages = entries.reduce((sum, e) => sum + estimatePageCount(e.worksheet), 0)
+  const markSchemesStartPage = 3 + totalWorksheetPages
 
   return (
     <Document>
@@ -228,6 +232,16 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
             <Text style={s.contentsPageNum}>{startPage}</Text>
           </View>
         ))}
+        {entries.length > 0 && (
+          <View style={[s.contentsRow, { marginTop: 12, borderBottomWidth: 0 }]} wrap={false}>
+            <Text style={s.contentsIndex} />
+            <View style={s.contentsTextBlock}>
+              <Text style={[s.contentsTitle, { fontStyle: 'italic', color: '#374151' }]}>Mark Schemes</Text>
+            </View>
+            <View style={s.contentsDots} />
+            <Text style={s.contentsPageNum}>{markSchemesStartPage}</Text>
+          </View>
+        )}
         <Text
           fixed
           style={s.pageNumber}
@@ -235,20 +249,22 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
         />
       </Page>
 
-      {/* Worksheet pages + mark schemes */}
+      {/* All worksheet pages */}
       {entries.map(entry => (
-        <>
-          <WorksheetDocumentPages
-            key={`ws-${entry.id}`}
-            worksheet={entry.worksheet}
-            showPageNumbers
-          />
-          <WorksheetMarkSchemePage
-            key={`ms-${entry.id}`}
-            worksheet={entry.worksheet}
-            showPageNumbers
-          />
-        </>
+        <WorksheetDocumentPages
+          key={entry.id}
+          worksheet={entry.worksheet}
+          showPageNumbers
+        />
+      ))}
+
+      {/* All mark schemes at the end */}
+      {entries.map(entry => (
+        <WorksheetMarkSchemePage
+          key={entry.id}
+          worksheet={entry.worksheet}
+          showPageNumbers
+        />
       ))}
     </Document>
   )
