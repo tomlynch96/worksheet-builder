@@ -236,7 +236,7 @@ export function BookletPDF({ bookletTitle, bookletSubtitle, entries }: Props) {
           <View style={[s.contentsRow, { marginTop: 12, borderBottomWidth: 0 }]} wrap={false}>
             <Text style={s.contentsIndex} />
             <View style={s.contentsTextBlock}>
-              <Text style={[s.contentsTitle, { fontStyle: 'italic', color: '#374151' }]}>Mark Schemes</Text>
+              <Text style={[s.contentsTitle, { fontFamily: 'Helvetica-Oblique', color: '#374151' }]}>Mark Schemes</Text>
             </View>
             <View style={s.contentsDots} />
             <Text style={s.contentsPageNum}>{markSchemesStartPage}</Text>
