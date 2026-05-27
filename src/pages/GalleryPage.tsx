@@ -4,7 +4,7 @@ import { Topbar } from '../components/layout/Topbar'
 import { NewSheetWizard } from '../components/NewSheetWizard'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
-import { offeringLabel, getSpecTopics } from '../data/qualifications'
+import { offeringLabel, getOffering, getSpecTopics } from '../data/qualifications'
 import { PRESETS } from '../data/presets'
 import type { Worksheet } from '../types/worksheet'
 import './GalleryPage.css'
@@ -220,11 +220,16 @@ export function GalleryPage() {
     })
   }
 
-  // Build course tabs from user's enrolled courses
-  const courseTabs = (profile?.user_courses ?? []).map(uc => ({
-    key: `${uc.exam_board}:${uc.qualification_id}`,
-    label: offeringLabel(uc.qualification_id, uc.exam_board),
-  }))
+  // Build course tabs from user's enrolled courses (filter out stale/invalid board combos)
+  const courseTabs = (profile?.user_courses ?? [])
+    .filter(uc => {
+      const offering = getOffering(uc.qualification_id)
+      return offering?.examBoards.includes(uc.exam_board) ?? false
+    })
+    .map(uc => ({
+      key: `${uc.exam_board}:${uc.qualification_id}`,
+      label: offeringLabel(uc.qualification_id, uc.exam_board),
+    }))
 
   // Filter entries by active course tab and search query
   const q = search.trim().toLowerCase()

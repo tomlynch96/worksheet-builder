@@ -1,0 +1,219 @@
+.oak-dir {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oak-dir-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 3px 10px;
+  width: fit-content;
+}
+
+.oak-dir-badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+  flex-shrink: 0;
+}
+
+.oak-dir-loading {
+  font-size: 13px;
+  color: #9ca3af;
+  padding: 20px;
+  text-align: center;
+}
+
+.oak-dir-error {
+  font-size: 12px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+/* Tree */
+
+.oak-dir-tree {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.oak-dir-year-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 12px 4px;
+  background: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.oak-dir-topic {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.oak-dir-topic:last-child {
+  border-bottom: none;
+}
+
+.oak-dir-topic-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: #111827;
+  transition: background 0.1s;
+}
+
+.oak-dir-topic-btn:hover {
+  background: #f3f4f6;
+}
+
+.oak-dir-topic-btn--open {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+.oak-dir-chevron {
+  font-size: 8px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.oak-dir-topic-title {
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Lessons list */
+
+.oak-dir-lessons {
+  border-top: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.oak-dir-lessons-status {
+  font-size: 12px;
+  color: #9ca3af;
+  padding: 8px 12px 8px 28px;
+}
+
+.oak-dir-lesson {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.oak-dir-lesson:last-child {
+  border-bottom: none;
+}
+
+.oak-dir-lesson--selected {
+  background: #eef2ff;
+}
+
+.oak-dir-lesson-btn {
+  width: 100%;
+  text-align: left;
+  padding: 7px 12px 7px 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: #374151;
+  line-height: 1.3;
+  transition: background 0.1s;
+}
+
+.oak-dir-lesson-btn:hover {
+  background: #f3f4f6;
+}
+
+.oak-dir-lesson--selected .oak-dir-lesson-btn {
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.oak-dir-lesson-actions {
+  display: flex;
+  gap: 8px;
+  padding: 4px 12px 10px 28px;
+}
+
+.oak-dir-action-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+
+.oak-dir-action-btn--seed {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.oak-dir-action-btn--seed:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.oak-dir-action-btn--import {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.oak-dir-action-btn--import:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.oak-dir-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Skip */
+
+.oak-dir-skip-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-align: left;
+}
+
+.oak-dir-skip-btn:hover {
+  color: #6b7280;
+}

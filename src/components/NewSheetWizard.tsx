@@ -2,11 +2,11 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } from '../data/qualifications'
 import { generateWorksheet, type OakContext } from '../utils/generateWorksheet'
-import { OakLessonPicker } from './OakLessonPicker'
+import { OakDirectoryPicker } from './OakDirectoryPicker'
 import { oakQuestionToBlock } from '../utils/oakConvert'
 import type { UserCourse } from '../types/profile'
 import type { Worksheet } from '../types/worksheet'
-import type { OakLessonDetail, OakSubject } from '../types/oak'
+import type { OakLessonDetail } from '../types/oak'
 import './NewSheetWizard.css'
 
 interface WizardResult {
@@ -173,7 +173,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
     return offering?.examBoards.includes(c.exam_board) ?? false
   })
 
-  const [step, setStep] = useState<'course' | 'spec' | 'oak' | 'mode'>('course')
+  const [step, setStep] = useState<'course' | 'oak-dir' | 'spec' | 'mode'>('course')
   const [selectedCourse, setSelectedCourse] = useState<UserCourse | null>(null)
   const [selectedTopic, setSelectedTopic] = useState('')
   const [selectedPoint, setSelectedPoint] = useState('')
@@ -193,12 +193,21 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
   const [oakLesson, setOakLesson] = useState<OakLessonDetail | null>(null)
 
-  function getOakSubject(qualId: string): OakSubject | null {
-    if (qualId.startsWith('exploring-science')) return 'science'
-    if (qualId === 'gcse-physics') return 'physics'
-    return null
+  function isOakCourse(qualId: string): boolean {
+    return qualId.startsWith('exploring-science') || qualId === 'gcse-physics'
   }
-  const oakSubject = selectedCourse ? getOakSubject(selectedCourse.qualification_id) : null
+
+  function getOakKs(qualId: string): 'ks3' | 'ks4' {
+    return qualId.startsWith('exploring-science') ? 'ks3' : 'ks4'
+  }
+
+  function getOakBoard(board: string): string {
+    const b = board.toLowerCase()
+    if (b === 'edexcel') return 'edexcel'
+    if (b === 'ocr') return 'ocr'
+    return 'aqa'
+  }
+
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
 
   function toggleTopicExpand(ref: string) {
@@ -231,16 +240,22 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
     setSelectedTopic('')
     setSelectedPoint('')
     setFreeText('')
-    setStep('spec')
+    setOakLesson(null)
+    setStep(isOakCourse(course.qualification_id) ? 'oak-dir' : 'spec')
   }
 
   function handleBack() {
-    if (step === 'mode') { setStep(oakSubject ? 'oak' : 'spec'); setGenError(null); return }
-    if (step === 'oak') { setStep('spec'); return }
+    const qualId = selectedCourse?.qualification_id ?? ''
+    if (step === 'mode') { setStep(isOakCourse(qualId) ? 'oak-dir' : 'spec'); setGenError(null); return }
+    if (step === 'oak-dir' || step === 'spec') {
+      setStep('course')
+      setSelectedTopic('')
+      setSelectedPoint('')
+      setFreeText('')
+      setOakLesson(null)
+      return
+    }
     setStep('course')
-    setSelectedTopic('')
-    setSelectedPoint('')
-    setFreeText('')
   }
 
   function handleOakImport(lesson: OakLessonDetail) {
@@ -438,31 +453,24 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
             <div className="wizard-actions">
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
-              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep(oakSubject ? 'oak' : 'mode') }}>
+              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep('mode') }}>
                 Next →
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 2b: Oak lesson picker */}
-        {!generating && step === 'oak' && oakSubject && (
+        {/* Step 2: Oak directory */}
+        {!generating && step === 'oak-dir' && selectedCourse && (
           <div className="wizard-body">
-            {oakLesson && (
-              <div className="wizard-oak-selected">
-                <span className="wizard-oak-selected-label">Oak context:</span>
-                <span className="wizard-oak-selected-title">{oakLesson.lessonTitle}</span>
-                <button type="button" className="wizard-oak-selected-clear" onClick={() => setOakLesson(null)}>✕</button>
-              </div>
-            )}
-            <OakLessonPicker
-              subject={oakSubject}
-              initialSearch={topicTitle || undefined}
-              onImport={handleOakImport}
+            <OakDirectoryPicker
+              ks={getOakKs(selectedCourse.qualification_id)}
+              examBoard={getOakKs(selectedCourse.qualification_id) === 'ks4' ? getOakBoard(selectedCourse.exam_board) : undefined}
               onSeed={lesson => { setOakLesson(lesson); setStep('mode') }}
-              onSkip={() => { setOakLesson(null); setStep('mode') }}
+              onImport={handleOakImport}
+              onSkip={() => { setOakLesson(null); setStep('spec') }}
             />
-            <div className="wizard-actions">
+            <div className="wizard-actions" style={{ marginTop: 4 }}>
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
             </div>
           </div>
