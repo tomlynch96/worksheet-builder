@@ -12,7 +12,7 @@ interface Props {
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph: () => void; onAddFigure: () => void }) {
+function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph?: () => void; onAddFigure?: () => void }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="q-attach-add">
@@ -22,8 +22,8 @@ function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph: () => void; onAdd
       </button>
       {open && (
         <div className="q-attach-menu">
-          <button type="button" onClick={() => { onAddGraph(); setOpen(false) }}>Graph / data table</button>
-          <button type="button" onClick={() => { onAddFigure(); setOpen(false) }}>Figure / image</button>
+          {onAddGraph && <button type="button" onClick={() => { onAddGraph(); setOpen(false) }}>Graph / data table</button>}
+          {onAddFigure && <button type="button" onClick={() => { onAddFigure(); setOpen(false) }}>Figure / image</button>}
         </div>
       )}
     </div>
@@ -61,18 +61,20 @@ function InlineBlockEditor({
 }
 
 function Attachments({
-  dataId, figureId, blocks, afterId, dispatch,
-  onChangeDataId, onChangeFigureId,
+  dataIds, figureId, blocks, afterId, dispatch,
+  onChangeDataIds, onChangeFigureId,
 }: {
-  dataId?: string
+  dataIds: string[]
   figureId?: string
   blocks: Block[]
   afterId: string
   dispatch: React.Dispatch<WorksheetAction>
-  onChangeDataId: (id: string | undefined) => void
+  onChangeDataIds: (ids: string[]) => void
   onChangeFigureId: (id: string | undefined) => void
 }) {
-  const dataBlock = dataId ? blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined : undefined
+  const dataBlocks = dataIds
+    .map(id => blocks.find(b => b.id === id && b.type === 'data') as DataBlock | undefined)
+    .filter((b): b is DataBlock => !!b)
   const figBlock = figureId ? blocks.find(b => b.id === figureId && b.type === 'figure') as FigureBlock | undefined : undefined
 
   function addGraph() {
@@ -98,7 +100,11 @@ function Attachments({
       hiddenCells: [],
     }
     dispatch({ type: 'ADD_BLOCK', block: newBlock, afterId })
-    onChangeDataId(newBlock.id)
+    onChangeDataIds([...dataIds, newBlock.id])
+  }
+
+  function removeGraph(id: string) {
+    onChangeDataIds(dataIds.filter(d => d !== id))
   }
 
   function addFigure() {
@@ -112,18 +118,20 @@ function Attachments({
     onChangeFigureId(newBlock.id)
   }
 
-  const canAddMore = !dataBlock || !figBlock
+  const canAddFigure = !figBlock
+  const canAddGraph = dataBlocks.length < 2
 
   return (
     <div className="q-attachments">
-      {dataBlock && (
+      {dataBlocks.map((db, i) => (
         <InlineBlockEditor
-          label="Graph / data table"
-          onRemove={() => onChangeDataId(undefined)}
+          key={db.id}
+          label={dataBlocks.length > 1 ? `Data ${i + 1}` : 'Graph / data table'}
+          onRemove={() => removeGraph(db.id)}
         >
-          <DataEditor block={dataBlock} dispatch={dispatch} blocks={blocks} />
+          <DataEditor block={db} dispatch={dispatch} blocks={blocks} />
         </InlineBlockEditor>
-      )}
+      ))}
       {figBlock && (
         <InlineBlockEditor
           label="Figure / image"
@@ -132,8 +140,8 @@ function Attachments({
           <FigureEditor block={figBlock} dispatch={dispatch} />
         </InlineBlockEditor>
       )}
-      {canAddMore && (
-        <AttachMenu onAddGraph={addGraph} onAddFigure={addFigure} />
+      {(canAddGraph || canAddFigure) && (
+        <AttachMenu onAddGraph={canAddGraph ? addGraph : undefined} onAddFigure={canAddFigure ? addFigure : undefined} />
       )}
     </div>
   )
@@ -177,12 +185,12 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
       </Field>
 
       <Attachments
-        dataId={block.attachedDataId}
+        dataIds={block.attachedDataIds ?? (block.attachedDataId ? [block.attachedDataId] : [])}
         figureId={block.attachedFigureId}
         blocks={blocks}
         afterId={block.id}
         dispatch={dispatch}
-        onChangeDataId={id => update({ attachedDataId: id })}
+        onChangeDataIds={ids => update({ attachedDataIds: ids.length ? ids : undefined, attachedDataId: ids[0] })}
         onChangeFigureId={id => update({ attachedFigureId: id })}
       />
 
@@ -213,12 +221,12 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
                 />
               </Field>
               <Attachments
-                dataId={part.attachedDataId}
+                dataIds={part.attachedDataIds ?? (part.attachedDataId ? [part.attachedDataId] : [])}
                 figureId={part.attachedFigureId}
                 blocks={blocks}
                 afterId={block.id}
                 dispatch={dispatch}
-                onChangeDataId={id => updatePart(i, { attachedDataId: id })}
+                onChangeDataIds={ids => updatePart(i, { attachedDataIds: ids.length ? ids : undefined, attachedDataId: ids[0] })}
                 onChangeFigureId={id => updatePart(i, { attachedFigureId: id })}
               />
               <Row>

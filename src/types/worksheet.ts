@@ -28,6 +28,7 @@ export interface QuestionPart {
   marks: number
   lines: number
   attachedDataId?: string
+  attachedDataIds?: string[]    // attach multiple data blocks (e.g. table + graph)
   attachedFigureId?: string
   markScheme?: string
   numericalAnswer?: string
@@ -41,6 +42,7 @@ export interface QuestionBlock {
   lines: number
   parts: QuestionPart[]
   attachedDataId?: string
+  attachedDataIds?: string[]    // attach multiple data blocks (e.g. table + graph)
   attachedFigureId?: string
   markScheme?: string
   numericalAnswer?: string

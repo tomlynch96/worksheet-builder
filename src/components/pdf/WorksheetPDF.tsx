@@ -193,6 +193,11 @@ function PDFInstructions({ block }: { block: InstructionsBlock }) {
   )
 }
 
+function resolveDataIds(b: { attachedDataId?: string; attachedDataIds?: string[] }): string[] {
+  if (b.attachedDataIds?.length) return b.attachedDataIds
+  return b.attachedDataId ? [b.attachedDataId] : []
+}
+
 function PDFQuestion({ block, blocks, num, showLines }: { block: QuestionBlock; blocks: Block[]; num: number; showLines: boolean }) {
   const hasParts = block.parts.length > 0
   return (
@@ -204,7 +209,7 @@ function PDFQuestion({ block, blocks, num, showLines }: { block: QuestionBlock; 
           <Text style={s.marks}>[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</Text>
         )}
       </View>
-      {block.attachedDataId && <PDFInlineData dataId={block.attachedDataId} blocks={blocks} />}
+      {resolveDataIds(block).map(id => <PDFInlineData key={id} dataId={id} blocks={blocks} />)}
       {block.attachedFigureId && <PDFInlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {!hasParts && showLines && <AnswerLinesPDF count={block.lines} />}
       {hasParts && (
@@ -218,7 +223,7 @@ function PDFQuestion({ block, blocks, num, showLines }: { block: QuestionBlock; 
                   <Text style={s.marks}>[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</Text>
                 )}
               </View>
-              {part.attachedDataId && <PDFInlineData dataId={part.attachedDataId} blocks={blocks} />}
+              {resolveDataIds(part).map(id => <PDFInlineData key={id} dataId={id} blocks={blocks} />)}
               {part.attachedFigureId && <PDFInlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               {showLines && <AnswerLinesPDF count={part.lines} />}
             </View>
@@ -591,7 +596,7 @@ function PDFMSQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: B
         <View style={s.qText}>{htmlToPdf(block.stem, {})}</View>
         {!hasParts && block.marks > 0 && <Text style={s.marks}>[{block.marks}m]</Text>}
       </View>
-      {block.attachedDataId && <PDFInlineData dataId={block.attachedDataId} blocks={blocks} markScheme />}
+      {resolveDataIds(block).map(id => <PDFInlineData key={id} dataId={id} blocks={blocks} markScheme />)}
       {block.attachedFigureId && <PDFInlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {hasParts ? (
         <View style={{ marginLeft: 15, marginBottom: 4 }}>
@@ -602,7 +607,7 @@ function PDFMSQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: B
                 <View style={{ flex: 1 }}>{htmlToPdf(part.stem, { fontSize: 10 })}</View>
                 {part.marks > 0 && <Text style={s.marks}>[{part.marks}m]</Text>}
               </View>
-              {part.attachedDataId && <PDFInlineData dataId={part.attachedDataId} blocks={blocks} markScheme />}
+              {resolveDataIds(part).map(id => <PDFInlineData key={id} dataId={id} blocks={blocks} markScheme />)}
               {part.attachedFigureId && <PDFInlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <View style={s.msAnswer}>
                 {part.markScheme
@@ -714,7 +719,7 @@ function PDFMarkSchemeSection({ worksheet }: { worksheet: Worksheet }) {
   const attachedIds = new Set(
     worksheet.blocks.flatMap(b =>
       b.type === 'question'
-        ? [b.attachedDataId, b.attachedFigureId, ...b.parts.map(p => p.attachedDataId), ...b.parts.map(p => p.attachedFigureId)].filter(Boolean) as string[]
+        ? [...resolveDataIds(b), b.attachedFigureId, ...b.parts.flatMap(p => [...resolveDataIds(p), p.attachedFigureId])].filter(Boolean) as string[]
         : []
     )
   )
@@ -756,10 +761,10 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
   const attachedIds = new Set<string>()
   for (const b of worksheet.blocks) {
     if (b.type === 'question') {
-      if (b.attachedDataId) attachedIds.add(b.attachedDataId)
+      resolveDataIds(b).forEach(id => attachedIds.add(id))
       if (b.attachedFigureId) attachedIds.add(b.attachedFigureId)
       for (const p of b.parts) {
-        if (p.attachedDataId) attachedIds.add(p.attachedDataId)
+        resolveDataIds(p).forEach(id => attachedIds.add(id))
         if (p.attachedFigureId) attachedIds.add(p.attachedFigureId)
       }
     } else if (b.type === 'multiple_choice') {

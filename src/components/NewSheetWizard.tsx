@@ -321,6 +321,10 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
           learningPoints: oakLesson.keyLearningPoints,
           keywords: oakLesson.keywords,
           misconceptions: oakLesson.misconceptions,
+          images: [...oakLesson.starterQuiz, ...oakLesson.exitQuiz]
+            .map(q => q.questionImage?.url)
+            .filter((url): url is string => !!url)
+            .filter((url, i, arr) => arr.indexOf(url) === i), // deduplicate
         } satisfies OakContext) : undefined,
       })
       onGenerated(worksheet, worksheetType)

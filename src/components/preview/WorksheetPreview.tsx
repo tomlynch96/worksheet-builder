@@ -95,6 +95,11 @@ function PreviewInstructions({ block }: { block: InstructionsBlock }) {
   )
 }
 
+function resolveDataIds(b: { attachedDataId?: string; attachedDataIds?: string[] }): string[] {
+  if (b.attachedDataIds?.length) return b.attachedDataIds
+  return b.attachedDataId ? [b.attachedDataId] : []
+}
+
 function PreviewQuestion({ block, blocks, num, showLines = true }: { block: QuestionBlock; blocks: Block[]; num: number; showLines?: boolean }) {
   const hasParts = block.parts.length > 0
   return (
@@ -108,7 +113,7 @@ function PreviewQuestion({ block, blocks, num, showLines = true }: { block: Ques
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
       </div>
-      {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} />}
+      {resolveDataIds(block).map(id => <InlineData key={id} dataId={id} blocks={blocks} />)}
       {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {!hasParts && <AnswerLines count={block.lines} show={showLines} />}
       {hasParts && (
@@ -124,7 +129,7 @@ function PreviewQuestion({ block, blocks, num, showLines = true }: { block: Ques
                   <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
                 )}
               </div>
-              {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} />}
+              {resolveDataIds(part).map(id => <InlineData key={id} dataId={id} blocks={blocks} />)}
               {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <AnswerLines count={part.lines} show={showLines} />
             </div>
@@ -530,7 +535,7 @@ function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; block
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
       </div>
-      {block.attachedDataId && <InlineData dataId={block.attachedDataId} blocks={blocks} markScheme />}
+      {resolveDataIds(block).map(id => <InlineData key={id} dataId={id} blocks={blocks} markScheme />)}
       {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {hasParts ? (
         <div className="pr-parts">
@@ -545,7 +550,7 @@ function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; block
                   <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
                 )}
               </div>
-              {part.attachedDataId && <InlineData dataId={part.attachedDataId} blocks={blocks} markScheme />}
+              {resolveDataIds(part).map(id => <InlineData key={id} dataId={id} blocks={blocks} markScheme />)}
               {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
               <MSAnswer html={part.markScheme} />
             </div>
@@ -743,10 +748,10 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
   const ids = new Set<string>()
   for (const b of blocks) {
     if (b.type === 'question') {
-      if (b.attachedDataId) ids.add(b.attachedDataId)
+      resolveDataIds(b).forEach(id => ids.add(id))
       if (b.attachedFigureId) ids.add(b.attachedFigureId)
       for (const p of b.parts) {
-        if (p.attachedDataId) ids.add(p.attachedDataId)
+        resolveDataIds(p).forEach(id => ids.add(id))
         if (p.attachedFigureId) ids.add(p.attachedFigureId)
       }
     } else if (b.type === 'multiple_choice') {

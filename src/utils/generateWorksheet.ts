@@ -22,15 +22,26 @@ function sanitiseBlock(block: Block): Block {
   const labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
   if (block.type === 'question') {
-    const q = block as QuestionBlock
+    const q = block as QuestionBlock & { attachedDataIds?: string[] | null }
+    const attachedDataIds = Array.isArray(q.attachedDataIds) && q.attachedDataIds.length > 0
+      ? q.attachedDataIds : undefined
     return {
       ...q,
       id,
-      parts: (q.parts ?? []).map((p, i) => ({
-        ...p,
-        id: p.id || crypto.randomUUID(),
-        label: p.label || labels[i] || String(i + 1),
-      })),
+      attachedDataId: q.attachedDataId ?? undefined,
+      attachedDataIds,
+      parts: (q.parts ?? []).map((p, i) => {
+        const pp = p as typeof p & { attachedDataIds?: string[] | null }
+        const partDataIds = Array.isArray(pp.attachedDataIds) && pp.attachedDataIds.length > 0
+          ? pp.attachedDataIds : undefined
+        return {
+          ...pp,
+          id: pp.id || crypto.randomUUID(),
+          label: pp.label || labels[i] || String(i + 1),
+          attachedDataId: pp.attachedDataId ?? undefined,
+          attachedDataIds: partDataIds,
+        }
+      }),
     }
   }
 
@@ -60,6 +71,7 @@ export interface OakContext {
   learningPoints: string[]
   keywords: Array<{ keyword: string; description: string }>
   misconceptions: Array<{ misconception: string; response: string }>
+  images?: string[]   // Oak question image URLs to pass as vision context
 }
 
 export async function generateWorksheet(params: {

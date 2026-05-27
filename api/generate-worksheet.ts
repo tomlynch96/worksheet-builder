@@ -25,22 +25,23 @@ instructions: { "id":"...", "type":"instructions", "items":["Answer all question
 
 question (multi-part):
 { "id":"...", "type":"question", "stem":"...", "marks":0, "lines":0,
-  "attachedDataId": null,
-  "parts":[ { "id":"part-001", "label":"a", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"9.8", "attachedDataId": null },
-            { "id":"part-002", "label":"b", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"", "attachedDataId": null } ],
+  "attachedDataId": null, "attachedDataIds": null,
+  "parts":[ { "id":"part-001", "label":"a", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"9.8", "attachedDataId": null, "attachedDataIds": null },
+            { "id":"part-002", "label":"b", "stem":"...", "marks":2, "lines":4, "markScheme":"...", "numericalAnswer":"", "attachedDataId": null, "attachedDataIds": null } ],
   "markScheme":"" }
 IMPORTANT: every part MUST have a "label" field set to "a", "b", "c" etc. and a unique "id".
 
-ATTACHING DATA BLOCKS TO QUESTIONS — use "attachedDataId" to display a table or graph inline with a question:
+ATTACHING DATA BLOCKS TO QUESTIONS — use "attachedDataId" or "attachedDataIds" to display a table or graph inline with a question:
 - Set "attachedDataId" on the QUESTION block if ALL parts refer to the same data (e.g. "Use the table to answer parts a–d").
 - Set "attachedDataId" on a specific PART if only that sub-question uses the data (e.g. part c asks pupils to plot a graph).
 - The data block MUST also exist as a standalone block in the worksheet (so it appears in the mark scheme).
-- Set "attachedDataId": null when no data is attached.
-- Example: a practical question where part (a) asks pupils to identify variables, part (b) asks them to plot the data in Table 1, and part (c) asks them to draw a best-fit line:
-  Set "attachedDataId" on the QUESTION stem (shown above all parts). The data block id is the id of the separate data block.
+- Set "attachedDataId": null when no data is attached (single attachment).
+- SHOWING BOTH TABLE AND GRAPH: when a question needs pupils to both read from a table AND plot a graph (very common in practicals), create TWO data blocks — one with display "table" and one with display "graph" (using linkedDataId pointing to the table block). Then use "attachedDataIds": ["table-block-id", "graph-block-id"] on the question/part so BOTH appear inline. Never use "attachedDataId" when you need two — use "attachedDataIds" instead.
+- Example: a practical question where part (b) asks pupils to plot the data AND part (c) asks them to read from the table:
+  Create data-001 (display "table") and data-002 (display "graph", linkedDataId "data-001"). Set "attachedDataIds": ["data-001","data-002"] on the question stem.
 - Example: a question where part (d) alone uses a results table — set "attachedDataId" only on part d's object, leave it null on the others.
 
-question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"...", "numericalAnswer":"15", "attachedDataId": null }
+question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"...", "numericalAnswer":"15", "attachedDataId": null, "attachedDataIds": null }
 
 multiple_choice: { "id":"...", "type":"multiple_choice", "stem":"...", "marks":1, "options":["A","B","C","D"], "correctIndex":2, "markScheme":"C — ... [1]" }
 
@@ -192,8 +193,10 @@ PEDAGOGICAL RULES — follow exactly:
 1. Open with an information block relevant to the experiment.
 2. Create a data block with realistic scattered data (±5–10% noise). Assign it a unique id (e.g. "data-001").
    Set ~40% of row indices in omitRows so pupils must plot those points themselves.
-3. The first question block MUST have "attachedDataId" set to the data block's id — this displays the table/graph inline above the question so pupils can see it while answering.
-   Set attachedDataId on the QUESTION (not on individual parts) when all parts refer to the same data.
+3. The first question block MUST have data attached so pupils can see it while answering.
+   - If the question asks pupils to BOTH read from a table AND plot a graph: create two data blocks (table + linked graph) and use "attachedDataIds": ["data-001","data-002"] on the question.
+   - If only one display is needed: use "attachedDataId": "data-001".
+   - Set the attachment on the QUESTION block (not on individual parts) when all parts refer to the same data.
 4. Graph questions inside that block: plot remaining points [2], draw best fit [1], extract a value [2–3].
 5. Follow-up: conclusion question, evaluation question.
 6. All markScheme fields must show full marking points with [marks].
@@ -204,10 +207,10 @@ const SYSTEM_BLOCK = `You are generating content for a science worksheet.
 
 NORMAL CASE — output a single JSON block object.
 
-EXCEPTION — if the teacher asks for a question that needs an accompanying data table or graph (e.g. "a question about this experiment with a results table", "a question using a graph of V against I"):
-  Output a JSON ARRAY containing exactly two blocks in this order:
-    1. The data block (type "data") with id "data-001"
-    2. The question block with "attachedDataId": "data-001" so the data displays inline above the question
+EXCEPTION — if the teacher asks for a question that needs an accompanying data table or graph:
+  Output a JSON ARRAY. Examples:
+  - Single data view: [data-block, question-block-with-"attachedDataId":"data-001"]
+  - Table AND graph: [table-block (id "data-001"), graph-block (id "data-002", linkedDataId "data-001"), question-block-with-"attachedDataIds":["data-001","data-002"]]
 
 Use "id": "ai-block-001" for the primary block when returning a single block.
 No markdown fences, no explanation — raw JSON only.
@@ -267,10 +270,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     learningPoints: string[]
     keywords: Array<{ keyword: string; description: string }>
     misconceptions: Array<{ misconception: string; response: string }>
+    images?: string[]
   }
   const oakContext = (params as Record<string, unknown>).oakContext as OakContext | undefined
   const oakSection = oakContext
-    ? `\n## Oak National Academy lesson context\nLesson: ${oakContext.lessonTitle}\nKey learning points:\n${oakContext.learningPoints.map(p => `- ${p}`).join('\n')}\nKeywords:\n${oakContext.keywords.map(k => `- ${k.keyword}: ${k.description}`).join('\n')}\nCommon misconceptions to address:\n${oakContext.misconceptions.map(m => `- ${m.misconception} (response: ${m.response})`).join('\n')}\nUse this content to make questions specific and targeted at these exact learning outcomes.\n`
+    ? `\n## Oak National Academy lesson context\nLesson: ${oakContext.lessonTitle}\nKey learning points:\n${oakContext.learningPoints.map(p => `- ${p}`).join('\n')}\nKeywords:\n${oakContext.keywords.map(k => `- ${k.keyword}: ${k.description}`).join('\n')}\nCommon misconceptions to address:\n${oakContext.misconceptions.map(m => `- ${m.misconception} (response: ${m.response})`).join('\n')}${oakContext.images?.length ? `\nLesson images: ${oakContext.images.length} diagram(s) from this lesson are included in this message. You may reference or use these diagrams in questions (e.g. "Refer to the diagram." or "Use the figure to answer…"). When using an image, create a figure block with the exact imageUrl provided and attach it to the relevant question using attachedFigureId.` : ''}\nUse this content to make questions specific and targeted at these exact learning outcomes.\n`
     : ''
 
   const contextSection = philosophySection + oakSection
@@ -340,8 +344,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                       (mode === 'block') ? '{' : null
 
   try {
-    const messages: { role: string; content: string }[] = [
-      { role: 'user', content: userMessage },
+    type TextBlock = { type: 'text'; text: string }
+    type ImageBlock = { type: 'image'; source: { type: 'url'; url: string } }
+    type ContentBlock = TextBlock | ImageBlock
+    type Message = { role: string; content: string | ContentBlock[] }
+
+    const oakImages = mode === 'worksheet' ? (oakContext?.images ?? []) : []
+    let userContent: string | ContentBlock[]
+    if (oakImages.length > 0) {
+      userContent = [
+        { type: 'text', text: userMessage },
+        ...oakImages.map((url): ImageBlock => ({ type: 'image', source: { type: 'url', url } })),
+        { type: 'text', text: `The ${oakImages.length} image(s) above are diagrams from the Oak lesson. Their URLs (in order) are:\n${oakImages.map((url, i) => `Image ${i + 1}: ${url}`).join('\n')}\nWhen using an image in a question, set the figure block's imageUrl to the exact URL listed above.` },
+      ]
+    } else {
+      userContent = userMessage
+    }
+
+    const messages: Message[] = [
+      { role: 'user', content: userContent },
     ]
     if (prefillChar) messages.push({ role: 'assistant', content: prefillChar })
 
