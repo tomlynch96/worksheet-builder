@@ -241,13 +241,14 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
     setSelectedPoint('')
     setFreeText('')
     setOakLesson(null)
-    setStep(isOakCourse(course.qualification_id) ? 'oak-dir' : 'spec')
+    setStep('spec')
   }
 
   function handleBack() {
     const qualId = selectedCourse?.qualification_id ?? ''
     if (step === 'mode') { setStep(isOakCourse(qualId) ? 'oak-dir' : 'spec'); setGenError(null); return }
-    if (step === 'oak-dir' || step === 'spec') {
+    if (step === 'oak-dir') { setStep('spec'); return }
+    if (step === 'spec') {
       setStep('course')
       setSelectedTopic('')
       setSelectedPoint('')
@@ -453,7 +454,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
 
             <div className="wizard-actions">
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
-              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep('mode') }}>
+              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep(isOakCourse(selectedCourse?.qualification_id ?? '') ? 'oak-dir' : 'mode') }}>
                 Next →
               </button>
             </div>
@@ -468,7 +469,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
               examBoard={getOakKs(selectedCourse.qualification_id) === 'ks4' ? getOakBoard(selectedCourse.exam_board) : undefined}
               onSeed={lesson => { setOakLesson(lesson); setStep('mode') }}
               onImport={handleOakImport}
-              onSkip={() => { setOakLesson(null); setStep('spec') }}
+              onSkip={() => { setOakLesson(null); setStep('mode') }}
             />
             <div className="wizard-actions" style={{ marginTop: 4 }}>
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
