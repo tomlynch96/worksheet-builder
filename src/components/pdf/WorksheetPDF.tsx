@@ -348,7 +348,7 @@ function PDFOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) 
 }
 
 function PDFFigure({ block }: { block: FigureBlock }) {
-  const heights: Record<FigureBlock['size'], number> = { small: 60, medium: 105, large: 150 }
+  const heights: Record<FigureBlock['size'], number> = { small: 80, medium: 140, large: 220 }
   return (
     <View style={[s.figure, { height: heights[block.size] }]}>
       {(block.imageData ?? block.imageUrl) && (
@@ -627,6 +627,7 @@ function PDFMSQuestion({ block, blocks, num }: { block: QuestionBlock; blocks: B
 
 function PDFMSMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: number }) {
   const LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
+  const correctSet = new Set(block.correctIndices ?? [block.correctIndex])
   return (
     <View style={s.msQuestion} wrap={false}>
       <View style={s.msQuestionStem}>
@@ -634,11 +635,13 @@ function PDFMSMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: 
         <View style={s.qText}>{htmlToPdf(block.stem, {})}</View>
         {block.marks > 0 && <Text style={s.marks}>[{block.marks}m]</Text>}
       </View>
-      <View style={s.msCorrectOption}>
-        <Text style={s.msCorrectLabel}>{LABELS[block.correctIndex] ?? block.correctIndex + 1}</Text>
-        <View style={{ flex: 1 }}>{htmlToPdf(block.options[block.correctIndex] ?? '', { fontSize: 10 })}</View>
-        <Text style={s.msCorrectTick}>✓</Text>
-      </View>
+      {block.options.map((opt, i) => correctSet.has(i) ? (
+        <View key={i} style={s.msCorrectOption}>
+          <Text style={s.msCorrectLabel}>{LABELS[i] ?? i + 1}</Text>
+          <View style={{ flex: 1 }}>{htmlToPdf(opt, { fontSize: 10 })}</View>
+          <Text style={s.msCorrectTick}>✓</Text>
+        </View>
+      ) : null)}
       {block.markScheme && (
         <View style={[s.msAnswer, { marginTop: 4 }]}>
           <View style={s.msAnswerText}>{htmlToPdf(block.markScheme, { fontSize: 10.5, color: '#14532d' })}</View>

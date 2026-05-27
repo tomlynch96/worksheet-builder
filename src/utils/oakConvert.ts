@@ -42,20 +42,24 @@ export function oakQuestionToBlock(q: OakQuizQuestion): Block {
       const options = q2.answers.map(a => a.content as string).filter(Boolean)
       const correctAnswers = q2.answers.filter(a => a.distractor === false)
 
-      // Multi-answer MCQ (select all that apply) — convert to open question
+      // Multi-answer MCQ (select all that apply) — MCQ with multiple correct answers
       if (correctAnswers.length > 1) {
+        const correctIndices = q2.answers
+          .map((a, i) => ({ a, i }))
+          .filter(({ a }) => a.distractor === false)
+          .map(({ i }) => i)
         return {
           id,
-          type: 'question',
+          type: 'multiple_choice',
           stem: q2.question,
           marks: correctAnswers.length,
-          lines: 3,
-          parts: [],
+          options,
+          correctIndex: correctIndices[0] ?? 0,
+          correctIndices,
           markScheme: correctAnswers
             .map(a => a.content as string)
             .filter(Boolean)
             .join(', ') + ` [${correctAnswers.length} marks]`,
-          numericalAnswer: '',
         }
       }
 
@@ -155,7 +159,7 @@ export function oakQuestionToBlocks(q: OakQuizQuestion): Block[] {
       id: figId,
       type: 'figure',
       caption: '',
-      size: 'medium',
+      size: 'large',
       imageUrl: q.questionImage.url,
     }
     blocks.push(fig)

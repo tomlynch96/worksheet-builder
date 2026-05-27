@@ -110,7 +110,8 @@ export interface MultipleChoiceBlock {
   stem: string
   marks: number
   options: string[]
-  correctIndex: number
+  correctIndex: number          // kept for backward compat; use correctIndices when set
+  correctIndices?: number[]     // multi-answer support
   markScheme?: string
   attachedFigureId?: string
 }

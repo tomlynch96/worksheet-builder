@@ -275,7 +275,7 @@ function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number
 }
 
 function PreviewFigure({ block }: { block: FigureBlock }) {
-  const heights: Record<FigureBlock['size'], number> = { small: 80, medium: 140, large: 200 }
+  const heights: Record<FigureBlock['size'], number> = { small: 100, medium: 180, large: 300 }
   return (
     <div className="pr-figure" style={{ height: heights[block.size] }}>
       {(block.imageData ?? block.imageUrl)
@@ -561,6 +561,7 @@ function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; block
 const MC_LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
 
 function PreviewMultipleChoiceMS({ block, num }: { block: MultipleChoiceBlock; num: number }) {
+  const correctSet = new Set(block.correctIndices ?? [block.correctIndex])
   return (
     <div className="pr-question">
       <div className="pr-question-stem">
@@ -574,10 +575,10 @@ function PreviewMultipleChoiceMS({ block, num }: { block: MultipleChoiceBlock; n
       </div>
       <div className="pr-mc-options">
         {block.options.map((opt, i) => (
-          <div key={i} className={`pr-mc-option${i === block.correctIndex ? ' pr-mc-option--correct' : ''}`}>
+          <div key={i} className={`pr-mc-option${correctSet.has(i) ? ' pr-mc-option--correct' : ''}`}>
             <span className="pr-mc-label">{MC_LABELS[i] ?? i + 1}</span>
             {opt ? <RichText html={opt} /> : <em className="pr-placeholder">Option…</em>}
-            {i === block.correctIndex && <span className="pr-ms-tick">✓</span>}
+            {correctSet.has(i) && <span className="pr-ms-tick">✓</span>}
           </div>
         ))}
       </div>
