@@ -53,7 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.query.units !== undefined) {
     const ks = (req.query.ks as string) || 'ks3'
     try {
-      const data = await oakFetch(`/key-stages/${ks}/subject/science/units`, apiKey)
+      const unitParams = new URLSearchParams()
+      if (req.query.examBoard) unitParams.set('examBoard', (req.query.examBoard as string).toLowerCase())
+      if (req.query.childSubject) unitParams.set('childSubject', req.query.childSubject as string)
+      const unitQs = unitParams.toString() ? `?${unitParams}` : ''
+      const data = await oakFetch(`/key-stages/${ks}/subject/science/units${unitQs}`, apiKey)
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
       return res.status(200).json({ units: Array.isArray(data) ? data : [] })
     } catch (err) {

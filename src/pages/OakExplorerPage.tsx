@@ -82,6 +82,8 @@ export function OakExplorerPage() {
     setRawJson(null)
     try {
       const params = new URLSearchParams({ units: '', ks })
+      if (examBoard) params.set('examBoard', examBoard.toLowerCase())
+      if (childSubject) params.set('childSubject', childSubject)
       const data = await fetchJson(`/api/oak?${params}`)
       const raw: OakUnit[] = data.units ?? []
       setUnits(raw)
