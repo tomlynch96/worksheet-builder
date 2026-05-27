@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
-import { QUALIFICATION_OFFERINGS, getSpecTopics, offeringLabel } from '../data/qualifications'
+import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } from '../data/qualifications'
 import { generateWorksheet, type OakContext } from '../utils/generateWorksheet'
 import { OakLessonPicker } from './OakLessonPicker'
 import { oakQuestionToBlock } from '../utils/oakConvert'
@@ -168,7 +168,10 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
 
 export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
   const { profile } = useProfileContext()
-  const courses = profile?.user_courses ?? []
+  const courses = (profile?.user_courses ?? []).filter(c => {
+    const offering = getOffering(c.qualification_id)
+    return offering?.examBoards.includes(c.exam_board) ?? false
+  })
 
   const [step, setStep] = useState<'course' | 'spec' | 'oak' | 'mode'>('course')
   const [selectedCourse, setSelectedCourse] = useState<UserCourse | null>(null)

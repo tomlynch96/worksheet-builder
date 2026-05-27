@@ -52,6 +52,13 @@ export const QUALIFICATION_OFFERINGS: QualificationOffering[] = [
     examBoards: ['Hodder'],
     specDataId: () => 'exploring-science-y8',
   },
+  {
+    id: 'exploring-science-y9',
+    label: 'Exploring Science Year 9',
+    shortLabel: 'Exp. Sci Y9',
+    examBoards: ['Hodder'],
+    specDataId: () => null,
+  },
 ]
 
 export function getOffering(id: string): QualificationOffering | undefined {

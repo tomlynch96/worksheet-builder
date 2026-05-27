@@ -48,6 +48,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // ── Mode: KS3 science topics (Y7, Y8, Y9) ────────────────────────────────
+  // GET /api/oak?ks3science=1
+  if (req.query.ks3science !== undefined) {
+    try {
+      const seq = 'science-secondary-aqa'
+      const [y7raw, y8raw, y9raw] = await Promise.all([
+        oakFetch(`/sequences/${seq}/units?year=7`, apiKey),
+        oakFetch(`/sequences/${seq}/units?year=8`, apiKey),
+        oakFetch(`/sequences/${seq}/units?year=9`, apiKey),
+      ])
+
+      function extractFlat(raw: unknown, year: number) {
+        if (!Array.isArray(raw)) return []
+        const yearEntry = (raw as Record<string, unknown>[]).find(y => y.year === year || y.year === String(year)) ?? (raw as Record<string, unknown>[])[0]
+        if (!yearEntry || !Array.isArray(yearEntry.units)) return []
+        return (yearEntry.units as Record<string, unknown>[]).flatMap(u => {
+          const slug = u.unitSlug ?? (u.unitOptions as { unitSlug: string }[])?.[0]?.unitSlug
+          return slug ? [{ unitSlug: slug as string, unitTitle: u.unitTitle as string, year, unitOrder: (u.unitOrder as number) ?? 0 }] : []
+        })
+      }
+
+      const topics = [
+        ...extractFlat(y7raw, 7),
+        ...extractFlat(y8raw, 8),
+        ...extractFlat(y9raw, 9),
+      ]
+
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+      return res.status(200).json({ topics })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return res.status(502).json({ error: message })
+    }
+  }
+
   // ── Mode: KS4 physics topics via sequences endpoint ──────────────────────
   // GET /api/oak?sequence=science-secondary-aqa
   if (req.query.sequence) {

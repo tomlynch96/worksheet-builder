@@ -12,11 +12,11 @@ const TIERS = [
   { label: 'Foundation', slug: 'foundation' },
 ]
 
-interface PhysicsTopic {
+interface Topic {
   unitSlug: string
   unitTitle: string
   year: number
-  tier: string | null
+  tier?: string | null
   unitOrder: number
 }
 
@@ -46,14 +46,15 @@ async function fetchJson(url: string) {
 }
 
 export function OakExplorerPage() {
+  const [ks, setKs] = useState<'ks3' | 'ks4'>('ks4')
   const [examBoard, setExamBoard] = useState('aqa')
   const [tier, setTier] = useState('higher')
 
-  const [allTopics, setAllTopics] = useState<PhysicsTopic[]>([])
+  const [allTopics, setAllTopics] = useState<Topic[]>([])
   const [topicsLoading, setTopicsLoading] = useState(false)
   const [topicsError, setTopicsError] = useState<string | null>(null)
 
-  const [selectedTopic, setSelectedTopic] = useState<PhysicsTopic | null>(null)
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
   const [lessons, setLessons] = useState<OakLesson[]>([])
   const [lessonsLoading, setLessonsLoading] = useState(false)
   const [lessonsError, setLessonsError] = useState<string | null>(null)
@@ -64,6 +65,17 @@ export function OakExplorerPage() {
   const [lessonError, setLessonError] = useState<string | null>(null)
 
   const [rawJson, setRawJson] = useState<string | null>(null)
+
+  function switchKs(newKs: 'ks3' | 'ks4') {
+    setKs(newKs)
+    setAllTopics([])
+    setTopicsError(null)
+    setSelectedTopic(null)
+    setLessons([])
+    setSelectedLesson(null)
+    setLessonDetail(null)
+    setRawJson(null)
+  }
 
   function changeTier(t: string) {
     setTier(t)
@@ -83,8 +95,13 @@ export function OakExplorerPage() {
     setLessonDetail(null)
     setRawJson(null)
     try {
-      const seq = `science-secondary-${examBoard}`
-      const data = await fetchJson(`/api/oak?sequence=${encodeURIComponent(seq)}`)
+      let data: { topics: Topic[] }
+      if (ks === 'ks3') {
+        data = await fetchJson('/api/oak?ks3science=1')
+      } else {
+        const seq = `science-secondary-${examBoard}`
+        data = await fetchJson(`/api/oak?sequence=${encodeURIComponent(seq)}`)
+      }
       setAllTopics(data.topics ?? [])
       setRawJson(JSON.stringify((data.topics ?? []).slice(0, 5), null, 2))
     } catch (e) {
@@ -94,7 +111,7 @@ export function OakExplorerPage() {
     }
   }
 
-  async function loadLessons(topic: PhysicsTopic) {
+  async function loadLessons(topic: Topic) {
     setSelectedTopic(topic)
     setLessons([])
     setLessonsError(null)
@@ -103,9 +120,13 @@ export function OakExplorerPage() {
     setLessonDetail(null)
     setRawJson(null)
     try {
-      const params = new URLSearchParams({ unit: topic.unitSlug, childSubject: 'physics', examBoard })
-      const effectiveTier = topic.tier ?? tier
-      if (effectiveTier) params.set('tier', effectiveTier)
+      const params = new URLSearchParams({ unit: topic.unitSlug })
+      if (ks === 'ks4') {
+        params.set('childSubject', 'physics')
+        params.set('examBoard', examBoard)
+        const effectiveTier = topic.tier ?? tier
+        if (effectiveTier) params.set('tier', effectiveTier)
+      }
       const data = await fetchJson(`/api/oak?${params}`)
       setLessons(data.unitLessons ?? [])
       setRawJson(JSON.stringify(data, null, 2))
@@ -133,10 +154,18 @@ export function OakExplorerPage() {
     }
   }
 
-  // Filter and group topics by selected tier and year
-  const filteredTopics = allTopics.filter(t => !t.tier || t.tier === tier)
-  const y10 = filteredTopics.filter(t => t.year === 10).sort((a, b) => a.unitOrder - b.unitOrder)
-  const y11 = filteredTopics.filter(t => t.year === 11).sort((a, b) => a.unitOrder - b.unitOrder)
+  // Group topics by year
+  const filteredTopics = ks === 'ks4'
+    ? allTopics.filter(t => !t.tier || t.tier === tier)
+    : allTopics
+
+  const years = ks === 'ks3' ? [7, 8, 9] : [10, 11]
+  const topicsByYear = years.map(y => ({
+    year: y,
+    topics: filteredTopics.filter(t => t.year === y).sort((a, b) => a.unitOrder - b.unitOrder),
+  }))
+
+  const loadLabel = ks === 'ks3' ? 'Load KS3 Science topics' : 'Load Physics GCSE topics'
 
   return (
     <div className="oak-ex-layout">
@@ -146,31 +175,49 @@ export function OakExplorerPage() {
         {/* ── Controls ── */}
         <div className="oak-ex-controls">
           <div className="oak-ex-control-group">
-            <label className="oak-ex-label">Exam board</label>
+            <label className="oak-ex-label">Key stage</label>
             <div className="oak-ex-toggle">
-              {EXAM_BOARDS.map(b => (
-                <button key={b.slug}
-                  className={`oak-ex-toggle-btn${examBoard === b.slug ? ' oak-ex-toggle-btn--active' : ''}`}
-                  onClick={() => setExamBoard(b.slug)}>
-                  {b.label}
+              {(['ks3', 'ks4'] as const).map(k => (
+                <button key={k}
+                  className={`oak-ex-toggle-btn${ks === k ? ' oak-ex-toggle-btn--active' : ''}`}
+                  onClick={() => switchKs(k)}>
+                  {k.toUpperCase()}
                 </button>
               ))}
             </div>
           </div>
-          <div className="oak-ex-control-group">
-            <label className="oak-ex-label">Tier</label>
-            <div className="oak-ex-toggle">
-              {TIERS.map(t => (
-                <button key={t.slug}
-                  className={`oak-ex-toggle-btn${tier === t.slug ? ' oak-ex-toggle-btn--active' : ''}`}
-                  onClick={() => changeTier(t.slug)}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
+
+          {ks === 'ks4' && (
+            <>
+              <div className="oak-ex-control-group">
+                <label className="oak-ex-label">Exam board</label>
+                <div className="oak-ex-toggle">
+                  {EXAM_BOARDS.map(b => (
+                    <button key={b.slug}
+                      className={`oak-ex-toggle-btn${examBoard === b.slug ? ' oak-ex-toggle-btn--active' : ''}`}
+                      onClick={() => setExamBoard(b.slug)}>
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="oak-ex-control-group">
+                <label className="oak-ex-label">Tier</label>
+                <div className="oak-ex-toggle">
+                  {TIERS.map(t => (
+                    <button key={t.slug}
+                      className={`oak-ex-toggle-btn${tier === t.slug ? ' oak-ex-toggle-btn--active' : ''}`}
+                      onClick={() => changeTier(t.slug)}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
           <button className="oak-ex-load-btn" onClick={loadTopics} disabled={topicsLoading}>
-            {topicsLoading ? 'Loading…' : 'Load Physics GCSE topics'}
+            {topicsLoading ? 'Loading…' : loadLabel}
           </button>
           {filteredTopics.length > 0 && (
             <span className="oak-ex-count" style={{ alignSelf: 'center' }}>
@@ -192,32 +239,20 @@ export function OakExplorerPage() {
             </div>
             <div className="oak-ex-col-body">
               {filteredTopics.length === 0 && !topicsLoading && (
-                <div className="oak-ex-empty">Click "Load Physics GCSE topics" above.</div>
+                <div className="oak-ex-empty">Click "{loadLabel}" above.</div>
               )}
-              {y10.length > 0 && (
-                <>
-                  <div className="oak-ex-year-header">Year 10</div>
-                  {y10.map(t => (
+              {topicsByYear.map(({ year, topics }) => topics.length === 0 ? null : (
+                <div key={year}>
+                  <div className="oak-ex-year-header">Year {year}</div>
+                  {topics.map(t => (
                     <button key={t.unitSlug + (t.tier ?? '')}
                       className={`oak-ex-item${selectedTopic?.unitSlug === t.unitSlug ? ' oak-ex-item--selected' : ''}`}
                       onClick={() => loadLessons(t)}>
                       <span className="oak-ex-item-title">{t.unitTitle}</span>
                     </button>
                   ))}
-                </>
-              )}
-              {y11.length > 0 && (
-                <>
-                  <div className="oak-ex-year-header">Year 11</div>
-                  {y11.map(t => (
-                    <button key={t.unitSlug + (t.tier ?? '')}
-                      className={`oak-ex-item${selectedTopic?.unitSlug === t.unitSlug ? ' oak-ex-item--selected' : ''}`}
-                      onClick={() => loadLessons(t)}>
-                      <span className="oak-ex-item-title">{t.unitTitle}</span>
-                    </button>
-                  ))}
-                </>
-              )}
+                </div>
+              ))}
             </div>
           </div>
 
