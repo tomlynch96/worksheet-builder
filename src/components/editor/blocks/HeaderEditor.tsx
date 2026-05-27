@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { HeaderBlock, ExamBoard, Tier } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row, CheckRow } from '../EditorPrimitives'
-import { QUALIFICATIONS, getQualification } from '../../../data/specs'
+import { QUALIFICATION_OFFERINGS, getSpecTopics } from '../../../data/qualifications'
 
 interface Props {
   block: HeaderBlock
@@ -21,10 +21,17 @@ export function HeaderEditor({ block, dispatch }: Props) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
 
-  const qualTopics = useMemo(() => {
-    if (!block.qualification) return []
-    return getQualification(block.qualification)?.topics ?? []
-  }, [block.qualification])
+  // Offerings compatible with the currently-selected exam board
+  const availableOfferings = useMemo(
+    () => QUALIFICATION_OFFERINGS.filter(o => o.examBoards.includes(block.examBoard)),
+    [block.examBoard],
+  )
+
+  // Spec topics using the offering's specDataId mapping
+  const qualTopics = useMemo(
+    () => block.qualification ? (getSpecTopics(block.qualification, block.examBoard) ?? []) : [],
+    [block.qualification, block.examBoard],
+  )
 
   return (
     <div className="block-fields">
@@ -36,7 +43,10 @@ export function HeaderEditor({ block, dispatch }: Props) {
       </Field>
       <Row>
         <Field label="Exam board">
-          <select value={block.examBoard} onChange={e => update({ examBoard: e.target.value as ExamBoard })}>
+          <select
+            value={block.examBoard}
+            onChange={e => update({ examBoard: e.target.value as ExamBoard, qualification: undefined, specPoint: undefined })}
+          >
             {EXAM_BOARDS.map(b => <option key={b}>{b}</option>)}
           </select>
         </Field>
@@ -52,8 +62,8 @@ export function HeaderEditor({ block, dispatch }: Props) {
           onChange={e => update({ qualification: e.target.value || undefined, specPoint: undefined })}
         >
           <option value="">— None —</option>
-          {QUALIFICATIONS.map(q => (
-            <option key={q.id} value={q.id}>{q.label}</option>
+          {availableOfferings.map(o => (
+            <option key={o.id} value={o.id}>{o.label}</option>
           ))}
         </select>
       </Field>
