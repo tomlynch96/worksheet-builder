@@ -15,9 +15,11 @@ export function FigureEditor({ block, dispatch }: Props) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
 
+  const imageSrc = block.imageData ?? block.imageUrl
+
   function readFile(file: File) {
     const reader = new FileReader()
-    reader.onload = () => update({ imageData: reader.result as string })
+    reader.onload = () => update({ imageData: reader.result as string, imageUrl: undefined })
     reader.readAsDataURL(file)
   }
 
@@ -35,26 +37,30 @@ export function FigureEditor({ block, dispatch }: Props) {
     e.target.value = ''
   }
 
+  function handleRemove() {
+    update({ imageData: undefined, imageUrl: undefined })
+  }
+
   return (
     <div className="block-fields">
       <Field label="Image">
         <div
-          className={`figure-paste-zone${block.imageData ? ' figure-paste-zone--has-image' : ''}`}
+          className={`figure-paste-zone${imageSrc ? ' figure-paste-zone--has-image' : ''}`}
           tabIndex={0}
           onPaste={handlePaste}
         >
-          {block.imageData ? (
-            <img src={block.imageData} alt="" className="figure-paste-preview" />
+          {imageSrc ? (
+            <img src={imageSrc} alt="" className="figure-paste-preview" />
           ) : (
             <span className="figure-paste-hint">Paste image here (Ctrl+V / ⌘+V)</span>
           )}
         </div>
         <div className="figure-paste-actions">
           <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>
-            Browse…
+            {imageSrc ? 'Replace…' : 'Browse…'}
           </button>
-          {block.imageData && (
-            <button type="button" className="btn-secondary btn-danger" onClick={() => update({ imageData: undefined })}>
+          {imageSrc && (
+            <button type="button" className="btn-secondary btn-danger" onClick={handleRemove}>
               Remove image
             </button>
           )}

@@ -154,7 +154,7 @@ export function oakQuestionToBlocks(q: OakQuizQuestion): Block[] {
     const fig: FigureBlock = {
       id: figId,
       type: 'figure',
-      caption: q.questionImage.alt ?? q.questionImage.text ?? '',
+      caption: '',
       size: 'medium',
       imageUrl: q.questionImage.url,
     }
