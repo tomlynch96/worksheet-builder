@@ -3,7 +3,7 @@ import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } from '../data/qualifications'
 import { generateWorksheet, type OakContext } from '../utils/generateWorksheet'
 import { OakDirectoryPicker } from './OakDirectoryPicker'
-import { oakQuestionToBlock, oakQuestionNeedsImage } from '../utils/oakConvert'
+import { oakQuestionToBlocks, oakQuestionNeedsImage } from '../utils/oakConvert'
 import type { UserCourse } from '../types/profile'
 import type { Worksheet } from '../types/worksheet'
 import type { OakLessonDetail } from '../types/oak'
@@ -282,7 +282,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
     }
     const questionBlocks = lesson.exitQuiz
       .filter(q => !oakQuestionNeedsImage(q))
-      .map(q => oakQuestionToBlock(q))
+      .flatMap(q => oakQuestionToBlocks(q))
     const worksheet: Worksheet = {
       id: crypto.randomUUID(),
       blocks: [headerBlock, instructionsBlock, ...questionBlocks],

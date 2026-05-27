@@ -135,7 +135,7 @@ function PreviewQuestion({ block, blocks, num, showLines = true }: { block: Ques
   )
 }
 
-function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: number }) {
+function PreviewMultipleChoice({ block, num, blocks }: { block: MultipleChoiceBlock; num: number; blocks: Block[] }) {
   const LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
   return (
     <div className="pr-question">
@@ -148,6 +148,7 @@ function PreviewMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num
           <span className="pr-marks">[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</span>
         )}
       </div>
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       <div className="pr-mc-options">
         {block.options.map((opt, i) => (
           <div key={i} className="pr-mc-option">
@@ -277,11 +278,11 @@ function PreviewFigure({ block }: { block: FigureBlock }) {
   const heights: Record<FigureBlock['size'], number> = { small: 80, medium: 140, large: 200 }
   return (
     <div className="pr-figure" style={{ height: heights[block.size] }}>
-      {block.imageData
-        ? <img src={block.imageData} alt={block.caption} className="pr-figure-image" />
+      {(block.imageData ?? block.imageUrl)
+        ? <img src={block.imageData ?? block.imageUrl} alt={block.caption} className="pr-figure-image" />
         : null}
       {block.caption && <span className="pr-figure-label">{block.caption}</span>}
-      {!block.imageData && !block.caption && <span className="pr-figure-label pr-placeholder">Add a caption…</span>}
+      {!(block.imageData ?? block.imageUrl) && !block.caption && <span className="pr-figure-label pr-placeholder">Add a caption…</span>}
     </div>
   )
 }
@@ -717,7 +718,7 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
     case 'header':          return <PreviewHeader block={block} />
     case 'instructions':    return <PreviewInstructions block={block} />
     case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} />
-    case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} />
+    case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} blocks={blocks} />
     case 'worked_example':  return <PreviewWorkedExample block={block} />
     case 'information':     return <PreviewInformation block={block} />
     case 'match_them_up':   return <PreviewMatchThemUp block={block} num={num} />
@@ -747,6 +748,8 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
         if (p.attachedDataId) ids.add(p.attachedDataId)
         if (p.attachedFigureId) ids.add(p.attachedFigureId)
       }
+    } else if (b.type === 'multiple_choice') {
+      if (b.attachedFigureId) ids.add(b.attachedFigureId)
     }
   }
   return ids

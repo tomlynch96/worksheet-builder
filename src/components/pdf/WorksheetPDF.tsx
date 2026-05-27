@@ -229,7 +229,7 @@ function PDFQuestion({ block, blocks, num, showLines }: { block: QuestionBlock; 
   )
 }
 
-function PDFMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: number }) {
+function PDFMultipleChoice({ block, num, blocks }: { block: MultipleChoiceBlock; num: number; blocks: Block[] }) {
   const LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
   return (
     <View style={s.question}>
@@ -240,6 +240,7 @@ function PDFMultipleChoice({ block, num }: { block: MultipleChoiceBlock; num: nu
           <Text style={s.marks}>[{block.marks} mark{block.marks !== 1 ? 's' : ''}]</Text>
         )}
       </View>
+      {block.attachedFigureId && <PDFInlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       <View style={s.mcOptions}>
         {block.options.map((opt, i) => (
           <View key={i} style={s.mcOption}>
@@ -350,9 +351,9 @@ function PDFFigure({ block }: { block: FigureBlock }) {
   const heights: Record<FigureBlock['size'], number> = { small: 60, medium: 105, large: 150 }
   return (
     <View style={[s.figure, { height: heights[block.size] }]}>
-      {block.imageData && (
+      {(block.imageData ?? block.imageUrl) && (
         <Image
-          src={block.imageData}
+          src={block.imageData ?? block.imageUrl!}
           style={{ flex: 1, objectFit: 'contain', marginBottom: block.caption ? 4 : 0 }}
         />
       )}
@@ -566,7 +567,7 @@ function PDFBlock({ block, blocks, showLines }: { block: Block; blocks: Block[];
     case 'header':          return <PDFHeader block={block} />
     case 'instructions':    return <PDFInstructions block={block} />
     case 'question':        return <PDFQuestion block={block} blocks={blocks} num={num} showLines={showLines} />
-    case 'multiple_choice': return <PDFMultipleChoice block={block} num={num} />
+    case 'multiple_choice': return <PDFMultipleChoice block={block} num={num} blocks={blocks} />
     case 'worked_example':  return <PDFWorkedExample block={block} />
     case 'information':     return <PDFInformation block={block} />
     case 'match_them_up':   return <PDFMatchThemUp block={block} num={num} />
@@ -758,6 +759,8 @@ function getPDFRenderableBlocks(worksheet: Worksheet) {
         if (p.attachedDataId) attachedIds.add(p.attachedDataId)
         if (p.attachedFigureId) attachedIds.add(p.attachedFigureId)
       }
+    } else if (b.type === 'multiple_choice') {
+      if (b.attachedFigureId) attachedIds.add(b.attachedFigureId)
     }
   }
   return worksheet.blocks.filter(b => !attachedIds.has(b.id))

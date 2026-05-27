@@ -58,7 +58,8 @@ export interface FigureBlock {
   type: 'figure'
   caption: string
   size: 'small' | 'medium' | 'large'
-  imageData?: string
+  imageData?: string   // base64 for uploaded images
+  imageUrl?: string    // remote URL (e.g. Oak CDN)
 }
 
 export interface SpacerBlock {
@@ -111,6 +112,7 @@ export interface MultipleChoiceBlock {
   options: string[]
   correctIndex: number
   markScheme?: string
+  attachedFigureId?: string
 }
 
 export interface DataColumn {

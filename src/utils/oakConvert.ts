@@ -1,4 +1,4 @@
-import type { Block } from '../types/worksheet'
+import type { Block, FigureBlock, QuestionBlock, MultipleChoiceBlock } from '../types/worksheet'
 import type { OakQuizQuestion } from '../types/oak'
 
 function isCloze(text: string) { return text.includes('{}') }
@@ -7,10 +7,9 @@ function clozeText(question: string, answer: string) {
   return question.replace('{}', `[${answer}]`)
 }
 
-/** Returns true if the question requires an image to make sense and should be skipped. */
+/** Returns true if the question has no usable text content and should be skipped entirely. */
 export function oakQuestionNeedsImage(q: OakQuizQuestion): boolean {
-  if (q.questionImage) return true
-  // If every answer option is an image, the question is image-dependent
+  // If every answer option is an image with no text, the question can't be represented at all
   if (q.questionType === 'multiple-choice') {
     const hasAnyText = q.answers.some(a => a.type === 'text' && typeof a.content === 'string' && a.content.trim())
     if (!hasAnyText) return true
@@ -139,4 +138,35 @@ export function oakQuestionToBlock(q: OakQuizQuestion): Block {
       }
     }
   }
+}
+
+/**
+ * Converts an Oak quiz question to one or more blocks.
+ * When the question has a questionImage, prepends a FigureBlock and sets
+ * attachedFigureId on the question/MCQ block.
+ */
+export function oakQuestionToBlocks(q: OakQuizQuestion): Block[] {
+  const blocks: Block[] = []
+  let figId: string | undefined
+
+  if (q.questionImage) {
+    figId = crypto.randomUUID()
+    const fig: FigureBlock = {
+      id: figId,
+      type: 'figure',
+      caption: q.questionImage.alt ?? q.questionImage.text ?? '',
+      size: 'medium',
+      imageUrl: q.questionImage.url,
+    }
+    blocks.push(fig)
+  }
+
+  const questionBlock = oakQuestionToBlock(q)
+
+  if (figId && (questionBlock.type === 'question' || questionBlock.type === 'multiple_choice')) {
+    ;(questionBlock as QuestionBlock | MultipleChoiceBlock).attachedFigureId = figId
+  }
+
+  blocks.push(questionBlock)
+  return blocks
 }
