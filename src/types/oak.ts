@@ -1,6 +1,14 @@
+export interface OakImage {
+  url: string
+  width: number
+  height: number
+  alt?: string
+  text?: string
+}
+
 export interface OakQuizAnswer {
-  type: 'text'
-  content?: string
+  type: 'text' | 'image'
+  content?: string | OakImage
   distractor?: boolean
   matchOption?: { type: string; content: string }
   correctChoice?: { type: string; content: string }
@@ -10,6 +18,7 @@ export interface OakQuizAnswer {
 export interface OakQuizQuestion {
   question: string
   questionType: 'multiple-choice' | 'short-answer' | 'match' | 'order'
+  questionImage?: OakImage
   answers: OakQuizAnswer[]
 }
 
