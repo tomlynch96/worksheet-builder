@@ -48,6 +48,62 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // ── Mode: KS4 physics topics via sequences endpoint ──────────────────────
+  // GET /api/oak?sequence=science-secondary-aqa
+  if (req.query.sequence) {
+    const seq = req.query.sequence as string
+    try {
+      const [y10raw, y11raw] = await Promise.all([
+        oakFetch(`/sequences/${seq}/units?year=10`, apiKey),
+        oakFetch(`/sequences/${seq}/units?year=11`, apiKey),
+      ])
+
+      function extractPhysics(raw: unknown, year: number) {
+        if (!Array.isArray(raw)) return []
+        // The sequences endpoint may return year-filtered data as a single-element array
+        const yearEntry = raw.find((y: Record<string, unknown>) =>
+          y.year === year || y.year === String(year)
+        ) ?? raw[0]
+        if (!yearEntry) return []
+
+        type Topic = { unitSlug: string; unitTitle: string; year: number; tier: string | null; unitOrder: number }
+        const results: Topic[] = []
+
+        // KS4 science response shape: { year, examSubjects: [{ examSubjectTitle, tiers: [...] | units: [...] }] }
+        if (yearEntry.examSubjects) {
+          for (const es of yearEntry.examSubjects as Record<string, unknown>[]) {
+            if (!String(es.examSubjectTitle ?? '').toLowerCase().includes('physic')) continue
+            if (Array.isArray(es.tiers)) {
+              for (const tier of es.tiers as Record<string, unknown>[]) {
+                for (const unit of (tier.units as Record<string, unknown>[]) ?? []) {
+                  const slug = unit.unitSlug ?? (unit.unitOptions as { unitSlug: string }[])?.[0]?.unitSlug
+                  if (slug) results.push({ unitSlug: slug as string, unitTitle: unit.unitTitle as string, year, tier: (tier.tierSlug as string) ?? null, unitOrder: (unit.unitOrder as number) ?? 0 })
+                }
+              }
+            } else if (Array.isArray(es.units)) {
+              for (const unit of es.units as Record<string, unknown>[]) {
+                const slug = unit.unitSlug ?? (unit.unitOptions as { unitSlug: string }[])?.[0]?.unitSlug
+                if (slug) results.push({ unitSlug: slug as string, unitTitle: unit.unitTitle as string, year, tier: null, unitOrder: (unit.unitOrder as number) ?? 0 })
+              }
+            }
+          }
+        }
+        return results
+      }
+
+      const topics = [
+        ...extractPhysics(y10raw, 10),
+        ...extractPhysics(y11raw, 11),
+      ]
+
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+      return res.status(200).json({ topics })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return res.status(502).json({ error: message })
+    }
+  }
+
   // ── Mode 2: units list for a key stage ────────────────────────────────────
   // GET /api/oak?units&ks=ks3|ks4
   if (req.query.units !== undefined) {
