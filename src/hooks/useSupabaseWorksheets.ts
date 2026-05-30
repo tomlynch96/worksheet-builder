@@ -12,6 +12,8 @@ export interface WorksheetEntry {
   tier: string
   block_count: number
   question_count: number
+  rating: number | null
+  annotation: string | null
   created_at: string
   updated_at: string
   worksheet: Worksheet
@@ -31,6 +33,8 @@ function rowToEntry(row: Record<string, unknown>): WorksheetEntry {
     tier: (row.tier as string) || 'higher',
     block_count: blocks.length,
     question_count: blocks.filter((b: unknown) => QUESTION_TYPES.has((b as { type: string }).type)).length,
+    rating: (row.rating as number) ?? null,
+    annotation: (row.annotation as string) ?? null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
     worksheet: { id: row.id as string, blocks: row.blocks as Worksheet['blocks'] },
@@ -104,11 +108,20 @@ export function useSupabaseWorksheets(profileId: string | null) {
     }
   }
 
+  async function annotate(id: string, rating: number | null, annotation: string) {
+    if (!isConfigured) return
+    await supabase
+      .from('worksheets')
+      .update({ rating, annotation })
+      .eq('id', id)
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, rating, annotation } : e))
+  }
+
   async function remove(id: string) {
     if (!profileId || !isConfigured) return
     await supabase.from('worksheets').delete().eq('id', id)
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  return { entries, loading, save, remove, reload: load }
+  return { entries, loading, save, annotate, remove, reload: load }
 }

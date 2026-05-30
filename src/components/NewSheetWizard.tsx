@@ -4,7 +4,9 @@ import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } fr
 import { generateWorksheet, type OakContext } from '../utils/generateWorksheet'
 import { OakDirectoryPicker } from './OakDirectoryPicker'
 import { oakQuestionToBlocks, oakQuestionNeedsImage } from '../utils/oakConvert'
+import { supabase, isConfigured } from '../lib/supabase'
 import type { UserCourse } from '../types/profile'
+import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import type { Worksheet } from '../types/worksheet'
 import type { OakLessonDetail } from '../types/oak'
 import './NewSheetWizard.css'
@@ -20,6 +22,7 @@ interface Props {
   onConfirm: (result: WizardResult) => void
   onGenerated: (worksheet: Worksheet, worksheetType: string) => void
   onCancel: () => void
+  entries?: WorksheetEntry[]
 }
 
 const BOARD_COLORS: Record<string, string> = {
@@ -166,7 +169,7 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
   )
 }
 
-export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
+export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] }: Props) {
   const { profile } = useProfileContext()
   const courses = (profile?.user_courses ?? []).filter(c => {
     const offering = getOffering(c.qualification_id)
@@ -306,6 +309,37 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
     setGenerating(true)
     setGenError(null)
     try {
+      // Build prior annotation context from same-qualification worksheets
+      const sameQual = entries.filter(
+        e => e.qualification_id === selectedCourse.qualification_id &&
+             e.exam_board === selectedCourse.exam_board
+      )
+      const priorAnnotations = sameQual
+        .filter(e => e.annotation)
+        .slice(0, 5)
+        .map(e => ({ topic: e.topic, rating: e.rating, annotation: e.annotation! }))
+
+      // Fetch block annotations for matching worksheets
+      let priorBlockAnnotations: Array<{ block_type: string; annotation: string; insight?: string }> = []
+      if (isConfigured && sameQual.length > 0) {
+        type BlockAnnRow = { block_type: string; annotation: string; annotation_insights: { insight_text: string }[] }
+        const { data } = await supabase
+          .from('block_annotations')
+          .select('block_type, annotation, annotation_insights(insight_text)')
+          .in('worksheet_id', sameQual.map(e => e.id))
+          .neq('annotation', '')
+          .limit(10)
+        if (data) {
+          priorBlockAnnotations = (data as BlockAnnRow[])
+            .filter(b => b.annotation)
+            .map(b => ({
+              block_type: b.block_type,
+              annotation: b.annotation,
+              insight: b.annotation_insights?.[0]?.insight_text,
+            }))
+        }
+      }
+
       const worksheet = await generateWorksheet({
         topic: topicTitle || freeText || selectedPoint,
         examBoard: selectedCourse.exam_board,
@@ -316,6 +350,8 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel }: Props) {
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
         teachingPhilosophy: profile?.teaching_philosophy || undefined,
+        priorAnnotations: priorAnnotations.length > 0 ? priorAnnotations : undefined,
+        priorBlockAnnotations: priorBlockAnnotations.length > 0 ? priorBlockAnnotations : undefined,
         oakContext: oakLesson ? ({
           lessonTitle: oakLesson.lessonTitle,
           learningPoints: oakLesson.keyLearningPoints,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Topbar } from '../components/layout/Topbar'
 import { NewSheetWizard } from '../components/NewSheetWizard'
+import { RateAnnotateModal } from '../components/RateAnnotateModal'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import { offeringLabel, getOffering, getSpecTopics } from '../data/qualifications'
@@ -54,10 +55,11 @@ function BlockChip({ type }: { type: string }) {
   )
 }
 
-function WorksheetCard({ entry, onOpen, onDelete }: {
+function WorksheetCard({ entry, onOpen, onDelete, onAnnotate }: {
   entry: WorksheetEntry
   onOpen: (w: Worksheet) => void
   onDelete: (id: string) => void
+  onAnnotate: (entry: WorksheetEntry) => void
 }) {
   const color = BOARD_COLORS[entry.exam_board] ?? '#374151'
   const tierLabel = entry.tier === 'higher' ? 'Higher' : entry.tier === 'foundation' ? 'Foundation' : ''
@@ -82,6 +84,16 @@ function WorksheetCard({ entry, onOpen, onDelete }: {
       <div className="gallery-card-meta">
         <span>{entry.question_count} question{entry.question_count !== 1 ? 's' : ''} · {entry.block_count} blocks</span>
         <span className="gallery-card-date">{formatDate(entry.updated_at)}</span>
+      </div>
+      <div className="gallery-card-rating">
+        {entry.rating != null && (
+          <span className="gallery-stars">
+            {'★'.repeat(entry.rating)}{'☆'.repeat(5 - entry.rating)}
+          </span>
+        )}
+        <button className="gallery-annotate-btn" onClick={() => onAnnotate(entry)}>
+          {entry.rating != null || entry.annotation ? 'Edit notes' : 'Rate & annotate'}
+        </button>
       </div>
       <div className="gallery-card-actions">
         <button className="gallery-btn gallery-btn--open" onClick={() => onOpen(entry.worksheet)}>Open in Editor</button>
@@ -180,8 +192,9 @@ function groupEntries(entries: WorksheetEntry[]): { groups: Group[]; unassigned:
 export function GalleryPage() {
   const { profile } = useProfileContext()
   const navigate = useNavigate()
-  const { entries, loading, remove } = useSupabaseWorksheets(profile?.id ?? null)
+  const { entries, loading, annotate, remove } = useSupabaseWorksheets(profile?.id ?? null)
   const [showWizard, setShowWizard] = useState(false)
+  const [annotateTarget, setAnnotateTarget] = useState<WorksheetEntry | null>(null)
   const [courseTab, setCourseTab] = useState<string>('all')
   const [search, setSearch] = useState('')
   const [templatesOpen, setTemplatesOpen] = useState(false)
@@ -350,7 +363,7 @@ export function GalleryPage() {
                         {!isCollapsed && (
                           <div className="gallery-grid">
                             {sg.entries.map(e => (
-                              <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                              <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} onAnnotate={setAnnotateTarget} />
                             ))}
                           </div>
                         )}
@@ -376,7 +389,7 @@ export function GalleryPage() {
                             {!isCollapsed && (
                               <div className="gallery-grid">
                                 {group.ungrouped.map(e => (
-                                  <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                                  <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} onAnnotate={setAnnotateTarget} />
                                 ))}
                               </div>
                             )}
@@ -386,7 +399,7 @@ export function GalleryPage() {
                       {group.subGroups.length === 0 && (
                         <div className="gallery-grid">
                           {group.ungrouped.map(e => (
-                            <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                            <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} onAnnotate={setAnnotateTarget} />
                           ))}
                         </div>
                       )}
@@ -400,7 +413,7 @@ export function GalleryPage() {
                   <h3 className="gallery-group-title">Unassigned</h3>
                   <div className="gallery-grid">
                     {unassigned.map(e => (
-                      <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                      <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} onAnnotate={setAnnotateTarget} />
                     ))}
                   </div>
                 </div>
@@ -412,9 +425,22 @@ export function GalleryPage() {
 
       {showWizard && (
         <NewSheetWizard
+          entries={entries}
           onConfirm={handleWizardConfirm}
           onGenerated={(w, wt) => { setShowWizard(false); navigate('/editor', { state: { worksheet: w, aiGenerated: true, worksheetType: wt } }) }}
           onCancel={() => setShowWizard(false)}
+        />
+      )}
+
+      {annotateTarget && profile && (
+        <RateAnnotateModal
+          entry={annotateTarget}
+          profileId={profile.id}
+          onClose={() => setAnnotateTarget(null)}
+          onAnnotate={async (rating, annotation) => {
+            await annotate(annotateTarget.id, rating, annotation)
+            setAnnotateTarget(prev => prev ? { ...prev, rating, annotation } : prev)
+          }}
         />
       )}
     </div>

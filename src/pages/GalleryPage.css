@@ -163,6 +163,34 @@
 }
 .gallery-card-date { white-space: nowrap; }
 
+.gallery-card-rating {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px 8px;
+  gap: 8px;
+}
+
+.gallery-stars {
+  font-size: 13px;
+  color: #f59e0b;
+  letter-spacing: 1px;
+}
+
+.gallery-annotate-btn {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.gallery-annotate-btn:hover { background: #f5f3ff; color: #7c3aed; border-color: #c4b5fd; }
+
 .gallery-card-actions {
   display: flex; border-top: 1px solid #f3f4f6; margin-top: auto;
 }

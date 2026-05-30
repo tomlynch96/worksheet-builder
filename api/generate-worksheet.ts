@@ -277,7 +277,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? `\n## Oak National Academy lesson context\nLesson: ${oakContext.lessonTitle}\nKey learning points:\n${oakContext.learningPoints.map(p => `- ${p}`).join('\n')}\nKeywords:\n${oakContext.keywords.map(k => `- ${k.keyword}: ${k.description}`).join('\n')}\nCommon misconceptions to address:\n${oakContext.misconceptions.map(m => `- ${m.misconception} (response: ${m.response})`).join('\n')}${oakContext.images?.length ? `\nLesson images: ${oakContext.images.length} diagram(s) from this lesson are included in this message. You may reference or use these diagrams in questions (e.g. "Refer to the diagram." or "Use the figure to answer…"). When using an image, create a figure block with the exact imageUrl provided and attach it to the relevant question using attachedFigureId.` : ''}\nUse this content to make questions specific and targeted at these exact learning outcomes.\n`
     : ''
 
-  const contextSection = philosophySection + oakSection
+  interface PriorAnnotation { topic: string; rating: number | null; annotation: string }
+  interface PriorBlockAnnotation { block_type: string; annotation: string; insight?: string }
+  const priorAnnotations = (params as Record<string, unknown>).priorAnnotations as PriorAnnotation[] | undefined
+  const priorBlockAnnotations = (params as Record<string, unknown>).priorBlockAnnotations as PriorBlockAnnotation[] | undefined
+
+  const priorSection = priorAnnotations?.length
+    ? `\n## Teacher feedback on previous worksheets\n${
+        priorAnnotations.map(a =>
+          `- "${a.topic}"${a.rating ? ` (rated ${a.rating}/5)` : ''}: ${a.annotation}`
+        ).join('\n')
+      }\n`
+    : ''
+
+  const priorBlockSection = priorBlockAnnotations?.length
+    ? `\n## Teacher notes on individual blocks from previous worksheets\n${
+        priorBlockAnnotations.map(b =>
+          `- ${b.block_type}: ${b.annotation}${b.insight ? ` (AI interpretation: ${b.insight})` : ''}`
+        ).join('\n')
+      }\nApply these preferences when generating similar blocks.\n`
+    : ''
+
+  const contextSection = philosophySection + oakSection + priorSection + priorBlockSection
 
   if (mode === 'worksheet') {
     const { topic, examBoard, tier, qualification, specPoint, worksheetType, extraNotes, difficulty, equations } = params as Record<string, unknown>

@@ -86,6 +86,8 @@ export async function generateWorksheet(params: {
   equations?: string[]
   teachingPhilosophy?: string
   oakContext?: OakContext
+  priorAnnotations?: Array<{ topic: string; rating: number | null; annotation: string }>
+  priorBlockAnnotations?: Array<{ block_type: string; annotation: string; insight?: string }>
 }): Promise<Worksheet> {
   const raw = await callAPI({ mode: 'worksheet', ...params })
   const parsed = JSON.parse(raw) as Worksheet
