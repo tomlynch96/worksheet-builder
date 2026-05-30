@@ -1,8 +1,122 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Topbar } from '../components/layout/Topbar'
 import { useProfileContext } from '../context/ProfileContext'
 import { supabase, isConfigured } from '../lib/supabase'
 import './InsightsPage.css'
+
+// ── Annotation-based insights ─────────────────────────────────────────────
+
+interface BlockAnnotationRow {
+  block_type: string
+  annotation: string
+  worksheets: { topic: string; exam_board: string; tier: string } | null
+}
+
+interface ProfileInsightRow {
+  id: string
+  insight_text: string
+  annotation_count: number
+  generated_at: string
+}
+
+function useAnnotationInsights(profileId: string | null) {
+  const [blockAnnotations, setBlockAnnotations] = useState<BlockAnnotationRow[]>([])
+  const [worksheetAnnotations, setWorksheetAnnotations] = useState<
+    { topic: string; exam_board: string; rating: number | null; annotation: string }[]
+  >([])
+  const [latestInsight, setLatestInsight] = useState<ProfileInsightRow | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState('')
+  const [loadingAnnotations, setLoadingAnnotations] = useState(false)
+
+  const loadAnnotations = useCallback(async () => {
+    if (!profileId || !isConfigured) return
+    setLoadingAnnotations(true)
+    const [blockRes, sheetRes, insightRes] = await Promise.all([
+      supabase
+        .from('block_annotations')
+        .select('block_type, annotation, worksheets(topic, exam_board, tier)')
+        .eq('profile_id', profileId)
+        .neq('annotation', '')
+        .order('created_at', { ascending: false })
+        .limit(100),
+      supabase
+        .from('worksheets')
+        .select('topic, exam_board, tier, rating, annotation')
+        .eq('profile_id', profileId)
+        .not('annotation', 'is', null)
+        .neq('annotation', '')
+        .limit(50),
+      supabase
+        .from('profile_insights')
+        .select('id, insight_text, annotation_count, generated_at')
+        .eq('profile_id', profileId)
+        .order('generated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ])
+    setBlockAnnotations((blockRes.data ?? []) as BlockAnnotationRow[])
+    setWorksheetAnnotations(
+      (sheetRes.data ?? []) as { topic: string; exam_board: string; rating: number | null; annotation: string }[]
+    )
+    setLatestInsight(insightRes.data as ProfileInsightRow | null)
+    setLoadingAnnotations(false)
+  }, [profileId])
+
+  useEffect(() => { loadAnnotations() }, [loadAnnotations])
+
+  async function generate() {
+    if (!profileId || !isConfigured) return
+    setGenerating(true)
+    setGenError('')
+    try {
+      const res = await fetch('/api/generate-profile-insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockAnnotations: blockAnnotations.map(b => ({
+            block_type: b.block_type,
+            annotation: b.annotation,
+            topic: (b.worksheets as { topic: string } | null)?.topic ?? '',
+            exam_board: (b.worksheets as { exam_board: string } | null)?.exam_board ?? '',
+            tier: (b.worksheets as { tier: string } | null)?.tier ?? '',
+          })),
+          worksheetAnnotations,
+        }),
+      })
+      const json = await res.json() as { insight?: string; error?: string }
+      if (!res.ok || !json.insight) throw new Error(json.error ?? 'Generation failed')
+      const total = blockAnnotations.length + worksheetAnnotations.length
+      const { data } = await supabase
+        .from('profile_insights')
+        .insert({ profile_id: profileId, insight_text: json.insight, annotation_count: total })
+        .select()
+        .single()
+      if (data) setLatestInsight(data as ProfileInsightRow)
+    } catch (err) {
+      setGenError(String(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return {
+    blockAnnotations, worksheetAnnotations, latestInsight,
+    generating, genError, loadingAnnotations, generate,
+    totalAnnotations: blockAnnotations.length + worksheetAnnotations.length,
+  }
+}
+
+// ── Block type frequency breakdown ────────────────────────────────────────
+
+function topBlockTypes(annotations: BlockAnnotationRow[]) {
+  const counts: Record<string, number> = {}
+  for (const a of annotations) counts[a.block_type] = (counts[a.block_type] ?? 0) + 1
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+}
+
+// ── Edit stats (existing) ─────────────────────────────────────────────────
+
 
 interface EditRow {
   worksheet_id: string
@@ -56,6 +170,8 @@ export function InsightsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
 
+  const ann = useAnnotationInsights(profile?.id ?? null)
+
   useEffect(() => {
     if (!profile || !isConfigured) { setLoading(false); return }
     supabase
@@ -101,11 +217,79 @@ export function InsightsPage() {
           </div>
         </div>
 
+        {/* ── AI insights from annotations ── */}
+        <section className="insights-ai-section">
+          <div className="insights-ai-header">
+            <div>
+              <h2 className="insights-ai-title">AI insights</h2>
+              <p className="insights-ai-subtitle">
+                {ann.loadingAnnotations
+                  ? 'Loading your annotations…'
+                  : ann.totalAnnotations > 0
+                    ? `Based on ${ann.totalAnnotations} annotation${ann.totalAnnotations !== 1 ? 's' : ''} across your worksheets`
+                    : 'No annotations yet — annotate worksheets from the editor or gallery to build up insights.'}
+              </p>
+            </div>
+            {ann.totalAnnotations > 0 && (
+              <button
+                className="insights-ai-generate-btn"
+                onClick={ann.generate}
+                disabled={ann.generating}
+              >
+                {ann.generating
+                  ? <><span className="insights-ai-spinner" /> Analysing…</>
+                  : ann.latestInsight ? '↺ Regenerate' : '✦ Generate insights'}
+              </button>
+            )}
+          </div>
+
+          {ann.genError && <p className="insights-ai-error">{ann.genError}</p>}
+
+          {ann.latestInsight ? (
+            <div className="insights-ai-result">
+              <div className="insights-ai-result-meta">
+                Generated {new Date(ann.latestInsight.generated_at).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                })} · from {ann.latestInsight.annotation_count} annotation{ann.latestInsight.annotation_count !== 1 ? 's' : ''}
+              </div>
+              <div className="insights-ai-result-text">
+                {ann.latestInsight.insight_text.split('\n\n').map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
+            </div>
+          ) : !ann.loadingAnnotations && ann.totalAnnotations === 0 ? null : (
+            !ann.latestInsight && !ann.generating && ann.totalAnnotations > 0 && (
+              <p className="insights-ai-prompt">
+                Click "Generate insights" to get Claude's analysis of your teaching patterns.
+              </p>
+            )
+          )}
+
+          {/* Annotation breakdown */}
+          {ann.blockAnnotations.length > 0 && (
+            <div className="insights-ann-breakdown">
+              <h3 className="insights-ann-breakdown-title">Most annotated block types</h3>
+              <div className="insights-ann-chips">
+                {topBlockTypes(ann.blockAnnotations).map(([type, count]) => (
+                  <span key={type} className="insights-ann-chip">
+                    <span className="insights-ann-chip-type">{type.replace(/_/g, ' ')}</span>
+                    <span className="insights-ann-chip-count">{count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <hr className="insights-divider" />
+
+        {/* ── Edit statistics ── */}
         {loading ? (
-          <div className="insights-empty">Loading…</div>
+          <div className="insights-empty">Loading edit statistics…</div>
         ) : rows.length === 0 ? (
           <div className="insights-empty">
-            No data yet. Generate a worksheet with AI, make some edits, and come back here.
+            No edit tracking data yet. Generate a worksheet with AI, make some edits, and come back here.
           </div>
         ) : (
           <>

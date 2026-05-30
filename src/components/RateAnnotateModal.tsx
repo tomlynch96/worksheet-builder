@@ -4,7 +4,6 @@ import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import type { Block, QuestionBlock, WorkedExampleBlock, FigureBlock,
   InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock,
   MultipleChoiceBlock, DataBlock } from '../types/worksheet'
-import type { BlockAnnotation } from '../types/annotations'
 import './RateAnnotateModal.css'
 
 const ANNOTATABLE_TYPES = new Set([
@@ -52,17 +51,12 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const [overallSaving, setOverallSaving] = useState(false)
   const [overallSaved, setOverallSaved] = useState(false)
-
   const [expandedBlockId, setExpandedBlockId] = useState<string | null>(null)
   const [draftNotes, setDraftNotes] = useState<Record<string, string>>({})
   const [savingBlock, setSavingBlock] = useState<string | null>(null)
-  const [generatingInsight, setGeneratingInsight] = useState<string | null>(null)
-  const [insightErrors, setInsightErrors] = useState<Record<string, string>>({})
-  const [insightComments, setInsightComments] = useState<Record<string, string>>({})
 
   const blockAnn = useBlockAnnotations(entry.id, profileId)
 
-  // Pre-fill draft notes from loaded annotations
   useEffect(() => {
     const fills: Record<string, string> = {}
     for (const ann of blockAnn.annotations) {
@@ -71,7 +65,6 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
     setDraftNotes(prev => ({ ...fills, ...prev }))
   }, [blockAnn.annotations])
 
-  // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
@@ -101,45 +94,14 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
     }
   }
 
-  async function handleGenerateInsight(ann: BlockAnnotation) {
-    setGeneratingInsight(ann.id)
-    setInsightErrors(prev => ({ ...prev, [ann.id]: '' }))
-    try {
-      const res = await fetch('/api/generate-insight', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          original_block: ann.original_block,
-          final_block: ann.final_block,
-          annotation: ann.annotation,
-        }),
-      })
-      const json = await res.json() as { insight?: string; error?: string }
-      if (!res.ok || !json.insight) throw new Error(json.error ?? 'Failed to generate insight')
-      await blockAnn.saveInsight(ann.id, json.insight)
-    } catch (err) {
-      setInsightErrors(prev => ({ ...prev, [ann.id]: String(err) }))
-    } finally {
-      setGeneratingInsight(null)
-    }
-  }
-
-  async function handleInsightRating(insightId: string, annId: string, rating: -1 | 1) {
-    const comment = insightComments[annId] ?? ''
-    await blockAnn.saveInsightRating(insightId, rating, comment)
-  }
-
   const annotatableBlocks = entry.worksheet.blocks.filter(b => ANNOTATABLE_TYPES.has(b.type))
   const annotatedCount = blockAnn.annotations.filter(a => a.annotation).length
-  const insightCount = blockAnn.annotations.filter(a => a.insight).length
-
   const overallChanged = localRating !== entry.rating || localAnnotation !== (entry.annotation ?? '')
 
   return (
     <div className="ram-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="ram-modal" role="dialog" aria-modal="true">
 
-        {/* Header */}
         <div className="ram-header">
           <div className="ram-header-text">
             <span className="ram-header-title">Rate &amp; annotate</span>
@@ -150,10 +112,9 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
 
         <div className="ram-body">
 
-          {/* ── Section 1: Overall rating ── */}
+          {/* Overall rating */}
           <section className="ram-section">
             <h3 className="ram-section-title">Overall rating</h3>
-
             <div className="ram-stars">
               {[1, 2, 3, 4, 5].map(n => (
                 <button
@@ -165,11 +126,8 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
                   aria-label={`Rate ${n} star${n !== 1 ? 's' : ''}`}
                 >★</button>
               ))}
-              {localRating && (
-                <span className="ram-rating-label">{localRating}/5</span>
-              )}
+              {localRating && <span className="ram-rating-label">{localRating}/5</span>}
             </div>
-
             <textarea
               className="ram-textarea"
               rows={3}
@@ -177,7 +135,6 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
               onChange={e => setLocalAnnotation(e.target.value)}
               placeholder="Overall notes — what worked well, what you'd change next time…"
             />
-
             <div className="ram-section-actions">
               <button
                 className="ram-btn ram-btn--save"
@@ -189,7 +146,7 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
             </div>
           </section>
 
-          {/* ── Section 2: Block notes ── */}
+          {/* Block notes */}
           {annotatableBlocks.length > 0 && (
             <section className="ram-section">
               <h3 className="ram-section-title">
@@ -199,7 +156,7 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
                 )}
               </h3>
               <p className="ram-section-hint">
-                Annotate individual blocks — what you changed and why. These notes feed into future AI generation.
+                Annotate individual blocks — these accumulate across all your worksheets and inform the AI insights on the Insights page.
               </p>
 
               <div className="ram-block-list">
@@ -212,7 +169,6 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
 
                   return (
                     <div key={block.id} className={`ram-block-row${isExpanded ? ' ram-block-row--expanded' : ''}`}>
-                      {/* Row header */}
                       <div className="ram-block-header">
                         <div className="ram-block-meta">
                           <span
@@ -239,7 +195,6 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
                         </div>
                       </div>
 
-                      {/* Expanded form */}
                       {isExpanded && (
                         <div className="ram-block-form">
                           <textarea
@@ -270,140 +225,19 @@ export function RateAnnotateModal({ entry, profileId, onClose, onAnnotate }: Pro
                           </div>
                         </div>
                       )}
-
-                      {/* Insight area — shows after a note is saved */}
-                      {existing && (
-                        <div className="ram-insight-area">
-                          {!existing.insight && !generatingInsight && (
-                            <button
-                              className="ram-btn ram-btn--insight"
-                              onClick={() => handleGenerateInsight(existing)}
-                              disabled={generatingInsight === existing.id}
-                            >
-                              ✦ Generate AI insight
-                            </button>
-                          )}
-                          {generatingInsight === existing.id && (
-                            <span className="ram-insight-loading">
-                              <span className="ram-spinner" /> Generating insight…
-                            </span>
-                          )}
-                          {insightErrors[existing.id] && (
-                            <p className="ram-insight-error">{insightErrors[existing.id]}</p>
-                          )}
-                          {existing.insight && (
-                            <InsightCard
-                              insight={existing.insight}
-                              annId={existing.id}
-                              comment={insightComments[existing.id] ?? existing.insight.teacher_comment ?? ''}
-                              onCommentChange={c => setInsightComments(prev => ({ ...prev, [existing.id]: c }))}
-                              onRate={rating => handleInsightRating(existing.insight!.id, existing.id, rating)}
-                            />
-                          )}
-                        </div>
-                      )}
                     </div>
                   )
                 })}
               </div>
             </section>
           )}
-
-          {/* ── Section 3: Insights summary (if any exist) ── */}
-          {insightCount > 0 && (
-            <section className="ram-section ram-section--insights">
-              <h3 className="ram-section-title">
-                AI insights
-                <span className="ram-section-count">{insightCount}</span>
-              </h3>
-              <p className="ram-section-hint">
-                Claude's interpretation of your edits. Rate each insight to help improve future suggestions.
-              </p>
-              <div className="ram-insights-list">
-                {blockAnn.annotations.filter(a => a.insight).map(ann => {
-                  const block = entry.worksheet.blocks.find(b => b.id === ann.block_id)
-                  const meta = BLOCK_LABELS[ann.block_type]
-                  return (
-                    <div key={ann.id} className="ram-insight-summary-row">
-                      <div className="ram-insight-summary-label">
-                        <span
-                          className="ram-block-badge"
-                          style={{ background: meta?.color + '22', color: meta?.color, borderColor: meta?.color + '55' }}
-                        >
-                          {meta?.short ?? ann.block_type}
-                        </span>
-                        <span className="ram-block-summary">
-                          {block ? blockSummary(block).slice(0, 50) : ann.block_type}
-                        </span>
-                      </div>
-                      <InsightCard
-                        insight={ann.insight!}
-                        annId={ann.id}
-                        comment={insightComments[ann.id] ?? ann.insight!.teacher_comment ?? ''}
-                        onCommentChange={c => setInsightComments(prev => ({ ...prev, [ann.id]: c }))}
-                        onRate={rating => handleInsightRating(ann.insight!.id, ann.id, rating)}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-          )}
-
         </div>
 
-        {/* Footer */}
         <div className="ram-footer">
           <button className="ram-btn ram-btn--close" onClick={onClose}>Close</button>
         </div>
 
       </div>
-    </div>
-  )
-}
-
-interface InsightCardProps {
-  insight: NonNullable<BlockAnnotation['insight']>
-  annId: string
-  comment: string
-  onCommentChange: (c: string) => void
-  onRate: (rating: -1 | 1) => void
-}
-
-function InsightCard({ insight, comment, onCommentChange, onRate }: InsightCardProps) {
-  const [showComment, setShowComment] = useState(!!insight.teacher_rating)
-
-  return (
-    <div className="ram-insight-card">
-      <p className="ram-insight-text">{insight.insight_text}</p>
-      <div className="ram-insight-actions">
-        <span className="ram-insight-actions-label">Was this interpretation helpful?</span>
-        <button
-          className={`ram-thumb${insight.teacher_rating === 1 ? ' ram-thumb--active' : ''}`}
-          onClick={() => { onRate(1); setShowComment(true) }}
-          title="Helpful"
-        >👍</button>
-        <button
-          className={`ram-thumb${insight.teacher_rating === -1 ? ' ram-thumb--active' : ''}`}
-          onClick={() => { onRate(-1); setShowComment(true) }}
-          title="Not helpful"
-        >👎</button>
-        {!showComment && (
-          <button className="ram-btn ram-btn--ghost ram-btn--xs" onClick={() => setShowComment(true)}>
-            Add comment
-          </button>
-        )}
-      </div>
-      {showComment && (
-        <textarea
-          className="ram-textarea ram-textarea--sm"
-          rows={2}
-          value={comment}
-          onChange={e => onCommentChange(e.target.value)}
-          placeholder="Any comment on this interpretation?"
-          onBlur={() => comment.trim() && onRate(insight.teacher_rating ?? 1)}
-        />
-      )}
     </div>
   )
 }
