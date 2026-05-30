@@ -4,6 +4,7 @@ import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
 import { AddBlockMenu } from './AddBlockMenu'
 import { AIDialog } from './AIDialog'
+import { BlockAnnotateModal } from './BlockAnnotateModal'
 import { ActiveEditorProvider } from './ActiveEditorContext'
 import { RTEToolbar } from './RTEToolbar'
 import { generateBlock, generateVariation, generateWorkedExample, generateExtraPart } from '../../utils/generateWorksheet'
@@ -41,11 +42,18 @@ const BLOCK_COLORS: Record<BlockType, string> = {
   numerical_answers:  '#374151',
 }
 
+const ANNOTATABLE_TYPES = new Set([
+  'question', 'multiple_choice', 'worked_example', 'information',
+  'cloze', 'match_them_up', 'order_steps', 'figure', 'data',
+])
+
 interface Props {
   worksheet: Worksheet
   dispatch: React.Dispatch<WorksheetAction>
   selectedId: string | null
   onSelect: (id: string | null) => void
+  worksheetId?: string
+  profileId?: string
 }
 
 interface BlockAIState {
@@ -54,7 +62,7 @@ interface BlockAIState {
   error: string | null
 }
 
-export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
+export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId, profileId }: Props) {
   const { blocks } = worksheet
   const selectedBlock = blocks.find(b => b.id === selectedId) ?? null
   const selectedIdx = selectedBlock ? blocks.indexOf(selectedBlock) : -1
@@ -62,6 +70,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
   const [blockAI, setBlockAI] = useState<BlockAIState | null>(null)
   const [addingVariation, setAddingVariation] = useState(false)
   const [addingWorkedEx, setAddingWorkedEx] = useState(false)
+  const [showAnnotate, setShowAnnotate] = useState(false)
   function isDataReferenced(id: string, excludeId?: string) {
     return blocks.some(b => {
       if (b.id === excludeId) return false
@@ -198,6 +207,15 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
                     title="Add worked example before this question"
                   >{addingWorkedEx ? <span className="ctrl-spinner" /> : 'WE'}</button>
                 )}
+                {worksheetId && profileId && ANNOTATABLE_TYPES.has(selectedBlock.type) && (
+                  <button
+                    type="button"
+                    className="ctrl-btn ctrl-btn--annotate"
+                    onClick={() => setShowAnnotate(true)}
+                    title="Annotate this block"
+                    disabled={addingVariation || addingWorkedEx}
+                  >✎</button>
+                )}
                 <button type="button" className="ctrl-btn" disabled={selectedIdx === 0 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'up' })} aria-label="Move up">↑</button>
                 <button type="button" className="ctrl-btn" disabled={selectedIdx === blocks.length - 1 || addingVariation || addingWorkedEx} onClick={() => dispatch({ type: 'MOVE_BLOCK', id: selectedBlock.id, direction: 'down' })} aria-label="Move down">↓</button>
                 <button type="button" className="ctrl-btn ctrl-btn--danger" onClick={handleDelete} aria-label="Delete block" disabled={addingVariation || addingWorkedEx}>×</button>
@@ -266,6 +284,15 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect }: Props) {
           worksheet={worksheet}
           dispatch={dispatch}
           onClose={() => setShowAIDialog(false)}
+        />
+      )}
+
+      {showAnnotate && selectedBlock && worksheetId && profileId && (
+        <BlockAnnotateModal
+          block={selectedBlock}
+          worksheetId={worksheetId}
+          profileId={profileId}
+          onClose={() => setShowAnnotate(false)}
         />
       )}
     </ActiveEditorProvider>

@@ -137,6 +137,8 @@
 .ctrl-btn--vary:hover:not(:disabled) { background: #ecfdf5; color: #047857; }
 .ctrl-btn--we { color: #c2410c; font-size: 9px; font-weight: 700; letter-spacing: -0.3px; }
 .ctrl-btn--we:hover:not(:disabled) { background: #fff7ed; color: #9a3412; }
+.ctrl-btn--annotate { color: #7c3aed; font-size: 13px; }
+.ctrl-btn--annotate:hover:not(:disabled) { background: #f5f3ff; color: #5b21b6; }
 
 .ctrl-spinner {
   display: inline-block;

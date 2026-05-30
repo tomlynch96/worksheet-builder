@@ -5,10 +5,12 @@ import { Topbar } from '../components/layout/Topbar'
 import { Editor } from '../components/editor/Editor'
 import { WorksheetPreview } from '../components/preview/WorksheetPreview'
 import { WorksheetPDF } from '../components/pdf/WorksheetPDF'
+import { SheetRateModal } from '../components/SheetRateModal'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useEditTracking } from '../hooks/useEditTracking'
 import { useProfileContext } from '../context/ProfileContext'
+import { supabase, isConfigured } from '../lib/supabase'
 import { PRESETS } from '../data/presets'
 import { LAYOUT_TEST_WORKSHEET } from '../data/layoutTest'
 import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
@@ -25,6 +27,9 @@ export function EditorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<'worksheet' | 'markscheme'>('worksheet')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [showRateModal, setShowRateModal] = useState(false)
+  const [sheetRating, setSheetRating] = useState<number | null>(null)
+  const [sheetAnnotation, setSheetAnnotation] = useState('')
   const openRef = useRef<HTMLInputElement>(null)
 
   const originalBlocksRef = useRef<Block[]>([])
@@ -134,6 +139,22 @@ export function EditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
+  // Load existing rating/annotation for the current worksheet
+  useEffect(() => {
+    if (!worksheet.id || !isConfigured) return
+    supabase
+      .from('worksheets')
+      .select('rating, annotation')
+      .eq('id', worksheet.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return
+        const row = data as Record<string, unknown>
+        setSheetRating((row.rating as number) ?? null)
+        setSheetAnnotation((row.annotation as string) ?? '')
+      })
+  }, [worksheet.id])
+
   function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -187,6 +208,14 @@ export function EditorPage() {
       </span>
 
       <button
+        className="btn-topbar"
+        onClick={() => setShowRateModal(true)}
+        title="Rate and annotate this worksheet"
+      >
+        {sheetRating ? `${'★'.repeat(sheetRating)} Rate` : '☆ Rate'}
+      </button>
+
+      <button
         className={`btn-topbar${worksheet.showLines === false ? ' btn-topbar--active' : ''}`}
         onClick={() => dispatch({ type: 'TOGGLE_LINES' })}
         title="Toggle answer lines"
@@ -231,6 +260,8 @@ export function EditorPage() {
             dispatch={dispatch}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            worksheetId={worksheet.id}
+            profileId={profile?.id}
           />
         </aside>
         <main className="panel-preview">
@@ -242,6 +273,28 @@ export function EditorPage() {
           />
         </main>
       </div>
+      {showRateModal && (
+        <SheetRateModal
+          worksheetTitle={
+            (() => {
+              const h = worksheet.blocks.find(b => b.type === 'header')
+              return h && 'title' in h ? (h.title as string) : ''
+            })()
+          }
+          initialRating={sheetRating}
+          initialAnnotation={sheetAnnotation}
+          onSave={async (rating, annotation) => {
+            if (!isConfigured) return
+            await supabase
+              .from('worksheets')
+              .update({ rating, annotation })
+              .eq('id', worksheet.id)
+            setSheetRating(rating)
+            setSheetAnnotation(annotation)
+          }}
+          onClose={() => setShowRateModal(false)}
+        />
+      )}
     </div>
   )
 }
