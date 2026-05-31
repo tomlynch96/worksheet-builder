@@ -217,6 +217,44 @@ export function InsightsPage() {
           </div>
         </div>
 
+        {/* ── Feedback loop status ── */}
+        <section className="insights-loop-section">
+          <div className="insights-loop-top">
+            <div className="insights-loop-status-row">
+              <span className={`insights-loop-dot${ann.totalAnnotations > 0 ? ' insights-loop-dot--active' : ''}`} />
+              <span className="insights-loop-status-label">
+                {ann.totalAnnotations > 0 ? 'Feedback loop active' : 'Feedback loop inactive'}
+              </span>
+            </div>
+            <div className="insights-loop-phrases">
+              <p className="insights-loop-phrase-primary">
+                {ann.totalAnnotations > 0
+                  ? `Your annotations are included in every new worksheet you generate — the AI learns your preferences over time.`
+                  : 'Annotate blocks and rate worksheets to teach the AI your preferences.'}
+              </p>
+              {ann.totalAnnotations > 0 && (
+                <p className="insights-loop-phrase-secondary">
+                  {ann.totalAnnotations} annotation{ann.totalAnnotations !== 1 ? 's' : ''} currently active in the loop.
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="insights-loop-strength-row">
+            <div className="insights-loop-bar-track">
+              <div
+                className="insights-loop-bar-fill"
+                style={{ width: `${Math.min(100, (ann.totalAnnotations / 20) * 100)}%` }}
+              />
+            </div>
+            <div className="insights-loop-strength-labels">
+              <span>No signal</span>
+              <span>Weak</span>
+              <span>Building</span>
+              <span>Strong</span>
+            </div>
+          </div>
+        </section>
+
         {/* ── AI insights from annotations ── */}
         <section className="insights-ai-section">
           <div className="insights-ai-header">
