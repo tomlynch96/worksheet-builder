@@ -360,10 +360,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: `Unknown mode: ${mode}` })
   }
 
-  // Modes that always return a single JSON object — prefill forces immediate JSON output
-  const prefillChar = (mode === 'vary' || mode === 'add_part') ? '{' :
-                      (mode === 'block') ? '{' : null
-
   try {
     type TextBlock = { type: 'text'; text: string }
     type ImageBlock = { type: 'image'; source: { type: 'url'; url: string } }
@@ -385,7 +381,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const messages: Message[] = [
       { role: 'user', content: userContent },
     ]
-    if (prefillChar) messages.push({ role: 'assistant', content: prefillChar })
 
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -409,32 +404,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await anthropicRes.json() as { content: { type: string; text: string }[] }
     const raw = data.content[0]?.type === 'text' ? data.content[0].text : ''
-    // When prefilling, the model continues from the prefill character — prepend it back
-    const withPrefill = prefillChar ? prefillChar + raw : raw
-    const cleaned = withPrefill.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
+    const cleaned = raw.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
 
-    // Validate JSON. For block mode, the model might return an array [data, question]
-    // when data+question are needed — if the { prefill made that invalid, fall back to
-    // the raw response without the prefill and try again.
     let finalJson = cleaned
     try {
       JSON.parse(cleaned)
     } catch {
-      if (prefillChar) {
-        const rawCleaned = raw.replace(/^```[a-z]*\n?/gm, '').replace(/^```\s*$/gm, '').trim()
-        try {
-          JSON.parse(rawCleaned)
-          finalJson = rawCleaned
-        } catch {
-          return res.status(502).json({
-            error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${raw.slice(0, 200)}${raw.length > 200 ? '…' : ''}"`,
-          })
-        }
-      } else {
-        return res.status(502).json({
-          error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${cleaned.slice(0, 200)}${cleaned.length > 200 ? '…' : ''}"`,
-        })
-      }
+      return res.status(502).json({
+        error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${cleaned.slice(0, 200)}${cleaned.length > 200 ? '…' : ''}"`,
+      })
     }
 
     return res.status(200).json({ result: finalJson })
