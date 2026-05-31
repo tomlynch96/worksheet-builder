@@ -55,7 +55,7 @@ function useAnnotationInsights(profileId: string | null) {
         .limit(1)
         .maybeSingle(),
     ])
-    setBlockAnnotations((blockRes.data ?? []) as BlockAnnotationRow[])
+    setBlockAnnotations((blockRes.data ?? []) as unknown as BlockAnnotationRow[])
     setWorksheetAnnotations(
       (sheetRes.data ?? []) as { topic: string; exam_board: string; rating: number | null; annotation: string }[]
     )
