@@ -6,9 +6,11 @@ import { Editor } from '../components/editor/Editor'
 import { WorksheetPreview } from '../components/preview/WorksheetPreview'
 import { WorksheetPDF } from '../components/pdf/WorksheetPDF'
 import { SheetRateModal } from '../components/SheetRateModal'
+import { AnnotateNudge } from '../components/editor/AnnotateNudge'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useEditTracking } from '../hooks/useEditTracking'
+import { useAnnotateNudge } from '../hooks/useAnnotateNudge'
 import { useProfileContext } from '../context/ProfileContext'
 import { supabase, isConfigured } from '../lib/supabase'
 import { PRESETS } from '../data/presets'
@@ -21,6 +23,7 @@ export function EditorPage() {
   const { worksheet, dispatch } = useWorksheet()
   const { save } = useSupabaseWorksheets(profile?.id ?? null)
   const { trackEdit } = useEditTracking(profile?.id ?? null)
+  const nudge = useAnnotateNudge(worksheet.id ?? null)
   const location = useLocation()
   const [searchParams] = useSearchParams()
 
@@ -30,6 +33,7 @@ export function EditorPage() {
   const [showRateModal, setShowRateModal] = useState(false)
   const [sheetRating, setSheetRating] = useState<number | null>(null)
   const [sheetAnnotation, setSheetAnnotation] = useState('')
+  const [showNudge, setShowNudge] = useState(false)
   const openRef = useRef<HTMLInputElement>(null)
 
   const originalBlocksRef = useRef<Block[]>([])
@@ -40,6 +44,8 @@ export function EditorPage() {
   saveRef.current = save
   const trackEditRef = useRef(trackEdit)
   trackEditRef.current = trackEdit
+  const nudgeRef = useRef(nudge)
+  nudgeRef.current = nudge
   const worksheetRef = useRef(worksheet)
   worksheetRef.current = worksheet
   const committedRef = useRef(false)
@@ -58,6 +64,17 @@ export function EditorPage() {
         await saveRef.current(w, aiMeta)
         if (isAIGeneratedRef.current && originalBlocksRef.current.length > 0) {
           await trackEditRef.current(w, originalBlocksRef.current, worksheetTypeRef.current)
+          // Check if we should nudge about annotations
+          const orig = originalBlocksRef.current
+          const curr = w.blocks
+          const editCount = curr.filter(b => {
+            const o = orig.find(ob => ob.id === b.id)
+            return o && JSON.stringify(b) !== JSON.stringify(o)
+          }).length + curr.filter(b => !orig.find(ob => ob.id === b.id)).length
+          if (nudgeRef.current.shouldNudge(editCount)) {
+            setShowNudge(true)
+            nudgeRef.current.markNudged()
+          }
         }
         setSaveStatus('saved')
       } catch {
@@ -293,6 +310,12 @@ export function EditorPage() {
             setSheetAnnotation(annotation)
           }}
           onClose={() => setShowRateModal(false)}
+        />
+      )}
+      {showNudge && (
+        <AnnotateNudge
+          onAddNote={() => { setShowNudge(false); setShowRateModal(true) }}
+          onDismiss={() => setShowNudge(false)}
         />
       )}
     </div>

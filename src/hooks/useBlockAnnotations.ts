@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
 import type { BlockAnnotation } from '../types/annotations'
+import type { Block } from '../types/worksheet'
+import { describeBlockChange } from './useEditTracking'
 
 type RawRow = Record<string, unknown>
 
@@ -13,6 +15,7 @@ function rowToAnnotation(row: RawRow): BlockAnnotation {
     original_block: row.original_block ?? null,
     final_block: row.final_block,
     annotation: (row.annotation as string) || '',
+    change_summary: (row.change_summary as string) || '',
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
   }
@@ -36,27 +39,47 @@ export function useBlockAnnotations(worksheetId: string | null, profileId: strin
 
   useEffect(() => { load() }, [load])
 
+  // Fetch original_block from worksheets.original_blocks by block_id
+  async function fetchOriginalBlock(blockId: string): Promise<Block | null> {
+    if (!worksheetId) return null
+    const { data } = await supabase
+      .from('worksheets')
+      .select('original_blocks')
+      .eq('id', worksheetId)
+      .maybeSingle()
+    if (!data?.original_blocks) return null
+    const blocks = data.original_blocks as Block[]
+    return blocks.find(b => b.id === blockId) ?? null
+  }
+
   async function save(
     blockId: string,
     blockType: string,
-    finalBlock: unknown,
+    finalBlock: Block,
     annotation: string,
-    originalBlock?: unknown
+    providedOriginalBlock?: Block
   ): Promise<BlockAnnotation> {
     if (!worksheetId || !profileId) throw new Error('Missing worksheetId or profileId')
 
     const { data: existing } = await supabase
       .from('block_annotations')
-      .select('id')
+      .select('id, original_block')
       .eq('worksheet_id', worksheetId)
       .eq('block_id', blockId)
       .maybeSingle()
+
+    // Always resolve the original block so change_summary can be computed
+    const originalBlock = providedOriginalBlock
+      ?? (existing as RawRow | null)?.original_block as Block | undefined
+      ?? await fetchOriginalBlock(blockId)
+
+    const change_summary = originalBlock ? describeBlockChange(originalBlock, finalBlock) : ''
 
     let row: RawRow
     if (existing) {
       const { data, error } = await supabase
         .from('block_annotations')
-        .update({ annotation, final_block: finalBlock, updated_at: new Date().toISOString() })
+        .update({ annotation, final_block: finalBlock, change_summary, updated_at: new Date().toISOString() })
         .eq('id', (existing as RawRow).id as string)
         .select('*')
         .single()
@@ -73,6 +96,7 @@ export function useBlockAnnotations(worksheetId: string | null, profileId: strin
           final_block: finalBlock,
           original_block: originalBlock ?? null,
           annotation,
+          change_summary,
         })
         .select('*')
         .single()

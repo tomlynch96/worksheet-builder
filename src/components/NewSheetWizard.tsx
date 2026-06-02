@@ -319,22 +319,31 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
         .slice(0, 5)
         .map(e => ({ topic: e.topic, rating: e.rating, annotation: e.annotation! }))
 
-      // Fetch block annotations for matching worksheets
-      let priorBlockAnnotations: Array<{ block_type: string; annotation: string; insight?: string }> = []
+      // Fetch block annotations for matching worksheets (include change_summary for richer context)
+      let priorBlockAnnotations: Array<{ block_type: string; topic: string; annotation: string; change_summary?: string; insight?: string }> = []
       if (isConfigured && sameQual.length > 0) {
-        type BlockAnnRow = { block_type: string; annotation: string; annotation_insights: { insight_text: string }[] }
+        type BlockAnnRow = {
+          block_type: string
+          annotation: string
+          change_summary: string
+          annotation_insights: { insight_text: string }[]
+          worksheets: { topic: string } | null
+        }
         const { data } = await supabase
           .from('block_annotations')
-          .select('block_type, annotation, annotation_insights(insight_text)')
+          .select('block_type, annotation, change_summary, annotation_insights(insight_text), worksheets(topic)')
           .in('worksheet_id', sameQual.map(e => e.id))
           .neq('annotation', '')
-          .limit(10)
+          .order('updated_at', { ascending: false })
+          .limit(15)
         if (data) {
           priorBlockAnnotations = (data as BlockAnnRow[])
             .filter(b => b.annotation)
             .map(b => ({
               block_type: b.block_type,
+              topic: (b.worksheets as { topic: string } | null)?.topic ?? '',
               annotation: b.annotation,
+              change_summary: b.change_summary || undefined,
               insight: b.annotation_insights?.[0]?.insight_text,
             }))
         }

@@ -65,6 +65,44 @@ function diffBlocks(original: Block[], current: Block[]): EditDiff {
   }
 }
 
+// Build a human-readable summary of what changed between two blocks.
+// e.g. "marks 4→2; stem shortened; 1 part removed"
+export function describeBlockChange(original: Block, final: Block): string {
+  const parts: string[] = []
+  if (original.type === 'question' && final.type === 'question') {
+    const o = original as QuestionBlock
+    const f = final as QuestionBlock
+    if ((o.marks ?? 0) !== (f.marks ?? 0)) parts.push(`marks ${o.marks ?? 0}→${f.marks ?? 0}`)
+    if (o.stem !== f.stem) {
+      parts.push((f.stem?.length ?? 0) > (o.stem?.length ?? 0) ? 'stem expanded' : 'stem shortened')
+    }
+    const oPartsLen = o.parts?.length ?? 0
+    const fPartsLen = f.parts?.length ?? 0
+    if (fPartsLen > oPartsLen) parts.push(`${fPartsLen - oPartsLen} part${fPartsLen - oPartsLen > 1 ? 's' : ''} added`)
+    if (fPartsLen < oPartsLen) parts.push(`${oPartsLen - fPartsLen} part${oPartsLen - fPartsLen > 1 ? 's' : ''} removed`)
+    // Part-level marks
+    let marksUp = 0; let marksDown = 0
+    for (const fp of f.parts ?? []) {
+      const op = o.parts?.find(p => p.id === fp.id)
+      if (!op) continue
+      const delta = (fp.marks ?? 0) - (op.marks ?? 0)
+      if (delta > 0) marksUp += delta
+      if (delta < 0) marksDown += Math.abs(delta)
+    }
+    if (marksUp) parts.push(`+${marksUp} marks across parts`)
+    if (marksDown) parts.push(`-${marksDown} marks across parts`)
+  } else if (original.type !== final.type) {
+    parts.push(`type changed ${original.type}→${final.type}`)
+  } else {
+    const origStr = JSON.stringify(original)
+    const finalStr = JSON.stringify(final)
+    if (origStr !== finalStr) {
+      parts.push(finalStr.length > origStr.length ? 'content expanded' : 'content shortened')
+    }
+  }
+  return parts.join('; ')
+}
+
 export function useEditTracking(profileId: string | null) {
   const trackEdit = useCallback(async (
     worksheet: Worksheet,

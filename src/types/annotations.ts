@@ -6,6 +6,7 @@ export interface BlockAnnotation {
   original_block: unknown | null
   final_block: unknown
   annotation: string
+  change_summary: string
   created_at: string
   updated_at: string
 }

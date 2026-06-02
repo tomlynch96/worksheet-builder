@@ -278,7 +278,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     : ''
 
   interface PriorAnnotation { topic: string; rating: number | null; annotation: string }
-  interface PriorBlockAnnotation { block_type: string; annotation: string; insight?: string }
+  interface PriorBlockAnnotation { block_type: string; topic: string; annotation: string; change_summary?: string; insight?: string }
   const priorAnnotations = (params as Record<string, unknown>).priorAnnotations as PriorAnnotation[] | undefined
   const priorBlockAnnotations = (params as Record<string, unknown>).priorBlockAnnotations as PriorBlockAnnotation[] | undefined
 
@@ -291,11 +291,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     : ''
 
   const priorBlockSection = priorBlockAnnotations?.length
-    ? `\n## Teacher notes on individual blocks from previous worksheets\n${
-        priorBlockAnnotations.map(b =>
-          `- ${b.block_type}: ${b.annotation}${b.insight ? ` (AI interpretation: ${b.insight})` : ''}`
-        ).join('\n')
-      }\nApply these preferences when generating similar blocks.\n`
+    ? `\n## Teacher edit history on previous blocks — apply these preferences\n${
+        priorBlockAnnotations.slice(0, 12).map(b => {
+          const topicTag = b.topic ? ` on "${b.topic}"` : ''
+          const changeTag = b.change_summary ? ` [what changed: ${b.change_summary}]` : ''
+          const insightTag = b.insight ? ` [interpretation: ${b.insight}]` : ''
+          return `- ${b.block_type}${topicTag}: teacher note: "${b.annotation}"${changeTag}${insightTag}`
+        }).join('\n')
+      }\nWhen generating ${priorBlockAnnotations.map(b => b.block_type).filter((v,i,a)=>a.indexOf(v)===i).join('/')} blocks, apply these preferences directly.\n`
     : ''
 
   const contextSection = philosophySection + oakSection + priorSection + priorBlockSection

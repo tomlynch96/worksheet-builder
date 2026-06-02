@@ -1,0 +1,67 @@
+.annotate-nudge {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1a1a2e;
+  color: #f1f5f9;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
+  z-index: 1000;
+  animation: nudge-slide-in 0.25s ease;
+}
+
+@keyframes nudge-slide-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.annotate-nudge-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.annotate-nudge-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.annotate-nudge-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+.annotate-nudge-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.annotate-nudge-btn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+
+.annotate-nudge-btn--primary {
+  background: #7c3aed;
+  color: #fff;
+}
+.annotate-nudge-btn--primary:hover { background: #6d28d9; }
+
+.annotate-nudge-btn--ghost {
+  background: rgba(255,255,255,0.08);
+  color: #94a3b8;
+}
+.annotate-nudge-btn--ghost:hover { background: rgba(255,255,255,0.14); }
