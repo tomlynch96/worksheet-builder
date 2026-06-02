@@ -14,6 +14,10 @@ export interface WorksheetEntry {
   question_count: number
   rating: number | null
   annotation: string | null
+  is_public: boolean
+  attribution: 'anonymous' | 'named'
+  publish_opt_out: boolean
+  author_name?: string  // populated when fetching public library
   created_at: string
   updated_at: string
   worksheet: Worksheet
@@ -35,6 +39,10 @@ function rowToEntry(row: Record<string, unknown>): WorksheetEntry {
     question_count: blocks.filter((b: unknown) => QUESTION_TYPES.has((b as { type: string }).type)).length,
     rating: (row.rating as number) ?? null,
     annotation: (row.annotation as string) ?? null,
+    is_public: (row.is_public as boolean) ?? false,
+    attribution: ((row.attribution as string) ?? 'anonymous') as 'anonymous' | 'named',
+    publish_opt_out: (row.publish_opt_out as boolean) ?? false,
+    author_name: (row.author_name as string) ?? undefined,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
     worksheet: { id: row.id as string, blocks: row.blocks as Worksheet['blocks'] },
@@ -117,11 +125,85 @@ export function useSupabaseWorksheets(profileId: string | null) {
     setEntries(prev => prev.map(e => e.id === id ? { ...e, rating, annotation } : e))
   }
 
+  async function publish(id: string, attribution: 'anonymous' | 'named' | 'opt_out') {
+    if (!isConfigured) return
+    if (attribution === 'opt_out') {
+      await supabase.from('worksheets').update({ publish_opt_out: true }).eq('id', id)
+      setEntries(prev => prev.map(e => e.id === id ? { ...e, publish_opt_out: true } : e))
+    } else {
+      await supabase.from('worksheets').update({
+        is_public: true,
+        published_at: new Date().toISOString(),
+        attribution,
+      }).eq('id', id)
+      setEntries(prev => prev.map(e => e.id === id ? { ...e, is_public: true, attribution } : e))
+    }
+  }
+
+  async function fetchPublic(opts: {
+    qualification_id?: string
+    exam_board?: string
+    spec_point?: string
+    query?: string
+  }): Promise<WorksheetEntry[]> {
+    if (!isConfigured) return []
+    let q = supabase
+      .from('worksheets')
+      .select('*, profiles(name)')
+      .eq('is_public', true)
+      .order('published_at', { ascending: false })
+      .limit(100)
+
+    if (opts.qualification_id) q = q.eq('qualification_id', opts.qualification_id)
+    if (opts.exam_board) q = q.eq('exam_board', opts.exam_board)
+    if (opts.spec_point) q = q.eq('spec_point', opts.spec_point)
+    if (opts.query) q = q.or(`title.ilike.%${opts.query}%,topic.ilike.%${opts.query}%,spec_point.ilike.%${opts.query}%`)
+
+    const { data } = await q
+    if (!data) return []
+    return (data as Record<string, unknown>[]).map(row => {
+      const profileData = row.profiles as { name: string } | null
+      return {
+        ...rowToEntry(row),
+        author_name: row.attribution === 'named' ? (profileData?.name ?? 'Teacher') : undefined,
+      }
+    })
+  }
+
+  async function copyToMyLibrary(publicWorksheetId: string): Promise<WorksheetEntry | null> {
+    if (!profileId || !isConfigured) return null
+    const { data: src } = await supabase
+      .from('worksheets')
+      .select('*')
+      .eq('id', publicWorksheetId)
+      .single()
+    if (!src) return null
+    const newId = crypto.randomUUID()
+    const copy = {
+      ...(src as Record<string, unknown>),
+      id: newId,
+      profile_id: profileId,
+      is_public: false,
+      publish_opt_out: false,
+      published_at: null,
+      rating: null,
+      annotation: null,
+      original_blocks: (src as Record<string, unknown>).blocks,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    const { data, error } = await supabase.from('worksheets').insert(copy).select().single()
+    if (error || !data) return null
+    const entry = rowToEntry(data as Record<string, unknown>)
+    setEntries(prev => [entry, ...prev])
+    return entry
+  }
+
   async function remove(id: string) {
     if (!profileId || !isConfigured) return
     await supabase.from('worksheets').delete().eq('id', id)
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  return { entries, loading, save, annotate, remove, reload: load }
+  return { entries, loading, save, annotate, publish, fetchPublic, copyToMyLibrary, remove, reload: load }
 }

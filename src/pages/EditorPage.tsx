@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
-import { PDFDownloadLink } from '@react-pdf/renderer'
+import { usePDF } from '@react-pdf/renderer'
 import { Topbar } from '../components/layout/Topbar'
 import { Editor } from '../components/editor/Editor'
 import { WorksheetPreview } from '../components/preview/WorksheetPreview'
 import { WorksheetPDF } from '../components/pdf/WorksheetPDF'
 import { SheetRateModal } from '../components/SheetRateModal'
 import { AnnotateNudge } from '../components/editor/AnnotateNudge'
+import { PublishExportModal } from '../components/PublishExportModal'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useEditTracking } from '../hooks/useEditTracking'
@@ -21,7 +22,7 @@ import './EditorPage.css'
 export function EditorPage() {
   const { profile } = useProfileContext()
   const { worksheet, dispatch } = useWorksheet()
-  const { save } = useSupabaseWorksheets(profile?.id ?? null)
+  const { save, publish, entries } = useSupabaseWorksheets(profile?.id ?? null)
   const { trackEdit } = useEditTracking(profile?.id ?? null)
   const nudge = useAnnotateNudge(worksheet.id ?? null)
   const location = useLocation()
@@ -34,7 +35,10 @@ export function EditorPage() {
   const [sheetRating, setSheetRating] = useState<number | null>(null)
   const [sheetAnnotation, setSheetAnnotation] = useState('')
   const [showNudge, setShowNudge] = useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
   const openRef = useRef<HTMLInputElement>(null)
+
+  const [pdfInstance, updatePdf] = usePDF({ document: <WorksheetPDF worksheet={worksheet} /> })
 
   const originalBlocksRef = useRef<Block[]>([])
   const worksheetTypeRef = useRef<string>('')
@@ -189,6 +193,16 @@ export function EditorPage() {
     e.target.value = ''
   }
 
+  function triggerPdfDownload() {
+    updatePdf(<WorksheetPDF worksheet={worksheet} />)
+    if (pdfInstance.url) {
+      const a = document.createElement('a')
+      a.href = pdfInstance.url
+      a.download = 'worksheet.pdf'
+      a.click()
+    }
+  }
+
   function handleDownloadJSON() {
     const json = JSON.stringify(worksheet, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -256,14 +270,20 @@ export function EditorPage() {
       </button>
       <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
 
-      <PDFDownloadLink
-        key={worksheet.blocks.map(b => b.id).join(',')}
-        document={<WorksheetPDF worksheet={worksheet} />}
-        fileName="worksheet.pdf"
+      <button
         className="btn-download"
+        disabled={pdfInstance.loading}
+        onClick={() => {
+          const existingEntry = entries.find(en => en.id === worksheet.id)
+          if (existingEntry && !existingEntry.is_public && !existingEntry.publish_opt_out) {
+            setShowPublishModal(true)
+          } else {
+            triggerPdfDownload()
+          }
+        }}
       >
-        {({ loading }) => (loading ? 'Preparing…' : 'Download PDF')}
-      </PDFDownloadLink>
+        {pdfInstance.loading ? 'Preparing…' : 'Download PDF'}
+      </button>
     </>
   )
 
@@ -316,6 +336,16 @@ export function EditorPage() {
         <AnnotateNudge
           onAddNote={() => { setShowNudge(false); setShowRateModal(true) }}
           onDismiss={() => setShowNudge(false)}
+        />
+      )}
+      {showPublishModal && (
+        <PublishExportModal
+          authorName={profile?.name ?? 'Teacher'}
+          onDecide={async choice => {
+            setShowPublishModal(false)
+            await publish(worksheet.id, choice)
+            triggerPdfDownload()
+          }}
         />
       )}
     </div>
