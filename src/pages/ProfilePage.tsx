@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Topbar } from '../components/layout/Topbar'
 import { useProfileContext } from '../context/ProfileContext'
@@ -12,7 +12,7 @@ const boardQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length > 1)
 const singleQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length === 1)
 
 export function ProfilePage() {
-  const { profile, signOut, updateProfile } = useProfileContext()
+  const { profile, signOut, updateProfile, linkProvider, getLinkedIdentities } = useProfileContext()
   const navigate = useNavigate()
 
   const [name, setName] = useState(profile?.name ?? '')
@@ -24,6 +24,26 @@ export function ProfilePage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [signingOut, setSigningOut] = useState(false)
+
+  const [linkedProviders, setLinkedProviders] = useState<string[]>([])
+  const [linkingProvider, setLinkingProvider] = useState<string | null>(null)
+  const [linkError, setLinkError] = useState('')
+
+  const refreshLinkedProviders = useCallback(async () => {
+    const providers = await getLinkedIdentities()
+    setLinkedProviders(providers)
+  }, [getLinkedIdentities])
+
+  useEffect(() => { refreshLinkedProviders() }, [refreshLinkedProviders])
+
+  async function handleLinkProvider(provider: 'google' | 'azure') {
+    setLinkingProvider(provider)
+    setLinkError('')
+    const result = await linkProvider(provider)
+    setLinkingProvider(null)
+    if (result.error) setLinkError(result.error)
+    else refreshLinkedProviders()
+  }
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -198,7 +218,40 @@ export function ProfilePage() {
               </button>
             </div>
           </form>
+
+          {/* Connected sign-in methods */}
+        <div className="profile-linked-section">
+          <p className="profile-linked-title">Connected sign-in methods</p>
+          <div className="profile-linked-list">
+            {(['google', 'azure'] as const).map(provider => {
+              const label = provider === 'azure' ? 'Microsoft' : 'Google'
+              const isLinked = linkedProviders.includes(provider)
+              return (
+                <div key={provider} className="profile-linked-row">
+                  <span className="profile-linked-connected">
+                    {label}
+                    {isLinked && <span className="profile-linked-badge">Connected</span>}
+                  </span>
+                  {!isLinked && (
+                    <button
+                      type="button"
+                      className="profile-linked-btn"
+                      onClick={() => handleLinkProvider(provider)}
+                      disabled={linkingProvider === provider}
+                    >
+                      {linkingProvider === provider ? 'Connecting…' : `Link ${label}`}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {linkError && <p className="profile-linked-error">{linkError}</p>}
+          <p className="profile-field-hint" style={{ marginTop: 8 }}>
+            Link your Google or Microsoft account so you can sign in either way without losing your worksheets.
+          </p>
         </div>
+        </div>{/* end profile-card */}
       </main>
     </div>
   )

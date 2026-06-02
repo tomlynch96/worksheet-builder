@@ -55,6 +55,28 @@ export function useProfile() {
     return error ? { error: error.message } : {}
   }
 
+  async function signInWithProvider(provider: 'google' | 'azure') {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: 'https://worksheet-builder-ten.vercel.app' },
+    })
+    if (error) console.error('[signInWithProvider]', error.message)
+  }
+
+  // Link an OAuth provider to the currently signed-in account (preserves all data)
+  async function linkProvider(provider: 'google' | 'azure'): Promise<{ error?: string }> {
+    const { error } = await supabase.auth.linkIdentity({
+      provider,
+      options: { redirectTo: 'https://worksheet-builder-ten.vercel.app' },
+    })
+    return error ? { error: error.message } : {}
+  }
+
+  async function getLinkedIdentities(): Promise<string[]> {
+    const { data } = await supabase.auth.getUserIdentities()
+    return data?.identities?.map(i => i.provider) ?? []
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
   }
@@ -106,5 +128,5 @@ export function useProfile() {
     return true
   }
 
-  return { profile, loading, authUserId, sendMagicLink, signOut, createProfile, updateProfile }
+  return { profile, loading, authUserId, sendMagicLink, signInWithProvider, linkProvider, getLinkedIdentities, signOut, createProfile, updateProfile }
 }
