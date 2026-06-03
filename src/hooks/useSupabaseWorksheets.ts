@@ -149,7 +149,7 @@ export function useSupabaseWorksheets(profileId: string | null) {
       published_at: null,
       attribution: null,
     }).eq('id', id)
-    setEntries(prev => prev.map(e => e.id === id ? { ...e, is_public: false, attribution: undefined, published_at: undefined } : e))
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, is_public: false, attribution: undefined, published_at: null } : e))
   }
 
   const fetchPublic = useCallback(async (opts: {
