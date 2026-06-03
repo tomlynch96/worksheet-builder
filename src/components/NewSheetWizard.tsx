@@ -337,7 +337,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
           .order('updated_at', { ascending: false })
           .limit(15)
         if (data) {
-          priorBlockAnnotations = (data as BlockAnnRow[])
+          priorBlockAnnotations = (data as unknown as BlockAnnRow[])
             .filter(b => b.annotation)
             .map(b => ({
               block_type: b.block_type,

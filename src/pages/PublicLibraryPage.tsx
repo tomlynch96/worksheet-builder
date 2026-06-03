@@ -23,7 +23,7 @@ export function PublicLibraryPage() {
   const [selectedSpec, setSelectedSpec] = useState('')
 
   const selectedOffering = QUALIFICATION_OFFERINGS.find(q => q.id === selectedQual)
-  const specTopics = selectedQual && selectedBoard ? getSpecTopics(selectedQual, selectedBoard) : []
+  const specTopics = (selectedQual && selectedBoard ? getSpecTopics(selectedQual, selectedBoard) : []) ?? []
 
   const search = useCallback(async () => {
     setLoading(true)
