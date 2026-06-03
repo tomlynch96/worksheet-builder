@@ -21,7 +21,8 @@
     "katex": "^0.16.45",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.15.0"
+    "react-router-dom": "^7.15.0",
+    "react-to-print": "^3.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
