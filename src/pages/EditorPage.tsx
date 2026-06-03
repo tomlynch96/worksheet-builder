@@ -329,7 +329,6 @@ export function EditorPage() {
       <div
         ref={printRef}
         style={{ position: 'fixed', top: 0, left: '-9999px', width: 794, pointerEvents: 'none' }}
-        aria-hidden
       >
         <WorksheetPreview worksheet={worksheet} mode="worksheet" />
         <WorksheetPreview worksheet={worksheet} mode="markscheme" />
