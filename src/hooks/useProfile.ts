@@ -128,5 +128,14 @@ export function useProfile() {
     return true
   }
 
-  return { profile, loading, authUserId, sendMagicLink, signInWithProvider, linkProvider, getLinkedIdentities, signOut, createProfile, updateProfile }
+  async function acceptWelcome() {
+    if (!profile) return
+    await supabase
+      .from('profiles')
+      .update({ welcome_seen: true, email_consent: true })
+      .eq('id', profile.id)
+    setProfile(p => p ? { ...p, welcome_seen: true, email_consent: true } : p)
+  }
+
+  return { profile, loading, authUserId, sendMagicLink, signInWithProvider, linkProvider, getLinkedIdentities, signOut, createProfile, updateProfile, acceptWelcome }
 }

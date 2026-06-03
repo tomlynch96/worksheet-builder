@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Topbar } from '../components/layout/Topbar'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
+import { useWelcomeConfig } from '../hooks/useAppConfig'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import './AdminPage.css'
@@ -11,12 +12,27 @@ export function AdminPage() {
   const { profile } = useProfileContext()
   const navigate = useNavigate()
   const { fetchPublic, unpublish } = useSupabaseWorksheets(profile?.id ?? null)
+  const { config: welcomeConfig, saving: savingWelcome, save: saveWelcome } = useWelcomeConfig()
 
   const [results, setResults] = useState<WorksheetEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [removing, setRemoving] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [selectedQual, setSelectedQual] = useState('')
+
+  // Welcome message editor state (seeded from config once loaded)
+  const [welcomeTitle, setWelcomeTitle] = useState('')
+  const [welcomeMessage, setWelcomeMessage] = useState('')
+  const [welcomeSaved, setWelcomeSaved] = useState(false)
+  useEffect(() => {
+    setWelcomeTitle(welcomeConfig.title)
+    setWelcomeMessage(welcomeConfig.message)
+  }, [welcomeConfig.title, welcomeConfig.message])
+
+  async function handleSaveWelcome() {
+    const ok = await saveWelcome({ title: welcomeTitle, message: welcomeMessage })
+    if (ok) { setWelcomeSaved(true); setTimeout(() => setWelcomeSaved(false), 2500) }
+  }
 
   useEffect(() => {
     if (!profile?.is_admin) navigate('/', { replace: true })
@@ -54,6 +70,43 @@ export function AdminPage() {
             {results.length} public worksheet{results.length !== 1 ? 's' : ''}
           </p>
         </div>
+
+        {/* Welcome message editor */}
+        <section className="admin-section">
+          <h2 className="admin-section-title">Welcome message</h2>
+          <p className="admin-section-hint">
+            Shown to every new user the first time they land on the home page. They must tick a consent checkbox before proceeding.
+          </p>
+          <div className="admin-field">
+            <label className="admin-label">Title</label>
+            <input
+              className="admin-input"
+              value={welcomeTitle}
+              onChange={e => setWelcomeTitle(e.target.value)}
+            />
+          </div>
+          <div className="admin-field">
+            <label className="admin-label">Message body</label>
+            <textarea
+              className="admin-textarea"
+              value={welcomeMessage}
+              onChange={e => setWelcomeMessage(e.target.value)}
+              rows={8}
+              placeholder="Separate paragraphs with a blank line…"
+            />
+          </div>
+          <div className="admin-field-actions">
+            <button
+              className="admin-save-btn"
+              onClick={handleSaveWelcome}
+              disabled={savingWelcome}
+            >
+              {savingWelcome ? 'Saving…' : welcomeSaved ? '✓ Saved' : 'Save message'}
+            </button>
+          </div>
+        </section>
+
+        <h2 className="admin-section-title">Public library</h2>
 
         <div className="admin-filters">
           <input
