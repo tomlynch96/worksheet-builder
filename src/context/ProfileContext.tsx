@@ -13,6 +13,7 @@ interface ProfileContextValue {
   signOut: () => Promise<void>
   createProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[]) => Promise<boolean>
   updateProfile: (name: string, courses: Omit<UserCourse, 'id' | 'profile_id'>[], teachingPhilosophy?: string) => Promise<boolean>
+  acceptWelcome: () => Promise<void>
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)

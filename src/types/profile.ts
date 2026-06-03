@@ -11,5 +11,7 @@ export interface Profile {
   created_at: string
   teaching_philosophy?: string
   is_admin?: boolean
+  welcome_seen?: boolean
+  email_consent?: boolean
   user_courses: UserCourse[]
 }

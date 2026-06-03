@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Topbar } from '../components/layout/Topbar'
 import { NewSheetWizard } from '../components/NewSheetWizard'
+import { WelcomeModal } from '../components/WelcomeModal'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
+import { useWelcomeConfig } from '../hooks/useAppConfig'
 import { offeringLabel } from '../data/qualifications'
 import type { Worksheet } from '../types/worksheet'
 import './Home.css'
@@ -45,10 +47,13 @@ function RecentCard({
 }
 
 export function Home() {
-  const { profile } = useProfileContext()
+  const { profile, acceptWelcome } = useProfileContext()
   const navigate = useNavigate()
   const { entries, loading } = useSupabaseWorksheets(profile?.id ?? null)
+  const { config: welcomeConfig, loading: welcomeLoading } = useWelcomeConfig()
   const [showWizard, setShowWizard] = useState(false)
+
+  const showWelcome = profile && !profile.welcome_seen && !welcomeLoading
 
   function handleWizardConfirm(result: {
     qualification_id: string
@@ -131,6 +136,10 @@ export function Home() {
           onGenerated={handleWizardGenerated}
           onCancel={() => setShowWizard(false)}
         />
+      )}
+
+      {showWelcome && (
+        <WelcomeModal config={welcomeConfig} onAccept={acceptWelcome} />
       )}
     </div>
   )
