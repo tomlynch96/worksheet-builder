@@ -280,11 +280,12 @@ function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number
 }
 
 function PreviewFigure({ block }: { block: FigureBlock }) {
-  const heights: Record<FigureBlock['size'], number> = { small: 100, medium: 180, large: 300 }
+  const maxHeights: Record<FigureBlock['size'], number> = { small: 100, medium: 180, large: 300 }
+  const maxH = maxHeights[block.size]
   return (
-    <div className="pr-figure" style={{ height: heights[block.size] }}>
+    <div className="pr-figure">
       {(block.imageData ?? block.imageUrl)
-        ? <img src={block.imageData ?? block.imageUrl} alt={block.caption} className="pr-figure-image" />
+        ? <img src={block.imageData ?? block.imageUrl} alt={block.caption} className="pr-figure-image" style={{ maxHeight: maxH }} />
         : null}
       {block.caption && <span className="pr-figure-label">{block.caption}</span>}
       {!(block.imageData ?? block.imageUrl) && !block.caption && <span className="pr-figure-label pr-placeholder">Add a caption…</span>}

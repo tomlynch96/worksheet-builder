@@ -154,7 +154,8 @@
   outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
-.figure-paste-zone:focus {
+.figure-paste-zone:focus,
+.figure-paste-zone--ready {
   border-color: var(--ui-accent);
   background: #ede9fe22;
 }
