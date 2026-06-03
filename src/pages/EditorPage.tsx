@@ -275,7 +275,9 @@ export function EditorPage() {
         disabled={pdfInstance.loading}
         onClick={() => {
           const existingEntry = entries.find(en => en.id === worksheet.id)
-          if (existingEntry && !existingEntry.is_public && !existingEntry.publish_opt_out) {
+          // Show prompt if: no entry yet (unsaved), or saved but not yet published/opted-out
+          const alreadyDecided = existingEntry && (existingEntry.is_public || existingEntry.publish_opt_out)
+          if (!alreadyDecided) {
             setShowPublishModal(true)
           } else {
             triggerPdfDownload()
