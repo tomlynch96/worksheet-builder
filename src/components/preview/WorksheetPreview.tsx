@@ -1,6 +1,6 @@
 import katex from 'katex'
 import 'katex/contrib/mhchem'
-import { useRef, useLayoutEffect, useState } from 'react'
+import { useRef, useLayoutEffect, useState, type RefObject } from 'react'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock, NumericalAnswersBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages, estimateBlockHeight } from '../../utils/pagination'
@@ -742,6 +742,7 @@ interface WorksheetPreviewProps {
   selectedId?: string | null
   onSelect?: (id: string) => void
   mode?: 'worksheet' | 'markscheme'
+  printRef?: RefObject<HTMLDivElement | null>
 }
 
 function getAttachedBlockIds(blocks: Block[]): Set<string> {
@@ -761,7 +762,7 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
   return ids
 }
 
-export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'worksheet' }: WorksheetPreviewProps) {
+export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'worksheet', printRef }: WorksheetPreviewProps) {
   const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -822,31 +823,33 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
         ))}
       </div>
 
-      {pages.map((pageBlocks, pageIdx) => (
-        <div key={pageIdx} className="a4-page">
-          {mode === 'markscheme' && (
-            <div className="pr-ms-page-banner">
-              {pageIdx === 0 ? 'Mark Scheme' : `Mark Scheme — p.${pageIdx + 1}`}
-            </div>
-          )}
-          {pageBlocks.map(block => {
-            const isSelected = block.id === selectedId
-            if (onSelect) {
-              return (
-                <div
-                  key={block.id}
-                  className={`preview-block-wrap ${isSelected ? 'preview-block-wrap--selected' : ''}`}
-                  onClick={() => onSelect(block.id)}
-                  title="Click to edit"
-                >
-                  <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
-                </div>
-              )
-            }
-            return <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
-          })}
-        </div>
-      ))}
+      <div ref={printRef}>
+        {pages.map((pageBlocks, pageIdx) => (
+          <div key={pageIdx} className="a4-page">
+            {mode === 'markscheme' && (
+              <div className="pr-ms-page-banner">
+                {pageIdx === 0 ? 'Mark Scheme' : `Mark Scheme — p.${pageIdx + 1}`}
+              </div>
+            )}
+            {pageBlocks.map(block => {
+              const isSelected = block.id === selectedId
+              if (onSelect) {
+                return (
+                  <div
+                    key={block.id}
+                    className={`preview-block-wrap ${isSelected ? 'preview-block-wrap--selected' : ''}`}
+                    onClick={() => onSelect(block.id)}
+                    title="Click to edit"
+                  >
+                    <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
+                  </div>
+                )
+              }
+              return <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
+            })}
+          </div>
+        ))}
+      </div>
     </>
   )
 }

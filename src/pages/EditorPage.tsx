@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
-import { usePDF } from '@react-pdf/renderer'
+import { useReactToPrint } from 'react-to-print'
 import { Topbar } from '../components/layout/Topbar'
 import { Editor } from '../components/editor/Editor'
 import { WorksheetPreview } from '../components/preview/WorksheetPreview'
-import { WorksheetPDF } from '../components/pdf/WorksheetPDF'
 import { SheetRateModal } from '../components/SheetRateModal'
 import { AnnotateNudge } from '../components/editor/AnnotateNudge'
 import { PublishExportModal } from '../components/PublishExportModal'
@@ -18,6 +17,21 @@ import { PRESETS } from '../data/presets'
 import { LAYOUT_TEST_WORKSHEET } from '../data/layoutTest'
 import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
 import './EditorPage.css'
+
+const printPageStyle = `
+  @page { size: A4; margin: 0; }
+  body { margin: 0; background: white; }
+  .a4-page {
+    width: 794px !important;
+    height: 1123px !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+  }
+  [aria-hidden="true"] { display: none !important; }
+  .preview-block-wrap { outline: none !important; cursor: default !important; }
+  .preview-block-wrap::after { display: none !important; }
+`
 
 export function EditorPage() {
   const { profile } = useProfileContext()
@@ -37,9 +51,18 @@ export function EditorPage() {
   const [showNudge, setShowNudge] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
   const openRef = useRef<HTMLInputElement>(null)
+  const printRef = useRef<HTMLDivElement>(null)
 
-  const [pdfInstance, updatePdf] = usePDF({ document: <WorksheetPDF worksheet={worksheet} /> })
-  const downloadPendingRef = useRef(false)
+  const worksheetTitle = (() => {
+    const h = worksheet.blocks.find(b => b.type === 'header')
+    return h && 'title' in h ? (h.title as string) : ''
+  })()
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: worksheetTitle || 'worksheet',
+    pageStyle: printPageStyle,
+  })
 
   const originalBlocksRef = useRef<Block[]>([])
   const worksheetTypeRef = useRef<string>('')
@@ -194,21 +217,6 @@ export function EditorPage() {
     e.target.value = ''
   }
 
-  useEffect(() => {
-    if (!downloadPendingRef.current) return
-    if (pdfInstance.loading || !pdfInstance.url) return
-    downloadPendingRef.current = false
-    const a = document.createElement('a')
-    a.href = pdfInstance.url
-    a.download = 'worksheet.pdf'
-    a.click()
-  }, [pdfInstance.loading, pdfInstance.url])
-
-  function triggerPdfDownload() {
-    downloadPendingRef.current = true
-    updatePdf(<WorksheetPDF worksheet={worksheet} />)
-  }
-
   function handleDownloadJSON() {
     const json = JSON.stringify(worksheet, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -278,19 +286,17 @@ export function EditorPage() {
 
       <button
         className="btn-download"
-        disabled={pdfInstance.loading}
         onClick={() => {
           const existingEntry = entries.find(en => en.id === worksheet.id)
-          // Show prompt if: no entry yet (unsaved), or saved but not yet published/opted-out
           const alreadyDecided = existingEntry && (existingEntry.is_public || existingEntry.publish_opt_out)
           if (!alreadyDecided) {
             setShowPublishModal(true)
           } else {
-            triggerPdfDownload()
+            handlePrint()
           }
         }}
       >
-        {pdfInstance.loading ? 'Preparing…' : 'Download PDF'}
+        Print / Save PDF
       </button>
     </>
   )
@@ -315,17 +321,13 @@ export function EditorPage() {
             selectedId={selectedId}
             onSelect={setSelectedId}
             mode={mode}
+            printRef={printRef}
           />
         </main>
       </div>
       {showRateModal && (
         <SheetRateModal
-          worksheetTitle={
-            (() => {
-              const h = worksheet.blocks.find(b => b.type === 'header')
-              return h && 'title' in h ? (h.title as string) : ''
-            })()
-          }
+          worksheetTitle={worksheetTitle}
           initialRating={sheetRating}
           initialAnnotation={sheetAnnotation}
           onSave={async (rating, annotation) => {
@@ -352,7 +354,7 @@ export function EditorPage() {
           onDecide={async choice => {
             setShowPublishModal(false)
             await publish(worksheet.id, choice)
-            triggerPdfDownload()
+            handlePrint()
           }}
         />
       )}
