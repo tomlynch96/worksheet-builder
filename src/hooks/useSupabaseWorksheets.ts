@@ -140,12 +140,12 @@ export function useSupabaseWorksheets(profileId: string | null) {
     }
   }
 
-  async function fetchPublic(opts: {
+  const fetchPublic = useCallback(async (opts: {
     qualification_id?: string
     exam_board?: string
     spec_point?: string
     query?: string
-  }): Promise<WorksheetEntry[]> {
+  }): Promise<WorksheetEntry[]> => {
     if (!isConfigured) return []
     let q = supabase
       .from('worksheets')
@@ -168,7 +168,7 @@ export function useSupabaseWorksheets(profileId: string | null) {
         author_name: row.attribution === 'named' ? (profileData?.name ?? 'Teacher') : undefined,
       }
     })
-  }
+  }, [])
 
   async function copyToMyLibrary(publicWorksheetId: string): Promise<WorksheetEntry | null> {
     if (!profileId || !isConfigured) return null
