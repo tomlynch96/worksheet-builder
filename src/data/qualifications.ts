@@ -15,28 +15,52 @@ export const QUALIFICATION_OFFERINGS: QualificationOffering[] = [
     label: 'GCSE Physics',
     shortLabel: 'GCSE Physics',
     examBoards: ['AQA', 'OCR', 'Edexcel', 'WJEC'],
-    specDataId: (b) => b === 'Edexcel' ? 'edexcel-gcse-physics' : null,
+    specDataId: (b) => {
+      if (b === 'AQA')    return 'aqa-gcse-physics'
+      if (b === 'OCR')    return 'ocr-gateway-gcse-physics'
+      if (b === 'Edexcel') return 'edexcel-gcse-physics'
+      if (b === 'WJEC')   return 'wjec-gcse-physics'
+      return null
+    },
   },
   {
-    id: 'gcse-combined',
-    label: 'GCSE Combined Science (Physics)',
-    shortLabel: 'GCSE Combined',
+    id: 'gcse-biology',
+    label: 'GCSE Biology',
+    shortLabel: 'GCSE Biology',
     examBoards: ['AQA', 'OCR', 'Edexcel', 'WJEC'],
-    specDataId: (b) => b === 'Edexcel' ? 'edexcel-gcse-combined' : null,
+    specDataId: (b) => {
+      if (b === 'AQA')    return 'aqa-gcse-biology'
+      if (b === 'OCR')    return 'ocr-gateway-gcse-biology'
+      if (b === 'Edexcel') return 'edexcel-gcse-biology'
+      if (b === 'WJEC')   return 'wjec-gcse-biology'
+      return null
+    },
   },
   {
     id: 'gcse-chemistry',
     label: 'GCSE Chemistry',
     shortLabel: 'GCSE Chemistry',
     examBoards: ['AQA', 'OCR', 'Edexcel', 'WJEC'],
-    specDataId: (b) => b === 'Edexcel' ? 'edexcel-gcse-chemistry' : null,
+    specDataId: (b) => {
+      if (b === 'AQA')    return 'aqa-gcse-chemistry'
+      if (b === 'OCR')    return 'ocr-gateway-gcse-chemistry'
+      if (b === 'Edexcel') return 'edexcel-gcse-chemistry'
+      if (b === 'WJEC')   return 'wjec-gcse-chemistry'
+      return null
+    },
   },
   {
     id: 'alevel-physics',
     label: 'A Level Physics',
     shortLabel: 'A Level Physics',
     examBoards: ['AQA', 'OCR', 'Edexcel', 'WJEC'],
-    specDataId: (b) => b === 'Edexcel' ? 'edexcel-alevel-physics' : null,
+    specDataId: (b) => {
+      if (b === 'AQA')    return 'aqa-alevel-physics'
+      if (b === 'OCR')    return 'ocr-alevel-physics'
+      if (b === 'Edexcel') return 'edexcel-alevel-physics'
+      if (b === 'WJEC')   return 'wjec-alevel-physics'
+      return null
+    },
   },
   {
     id: 'exploring-science-y7',

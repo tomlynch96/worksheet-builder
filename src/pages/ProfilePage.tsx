@@ -66,6 +66,38 @@ export function ProfilePage() {
     }
   }, [profile])
 
+  const [showCustomBoard, setShowCustomBoard] = useState(false)
+  const [customBoardName, setCustomBoardName] = useState('')
+  const [customSubjects, setCustomSubjects] = useState<Set<string>>(new Set())
+
+  const CUSTOM_SUBJECTS = [
+    { id: 'gcse-physics',   label: 'GCSE Physics' },
+    { id: 'gcse-biology',   label: 'GCSE Biology' },
+    { id: 'gcse-chemistry', label: 'GCSE Chemistry' },
+    { id: 'alevel-physics', label: 'A Level Physics' },
+  ]
+
+  function toggleCustomSubject(id: string) {
+    setCustomSubjects(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function addCustomBoard() {
+    const board = customBoardName.trim()
+    if (!board || customSubjects.size === 0) return
+    setSelected(prev => {
+      const next = new Set(prev)
+      customSubjects.forEach(qualId => next.add(`${qualId}:${board}`))
+      return next
+    })
+    setCustomBoardName('')
+    setCustomSubjects(new Set())
+    setShowCustomBoard(false)
+  }
+
   function toggle(qualId: string, board: string) {
     const key = `${qualId}:${board}`
     setSelected(prev => {
@@ -203,6 +235,45 @@ export function ProfilePage() {
                       </div>
                     )
                   })}
+                </div>
+              )}
+            </div>
+
+            {/* Custom board */}
+            <div className="onboarding-custom-board" style={{ marginTop: 12 }}>
+              {!showCustomBoard ? (
+                <button type="button" className="onboarding-custom-board-trigger" onClick={() => setShowCustomBoard(true)}>
+                  My exam board isn't listed yet
+                </button>
+              ) : (
+                <div className="onboarding-custom-board-form">
+                  <p className="profile-field-label">Which exam board do you teach?</p>
+                  <input
+                    className="profile-input"
+                    value={customBoardName}
+                    onChange={e => setCustomBoardName(e.target.value)}
+                    placeholder="e.g. CCEA, Cambridge, IGCSE…"
+                  />
+                  <p className="profile-field-label" style={{ marginTop: 10 }}>Which subjects?</p>
+                  <div className="onboarding-custom-subjects">
+                    {CUSTOM_SUBJECTS.map(s => (
+                      <label key={s.id} className="onboarding-custom-subject">
+                        <input type="checkbox" checked={customSubjects.has(s.id)} onChange={() => toggleCustomSubject(s.id)} />
+                        {s.label}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="onboarding-custom-board-actions">
+                    <button type="button" className="profile-btn profile-btn--cancel" onClick={() => setShowCustomBoard(false)}>Cancel</button>
+                    <button
+                      type="button"
+                      className="profile-btn profile-btn--save"
+                      disabled={!customBoardName.trim() || customSubjects.size === 0}
+                      onClick={addCustomBoard}
+                    >
+                      Add courses
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

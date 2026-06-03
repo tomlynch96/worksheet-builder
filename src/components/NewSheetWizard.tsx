@@ -171,10 +171,8 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
 
 export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] }: Props) {
   const { profile } = useProfileContext()
-  const courses = (profile?.user_courses ?? []).filter(c => {
-    const offering = getOffering(c.qualification_id)
-    return offering?.examBoards.includes(c.exam_board) ?? false
-  })
+  // Include all courses the teacher has added, including custom boards (where specDataId returns null)
+  const courses = (profile?.user_courses ?? []).filter(c => getOffering(c.qualification_id) !== undefined)
 
   const [step, setStep] = useState<'course' | 'oak-dir' | 'spec' | 'mode'>('course')
   const [selectedCourse, setSelectedCourse] = useState<UserCourse | null>(null)
@@ -498,7 +496,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
                   placeholder="e.g. Newton's Laws of Motion"
                 />
                 <p className="wizard-field-hint">
-                  Full spec data for {selectedCourse.exam_board} is coming soon.
+                  {selectedCourse.exam_board} isn't in our spec library yet — type your topic or spec point above and we'll generate to it directly.
                 </p>
               </div>
             )}
