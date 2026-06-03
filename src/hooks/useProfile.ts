@@ -58,7 +58,7 @@ export function useProfile() {
   async function signInWithProvider(provider: 'google' | 'azure') {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: 'https://worksheet-builder-ten.vercel.app' },
+      options: { redirectTo: window.location.origin },
     })
     if (error) console.error('[signInWithProvider]', error.message)
   }
@@ -67,7 +67,7 @@ export function useProfile() {
   async function linkProvider(provider: 'google' | 'azure'): Promise<{ error?: string }> {
     const { error } = await supabase.auth.linkIdentity({
       provider,
-      options: { redirectTo: 'https://worksheet-builder-ten.vercel.app' },
+      options: { redirectTo: window.location.origin },
     })
     return error ? { error: error.message } : {}
   }
