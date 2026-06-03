@@ -325,11 +325,8 @@ export function EditorPage() {
         </main>
       </div>
 
-      {/* Off-screen print container: worksheet pages then mark scheme pages */}
-      <div
-        ref={printRef}
-        style={{ position: 'fixed', top: 0, left: '-9999px', width: 794, pointerEvents: 'none' }}
-      >
+      {/* Off-screen on screen; visible in react-to-print iframe (screen media doesn't apply there) */}
+      <div ref={printRef} className="print-only">
         <WorksheetPreview worksheet={worksheet} mode="worksheet" />
         <WorksheetPreview worksheet={worksheet} mode="markscheme" />
       </div>
