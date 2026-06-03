@@ -39,6 +39,7 @@ export function EditorPage() {
   const openRef = useRef<HTMLInputElement>(null)
 
   const [pdfInstance, updatePdf] = usePDF({ document: <WorksheetPDF worksheet={worksheet} /> })
+  const downloadPendingRef = useRef(false)
 
   const originalBlocksRef = useRef<Block[]>([])
   const worksheetTypeRef = useRef<string>('')
@@ -193,14 +194,19 @@ export function EditorPage() {
     e.target.value = ''
   }
 
+  useEffect(() => {
+    if (!downloadPendingRef.current) return
+    if (pdfInstance.loading || !pdfInstance.url) return
+    downloadPendingRef.current = false
+    const a = document.createElement('a')
+    a.href = pdfInstance.url
+    a.download = 'worksheet.pdf'
+    a.click()
+  }, [pdfInstance.loading, pdfInstance.url])
+
   function triggerPdfDownload() {
+    downloadPendingRef.current = true
     updatePdf(<WorksheetPDF worksheet={worksheet} />)
-    if (pdfInstance.url) {
-      const a = document.createElement('a')
-      a.href = pdfInstance.url
-      a.download = 'worksheet.pdf'
-      a.click()
-    }
   }
 
   function handleDownloadJSON() {
