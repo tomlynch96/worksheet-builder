@@ -561,6 +561,121 @@ const exploringScience8Topics: SpecTopic[] = [
   },
 ]
 
+// ── Exploring Science Year 9 (Pearson/Hodder) ────────────────────────────────
+
+const exploringScience9Topics: SpecTopic[] = [
+  {
+    ref: '9A', title: 'Inheritance',
+    points: [
+      { ref: '9A.1', title: 'Genes, chromosomes and DNA' },
+      { ref: '9A.2', title: 'Inherited characteristics — dominant and recessive alleles' },
+      { ref: '9A.3', title: 'Punnett squares and predicting outcomes' },
+      { ref: '9A.4', title: 'Variation — genetic and environmental' },
+      { ref: '9A.5', title: 'Evolution and natural selection' },
+    ],
+  },
+  {
+    ref: '9B', title: 'Fit and healthy',
+    points: [
+      { ref: '9B.1', title: 'Diet, exercise and health' },
+      { ref: '9B.2', title: 'Drugs — effects on the body and addiction' },
+      { ref: '9B.3', title: 'Smoking, alcohol and their health effects' },
+      { ref: '9B.4', title: 'The nervous system and the brain' },
+    ],
+  },
+  {
+    ref: '9C', title: 'Plants and photosynthesis',
+    points: [
+      { ref: '9C.1', title: 'Photosynthesis — the equation and where it occurs' },
+      { ref: '9C.2', title: 'Factors affecting the rate of photosynthesis' },
+      { ref: '9C.3', title: 'How plants use glucose' },
+      { ref: '9C.4', title: 'Transport in plants — xylem and phloem' },
+    ],
+  },
+  {
+    ref: '9D', title: 'Plants for food',
+    points: [
+      { ref: '9D.1', title: 'Farming — intensive versus organic' },
+      { ref: '9D.2', title: 'Fertilisers — uses and environmental effects' },
+      { ref: '9D.3', title: 'Pesticides and biological control' },
+      { ref: '9D.4', title: 'Selective breeding and GM crops' },
+    ],
+  },
+  {
+    ref: '9E', title: 'Reactions of metals and metal compounds',
+    points: [
+      { ref: '9E.1', title: 'Properties of metals and non-metals' },
+      { ref: '9E.2', title: 'Reactions of metals with oxygen, water and acids' },
+      { ref: '9E.3', title: 'The reactivity series' },
+      { ref: '9E.4', title: 'Displacement reactions' },
+      { ref: '9E.5', title: 'Word and symbol equations for metal reactions' },
+    ],
+  },
+  {
+    ref: '9F', title: 'Patterns of reactivity',
+    points: [
+      { ref: '9F.1', title: 'Oxidation and reduction' },
+      { ref: '9F.2', title: 'Extracting metals from their ores' },
+      { ref: '9F.3', title: 'Recycling metals — advantages and disadvantages' },
+      { ref: '9F.4', title: 'Acids and alkalis revisited — neutralisation in detail' },
+    ],
+  },
+  {
+    ref: '9G', title: 'Environmental chemistry',
+    points: [
+      { ref: '9G.1', title: 'The atmosphere — composition and its importance' },
+      { ref: '9G.2', title: 'Pollution — acid rain, the greenhouse effect, ozone depletion' },
+      { ref: '9G.3', title: 'The carbon cycle and global warming' },
+      { ref: '9G.4', title: 'Water quality and treatment' },
+    ],
+  },
+  {
+    ref: '9H', title: 'Using chemistry',
+    points: [
+      { ref: '9H.1', title: 'Hydrocarbons and fossil fuels' },
+      { ref: '9H.2', title: 'Combustion and fuels' },
+      { ref: '9H.3', title: 'Polymers — plastics and their properties' },
+      { ref: '9H.4', title: 'Smart materials and nanotechnology' },
+    ],
+  },
+  {
+    ref: '9I', title: 'Energy and electricity',
+    points: [
+      { ref: '9I.1', title: 'Energy resources and electricity generation' },
+      { ref: '9I.2', title: 'Generating electricity — renewable and non-renewable' },
+      { ref: '9I.3', title: 'The National Grid — transformers and transmission' },
+      { ref: '9I.4', title: 'Electrical power — calculating units and cost' },
+    ],
+  },
+  {
+    ref: '9J', title: 'Gravity and space',
+    points: [
+      { ref: '9J.1', title: 'Gravity — weight, mass and gravitational field strength' },
+      { ref: '9J.2', title: 'Orbital motion — planets, moons and satellites' },
+      { ref: '9J.3', title: 'The life cycle of stars' },
+      { ref: '9J.4', title: 'The expanding universe — red-shift and the Big Bang' },
+    ],
+  },
+  {
+    ref: '9K', title: 'Speeding up',
+    points: [
+      { ref: '9K.1', title: 'Speed, velocity and acceleration — calculations and graphs' },
+      { ref: '9K.2', title: 'Forces and motion — Newton\'s Laws revisited' },
+      { ref: '9K.3', title: 'Stopping distance — thinking time and braking' },
+      { ref: '9K.4', title: 'Momentum — p = mv and collisions' },
+    ],
+  },
+  {
+    ref: '9L', title: 'Pressure and moments',
+    points: [
+      { ref: '9L.1', title: 'Pressure — calculating pressure in solids, liquids and gases' },
+      { ref: '9L.2', title: 'Hydraulic systems and pressure in liquids' },
+      { ref: '9L.3', title: 'Moments — levers and principle of moments' },
+      { ref: '9L.4', title: 'Stability and centre of mass' },
+    ],
+  },
+]
+
 // ── Edexcel GCSE Chemistry (1CH0) ─────────────────────────────────────────────
 
 const edexcelGCSEChemTopics: SpecTopic[] = [
@@ -1720,6 +1835,7 @@ export const QUALIFICATIONS: Qualification[] = [
   // ── KS3 ──
   { id: 'exploring-science-y7', label: 'Exploring Science Year 7', shortLabel: 'Exp. Sci Y7', topics: exploringScience7Topics },
   { id: 'exploring-science-y8', label: 'Exploring Science Year 8', shortLabel: 'Exp. Sci Y8', topics: exploringScience8Topics },
+  { id: 'exploring-science-y9', label: 'Exploring Science Year 9', shortLabel: 'Exp. Sci Y9', topics: exploringScience9Topics },
 ]
 
 export function getQualification(id: string): Qualification | undefined {

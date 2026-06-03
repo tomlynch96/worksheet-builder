@@ -32,6 +32,11 @@ export function Topbar({ actions }: TopbarProps) {
           <Link className={`topbar-nav-link${pathname === '/library' ? ' topbar-nav-link--active' : ''}`} to="/library">
             Public Library
           </Link>
+          {profile?.is_admin && (
+            <Link className={`topbar-nav-link topbar-nav-link--admin${pathname === '/admin' ? ' topbar-nav-link--active' : ''}`} to="/admin">
+              Admin
+            </Link>
+          )}
         </nav>
       )}
 

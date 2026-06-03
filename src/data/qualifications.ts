@@ -81,7 +81,7 @@ export const QUALIFICATION_OFFERINGS: QualificationOffering[] = [
     label: 'Exploring Science Year 9',
     shortLabel: 'Exp. Sci Y9',
     examBoards: ['Hodder'],
-    specDataId: () => null,
+    specDataId: () => 'exploring-science-y9',
   },
 ]
 

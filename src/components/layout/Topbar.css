@@ -130,3 +130,6 @@
   transition: background 0.15s;
 }
 .btn-download:hover { background: #4338ca; }
+
+.topbar-nav-link--admin { color: #fbbf24; }
+.topbar-nav-link--admin:hover { color: #fde68a; }

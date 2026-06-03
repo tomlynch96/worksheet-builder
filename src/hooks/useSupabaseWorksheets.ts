@@ -15,8 +15,9 @@ export interface WorksheetEntry {
   rating: number | null
   annotation: string | null
   is_public: boolean
-  attribution: 'anonymous' | 'named'
+  attribution: 'anonymous' | 'named' | undefined
   publish_opt_out: boolean
+  published_at: string | null
   author_name?: string  // populated when fetching public library
   created_at: string
   updated_at: string
@@ -40,8 +41,9 @@ function rowToEntry(row: Record<string, unknown>): WorksheetEntry {
     rating: (row.rating as number) ?? null,
     annotation: (row.annotation as string) ?? null,
     is_public: (row.is_public as boolean) ?? false,
-    attribution: ((row.attribution as string) ?? 'anonymous') as 'anonymous' | 'named',
+    attribution: (row.attribution as 'anonymous' | 'named') ?? undefined,
     publish_opt_out: (row.publish_opt_out as boolean) ?? false,
+    published_at: (row.published_at as string) ?? null,
     author_name: (row.author_name as string) ?? undefined,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -140,6 +142,16 @@ export function useSupabaseWorksheets(profileId: string | null) {
     }
   }
 
+  async function unpublish(id: string) {
+    if (!isConfigured) return
+    await supabase.from('worksheets').update({
+      is_public: false,
+      published_at: null,
+      attribution: null,
+    }).eq('id', id)
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, is_public: false, attribution: undefined, published_at: undefined } : e))
+  }
+
   const fetchPublic = useCallback(async (opts: {
     qualification_id?: string
     exam_board?: string
@@ -205,5 +217,5 @@ export function useSupabaseWorksheets(profileId: string | null) {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  return { entries, loading, save, annotate, publish, fetchPublic, copyToMyLibrary, remove, reload: load }
+  return { entries, loading, save, annotate, publish, unpublish, fetchPublic, copyToMyLibrary, remove, reload: load }
 }
