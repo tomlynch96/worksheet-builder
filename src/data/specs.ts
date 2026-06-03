@@ -195,10 +195,6 @@ const gcsePhysicsTopics: SpecTopic[] = [
   },
 ]
 
-// ── Edexcel GCSE Combined Science: Physics (9-1) — 1SC0 ──────────────────────
-
-const gcseCombinedPhysicsTopics: SpecTopic[] = gcsePhysicsTopics.filter(t => t.ref !== 'T7')
-
 // ── Edexcel A Level Physics (9PH0) ───────────────────────────────────────────
 
 const aLevelPhysicsTopics: SpecTopic[] = [
