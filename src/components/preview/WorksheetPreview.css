@@ -88,6 +88,25 @@
   position: relative;
 }
 
+/* Reserved blank footer zone — 44px tall, sits inside the bottom margin area */
+.a4-page-footer {
+  position: absolute;
+  bottom: 68px;
+  left: 68px;
+  right: 68px;
+  height: 44px;
+  border-top: 0.5px solid #e5e7eb;
+}
+
+/* Screen-only: stack pages with a gap so the purple background shows between them */
+@media screen {
+  .ws-pages {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+}
+
 /* ── Shared typography ──────────────────────────────────── */
 .pr-placeholder {
   color: #aaa;

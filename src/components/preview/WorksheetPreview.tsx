@@ -969,7 +969,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
         ))}
       </div>
 
-      <div ref={printRef}>
+      <div ref={printRef} className="ws-pages">
         {pages.map((pageBlocks, pageIdx) => (
           <div key={pageIdx} className="a4-page">
             {mode === 'markscheme' && (
@@ -1006,6 +1006,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
               }
               return <PreviewBlock key={blockKey} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
             })}
+            <div className="a4-page-footer" />
           </div>
         ))}
       </div>
