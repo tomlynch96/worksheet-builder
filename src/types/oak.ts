@@ -41,4 +41,4 @@ export interface OakLessonDetail {
   exitQuiz: OakQuizQuestion[]
 }
 
-export type OakSubject = 'science' | 'physics'
+export type OakSubject = 'science' | 'physics' | 'biology' | 'chemistry'

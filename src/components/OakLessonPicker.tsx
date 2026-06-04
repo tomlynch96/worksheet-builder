@@ -3,7 +3,7 @@ import { useOakSearch, fetchOakLesson } from '../hooks/useOakLessons'
 import type { OakSubject, OakLessonDetail } from '../types/oak'
 import './OakLessonPicker.css'
 
-const KS: Record<OakSubject, string> = { science: 'ks3', physics: 'ks4' }
+const KS: Record<OakSubject, string> = { science: 'ks3', physics: 'ks4', biology: 'ks4', chemistry: 'ks4' }
 
 interface Props {
   subject: OakSubject

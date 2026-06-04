@@ -195,7 +195,10 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
   const [oakLesson, setOakLesson] = useState<OakLessonDetail | null>(null)
 
   function isOakCourse(qualId: string): boolean {
-    return qualId.startsWith('exploring-science') || qualId === 'gcse-physics'
+    return qualId.startsWith('exploring-science') ||
+      qualId === 'gcse-physics' ||
+      qualId === 'gcse-biology' ||
+      qualId === 'gcse-chemistry'
   }
 
   function getOakKs(qualId: string): 'ks3' | 'ks4' {
@@ -207,6 +210,12 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
     if (b === 'edexcel') return 'edexcel'
     if (b === 'ocr') return 'ocr'
     return 'aqa'
+  }
+
+  function getOakSubject(qualId: string): 'physics' | 'biology' | 'chemistry' {
+    if (qualId.includes('biology')) return 'biology'
+    if (qualId.includes('chemistry')) return 'chemistry'
+    return 'physics'
   }
 
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
@@ -516,6 +525,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
             <OakDirectoryPicker
               ks={getOakKs(selectedCourse.qualification_id)}
               examBoard={getOakKs(selectedCourse.qualification_id) === 'ks4' ? getOakBoard(selectedCourse.exam_board) : undefined}
+              subject={getOakKs(selectedCourse.qualification_id) === 'ks4' ? getOakSubject(selectedCourse.qualification_id) : undefined}
               onSeed={lesson => { setOakLesson(lesson); setStep('mode') }}
               onImport={handleOakImport}
               onSkip={() => { setOakLesson(null); setStep('mode') }}

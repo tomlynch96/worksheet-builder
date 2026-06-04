@@ -20,6 +20,7 @@ interface OakLesson {
 interface Props {
   ks: 'ks3' | 'ks4'
   examBoard?: string  // oak slug: aqa | edexcel | ocr (ks4 only)
+  subject?: 'physics' | 'biology' | 'chemistry'  // ks4 only; defaults to physics
   onSeed: (lesson: OakLessonDetail) => void
   onImport: (lesson: OakLessonDetail) => void
   onSkip: () => void
@@ -32,7 +33,7 @@ async function fetchJson(url: string) {
   return j
 }
 
-export function OakDirectoryPicker({ ks, examBoard, onSeed, onImport, onSkip }: Props) {
+export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed, onImport, onSkip }: Props) {
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -92,7 +93,7 @@ export function OakDirectoryPicker({ ks, examBoard, onSeed, onImport, onSkip }: 
     try {
       const params = new URLSearchParams({ unit: slug })
       if (ks === 'ks4') {
-        params.set('childSubject', 'physics')
+        params.set('childSubject', subject)
         params.set('examBoard', examBoard ?? 'aqa')
         if (topic.tier) params.set('tier', topic.tier)
       }
@@ -128,7 +129,7 @@ export function OakDirectoryPicker({ ks, examBoard, onSeed, onImport, onSkip }: 
   return (
     <div className="oak-dir">
       <div className="oak-dir-badge">
-        Oak National Academy — {ks === 'ks3' ? 'KS3 Science' : 'GCSE Physics'}
+        Oak National Academy — {ks === 'ks3' ? 'KS3 Science' : `GCSE ${subject.charAt(0).toUpperCase() + subject.slice(1)}`}
       </div>
 
       {loading && <div className="oak-dir-loading">Loading topics…</div>}
