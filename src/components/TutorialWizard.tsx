@@ -3,9 +3,6 @@ import './TutorialWizard.css'
 
 export const TUTORIAL_KEY = 'wb_tutorial_v1'
 
-// Step index that has the two-phase add-block interaction
-const ADD_BLOCK_STEP = 0
-
 interface StepDef {
   targetId?: string
   icon: string
@@ -13,8 +10,11 @@ interface StepDef {
   bg: string
   title: string
   body: string
-  bodyMenuOpen?: string  // alternate body text when the add-block menu is open
-  waitPrompt?: string    // Next button label while waiting for action
+  // If set, the wizard auto-advances when this selector appears in the DOM
+  autoAdvanceSelector?: string
+  // If set, Next button stays disabled until this selector appears in the DOM
+  waitSelector?: string
+  waitPrompt?: string
 }
 
 const STEPS: StepDef[] = [
@@ -25,8 +25,17 @@ const STEPS: StepDef[] = [
     bg: '#eef2ff',
     title: 'Add a block',
     body: 'Click "+ Add block" at the bottom of the editor panel to open the block menu.',
-    bodyMenuOpen: 'Select "Question" from the list to add your first question block.',
-    waitPrompt: 'Add a Question block to continue →',
+    autoAdvanceSelector: '[data-tutorial-id="block-option-question"]',
+  },
+  {
+    targetId: 'block-option-question',
+    icon: '+',
+    color: '#4f46e5',
+    bg: '#eef2ff',
+    title: 'Select Question',
+    body: 'Click "Question" to add your first question block to the worksheet.',
+    waitSelector: '.pr-question',
+    waitPrompt: 'Click Question to continue →',
   },
   {
     targetId: 'ai-fill',
@@ -92,14 +101,6 @@ function getTargetRect(targetId?: string): DOMRect | null {
   return el ? el.getBoundingClientRect() : null
 }
 
-function hasQuestionBlock(): boolean {
-  return document.querySelector('.pr-question') !== null
-}
-
-function isAddBlockMenuOpen(): boolean {
-  return document.querySelector('[data-tutorial-id="block-option-question"]') !== null
-}
-
 const CARD_W = 320
 
 function computeCardPos(rect: DOMRect): { top: number; left: number } {
@@ -124,82 +125,83 @@ interface Props {
 export function TutorialWizard({ open, onClose }: Props) {
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
-  const [questionAdded, setQuestionAdded] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [waitMet, setWaitMet] = useState(false)
 
   const step = STEPS[stepIdx]
   const total = STEPS.length
 
-  // On the add-block step, spotlight shifts to the Question option once the menu opens
-  const effectiveTargetId = (stepIdx === ADD_BLOCK_STEP && menuOpen)
-    ? 'block-option-question'
-    : step.targetId
-
   const refreshRect = useCallback(() => {
-    setRect(getTargetRect(effectiveTargetId))
-  }, [effectiveTargetId])
+    setRect(getTargetRect(step.targetId))
+  }, [step.targetId])
 
   useEffect(() => {
     if (!open) return
     setStepIdx(0)
-    setQuestionAdded(false)
-    setMenuOpen(false)
+    setWaitMet(false)
   }, [open])
 
   useEffect(() => {
     if (!open) return
+    setWaitMet(false)
     const t = setTimeout(refreshRect, 60)
     return () => clearTimeout(t)
-  }, [open, refreshRect])
+  }, [open, refreshRect, stepIdx])
 
   useEffect(() => {
     window.addEventListener('resize', refreshRect)
     return () => window.removeEventListener('resize', refreshRect)
   }, [refreshRect])
 
-  // Poll for menu open state and question-added state while on step 1
+  // Poll for autoAdvance and waitSelector on the current step
   useEffect(() => {
-    if (!open || stepIdx !== ADD_BLOCK_STEP) return
+    if (!open) return
+    if (!step.autoAdvanceSelector && !step.waitSelector) return
+
     const id = setInterval(() => {
-      const nowOpen = isAddBlockMenuOpen()
-      setMenuOpen(nowOpen)
-      if (hasQuestionBlock()) {
-        setQuestionAdded(true)
-        setMenuOpen(false)
+      if (step.autoAdvanceSelector && document.querySelector(step.autoAdvanceSelector)) {
+        // Auto-advance: step forward, refreshing rect for the new step
+        setStepIdx(s => s + 1)
+        setWaitMet(false)
+        clearInterval(id)
+        return
+      }
+      if (step.waitSelector && document.querySelector(step.waitSelector)) {
+        setWaitMet(true)
       }
     }, 150)
-    return () => clearInterval(id)
-  }, [open, stepIdx])
 
-  // Refresh rect immediately when menuOpen changes so spotlight snaps to new target
+    return () => clearInterval(id)
+  }, [open, step.autoAdvanceSelector, step.waitSelector, stepIdx])
+
+  // Re-measure rect whenever stepIdx changes
   useEffect(() => {
-    if (stepIdx === ADD_BLOCK_STEP) {
-      setTimeout(refreshRect, 30)
-    }
-  }, [menuOpen, stepIdx, refreshRect])
+    const t = setTimeout(refreshRect, 80)
+    return () => clearTimeout(t)
+  }, [stepIdx, refreshRect])
 
   if (!open) return null
 
-  const isWaitStep = stepIdx === ADD_BLOCK_STEP
-  const nextBlocked = isWaitStep && !questionAdded
+  const nextBlocked = !!step.waitSelector && !waitMet
   const cardPos = rect ? computeCardPos(rect) : null
 
-  const bodyText = (stepIdx === ADD_BLOCK_STEP && menuOpen && step.bodyMenuOpen)
-    ? step.bodyMenuOpen
-    : step.body
-
   function next() {
-    if (stepIdx < total - 1) setStepIdx(s => s + 1)
-    else onClose()
+    if (stepIdx < total - 1) {
+      setStepIdx(s => s + 1)
+      setWaitMet(false)
+    } else {
+      onClose()
+    }
   }
 
   function prev() {
-    if (stepIdx > 0) setStepIdx(s => s - 1)
+    if (stepIdx > 0) {
+      setStepIdx(s => s - 1)
+      setWaitMet(false)
+    }
   }
 
   return (
     <>
-      {/* Dark backdrop — either the spotlight box-shadow or a full overlay */}
       {rect ? (
         <div
           className="tutorial-spotlight"
@@ -214,12 +216,10 @@ export function TutorialWizard({ open, onClose }: Props) {
         <div className="tutorial-overlay" />
       )}
 
-      {/* Card */}
       <div
         className={`tutorial-card${rect ? ' tutorial-card--anchored' : ' tutorial-card--centered'}`}
         style={cardPos ? { top: cardPos.top, left: cardPos.left } : undefined}
       >
-        {/* Progress dots */}
         <div className="tutorial-progress">
           {STEPS.map((_, i) => (
             <div
@@ -237,7 +237,7 @@ export function TutorialWizard({ open, onClose }: Props) {
         </div>
 
         <h3 className="tutorial-title">{step.title}</h3>
-        <p className="tutorial-body">{bodyText}</p>
+        <p className="tutorial-body">{step.body}</p>
 
         <div className="tutorial-actions">
           <button className="tutorial-skip" onClick={onClose}>
@@ -247,16 +247,19 @@ export function TutorialWizard({ open, onClose }: Props) {
             {stepIdx > 0 && (
               <button className="tutorial-btn tutorial-btn--prev" onClick={prev}>← Back</button>
             )}
-            <button
-              className={`tutorial-btn tutorial-btn--next${nextBlocked ? ' tutorial-btn--waiting' : ''}`}
-              onClick={nextBlocked ? undefined : next}
-              disabled={nextBlocked}
-              title={nextBlocked ? 'Add a Question block first' : undefined}
-            >
-              {nextBlocked
-                ? (step.waitPrompt ?? 'Waiting…')
-                : stepIdx < total - 1 ? 'Next →' : 'Finish ✓'}
-            </button>
+            {/* Hide Next on auto-advance steps — the action itself moves things forward */}
+            {!step.autoAdvanceSelector && (
+              <button
+                className={`tutorial-btn tutorial-btn--next${nextBlocked ? ' tutorial-btn--waiting' : ''}`}
+                onClick={nextBlocked ? undefined : next}
+                disabled={nextBlocked}
+                title={nextBlocked ? (step.waitPrompt ?? 'Complete the action first') : undefined}
+              >
+                {nextBlocked
+                  ? (step.waitPrompt ?? 'Waiting…')
+                  : stepIdx < total - 1 ? 'Next →' : 'Finish ✓'}
+              </button>
+            )}
           </div>
         </div>
       </div>
