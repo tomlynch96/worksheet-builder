@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import type { FigureBlock } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
@@ -10,6 +10,8 @@ interface Props {
 
 export function FigureEditor({ block, dispatch }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const pasteZoneRef = useRef<HTMLDivElement>(null)
+  const [pasteReady, setPasteReady] = useState(false)
 
   function update(updates: Partial<FigureBlock>) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
@@ -29,6 +31,14 @@ export function FigureEditor({ block, dispatch }: Props) {
     e.preventDefault()
     const file = imgItem.getAsFile()
     if (file) readFile(file)
+    setPasteReady(false)
+  }
+
+  function handleZoneClick(e: React.MouseEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    pasteZoneRef.current?.focus()
+    setPasteReady(true)
   }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -43,16 +53,23 @@ export function FigureEditor({ block, dispatch }: Props) {
 
   return (
     <div className="block-fields">
+      {/* File input lives outside Field so the wrapping <label> doesn't activate it on click */}
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
       <Field label="Image">
         <div
-          className={`figure-paste-zone${imageSrc ? ' figure-paste-zone--has-image' : ''}`}
+          ref={pasteZoneRef}
+          className={`figure-paste-zone${imageSrc ? ' figure-paste-zone--has-image' : ''}${pasteReady ? ' figure-paste-zone--ready' : ''}`}
           tabIndex={0}
           onPaste={handlePaste}
+          onClick={handleZoneClick}
+          onBlur={() => setPasteReady(false)}
         >
           {imageSrc ? (
             <img src={imageSrc} alt="" className="figure-paste-preview" />
           ) : (
-            <span className="figure-paste-hint">Paste image here (Ctrl+V / ⌘+V)</span>
+            <span className="figure-paste-hint">
+              {pasteReady ? 'Ready — press Ctrl+V / ⌘+V' : 'Click then paste (Ctrl+V / ⌘+V)'}
+            </span>
           )}
         </div>
         <div className="figure-paste-actions">
@@ -65,7 +82,6 @@ export function FigureEditor({ block, dispatch }: Props) {
             </button>
           )}
         </div>
-        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
       </Field>
       <Field label="Caption">
         <input value={block.caption} onChange={e => update({ caption: e.target.value })} placeholder="Figure 1: …" />
