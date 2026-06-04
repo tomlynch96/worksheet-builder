@@ -36,16 +36,13 @@
 .editor-save-status--saved  { color: #4ade80; }
 .editor-save-status--error  { color: #f87171; }
 
-/* Off-screen on screen; full-width in print so the iframe layout matches A4 exactly */
-.print-only {
-  width: 794px;
-}
-
+/* Off-screen on screen; print iframe uses only screen media so this class is invisible there */
 @media screen {
   .print-only {
     position: fixed;
     top: 0;
     left: -9999px;
+    width: 794px;
     pointer-events: none;
   }
 }

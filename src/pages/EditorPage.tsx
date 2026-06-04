@@ -19,23 +19,17 @@ import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
 import './EditorPage.css'
 
 const printPageStyle = `
-  @page { size: 210mm 297mm; margin: 0; }
-  html, body { width: 794px; max-width: 794px; margin: 0; padding: 0; overflow: hidden; background: white; }
-  .print-only { width: 794px !important; }
-  .ws-pages { display: block !important; gap: 0 !important; }
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; background: white; }
+  .ws-pages { display: block !important; }
   .a4-page {
-    width: 210mm !important;
-    height: 297mm !important;
-    padding: 18mm !important;
+    width: 794px !important;
+    height: 1123px !important;
     box-shadow: none !important;
     page-break-after: always;
     break-after: page;
   }
-  .a4-page-footer {
-    bottom: 18mm !important;
-    left: 18mm !important;
-    right: 18mm !important;
-  }
+  .a4-page-footer { display: none !important; }
   [aria-hidden="true"] { display: none !important; }
   .preview-block-wrap { outline: none !important; cursor: default !important; }
   .preview-block-wrap::after { display: none !important; }
