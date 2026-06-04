@@ -102,18 +102,29 @@ function getTargetRect(targetId?: string): DOMRect | null {
 
 const CARD_W = 320
 
+const CARD_H = 260
+
 function computeCardPos(rect: DOMRect): { top: number; left: number } {
   const vw = window.innerWidth
   const vh = window.innerHeight
   const GAP = 16
 
+  // If the target is in the left half of the screen, prefer placing the card
+  // to the right so it never covers the target element.
+  const targetInLeftHalf = rect.right < vw / 2
+
+  if (targetInLeftHalf && rect.right + GAP + CARD_W < vw) {
+    const top = Math.min(Math.max(rect.top + rect.height / 2 - CARD_H / 2, GAP), vh - CARD_H - GAP)
+    return { top, left: rect.right + GAP }
+  }
+
   const cx = rect.left + rect.width / 2
   const left = Math.min(Math.max(cx - CARD_W / 2, GAP), vw - CARD_W - GAP)
 
-  if (rect.bottom + GAP + 260 < vh) {
+  if (rect.bottom + GAP + CARD_H < vh) {
     return { top: rect.bottom + GAP, left }
   }
-  return { top: Math.max(rect.top - GAP - 260, GAP), left }
+  return { top: Math.max(rect.top - GAP - CARD_H, GAP), left }
 }
 
 interface Props {
