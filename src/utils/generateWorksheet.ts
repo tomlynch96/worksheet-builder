@@ -1,4 +1,4 @@
-import type { Worksheet, Block, QuestionBlock, MatchThemUpBlock, MatchItem, QuestionPart } from '../types/worksheet'
+import type { Worksheet, Block, QuestionBlock, MatchThemUpBlock, MatchItem, QuestionPart, OakContext } from '../types/worksheet'
 
 const API_URL = '/api/generate-worksheet'
 
@@ -66,13 +66,7 @@ function sanitiseWorksheet(ws: Worksheet): Worksheet {
   return { ...ws, id: toUUID(ws.id), blocks: ws.blocks.map(sanitiseBlock) }
 }
 
-export interface OakContext {
-  lessonTitle: string
-  learningPoints: string[]
-  keywords: Array<{ keyword: string; description: string }>
-  misconceptions: Array<{ misconception: string; response: string }>
-  images?: string[]   // Oak question image URLs to pass as vision context
-}
+export type { OakContext }
 
 export async function generateWorksheet(params: {
   topic: string
@@ -109,6 +103,7 @@ export async function generateBlock(params: {
   context?: string
   request: string
   currentBlock?: Block
+  oakContext?: OakContext
 }): Promise<{ block: Block; attachedBlocks: Block[] }> {
   const raw = await callAPI({ mode: 'block', ...params })
   const parsed = JSON.parse(raw)
@@ -131,14 +126,14 @@ export async function generateBlock(params: {
   return { block: sanitiseBlock({ ...parsed, id: crypto.randomUUID() }), attachedBlocks: [] }
 }
 
-export async function generateVariation(block: Block, context: string): Promise<Block> {
-  const raw = await callAPI({ mode: 'vary', block, context })
+export async function generateVariation(block: Block, context: string, oakContext?: OakContext): Promise<Block> {
+  const raw = await callAPI({ mode: 'vary', block, context, oakContext })
   const parsed = JSON.parse(raw) as Block
   if (!parsed.type) throw new Error('Invalid block returned by AI.')
   return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
 }
 
-export async function generateWorkedExample(block: Block, context: string): Promise<Block> {
+export async function generateWorkedExample(block: Block, context: string, oakContext?: OakContext): Promise<Block> {
   // For multi-part questions, only demonstrate part a — simpler and more useful as a model answer
   let blockForWE = block
   if (block.type === 'question') {
@@ -151,6 +146,7 @@ export async function generateWorkedExample(block: Block, context: string): Prom
     mode: 'block',
     blockType: 'worked_example',
     context,
+    oakContext,
     request: `Generate a worked example demonstrating how to answer a question like this. Use similar but slightly different numbers or values so pupils cannot simply copy the answer directly: ${JSON.stringify(blockForWE)}`,
   })
   const parsed = JSON.parse(raw) as Block
@@ -158,8 +154,8 @@ export async function generateWorkedExample(block: Block, context: string): Prom
   return sanitiseBlock({ ...parsed, id: crypto.randomUUID() })
 }
 
-export async function generateExtraPart(block: QuestionBlock, context: string): Promise<{ parts: QuestionPart[] }> {
-  const raw = await callAPI({ mode: 'add_part', block, context })
+export async function generateExtraPart(block: QuestionBlock, context: string, oakContext?: OakContext): Promise<{ parts: QuestionPart[] }> {
+  const raw = await callAPI({ mode: 'add_part', block, context, oakContext })
   const parsed = JSON.parse(raw) as QuestionBlock
   if (!parsed.type || !Array.isArray(parsed.parts)) throw new Error('Invalid response from AI.')
   const sanitised = sanitiseBlock({ ...parsed, id: block.id }) as QuestionBlock

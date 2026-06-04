@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } from '../data/qualifications'
-import { generateWorksheet, type OakContext } from '../utils/generateWorksheet'
+import { generateWorksheet } from '../utils/generateWorksheet'
+import type { OakContext } from '../types/worksheet'
 import { OakDirectoryPicker } from './OakDirectoryPicker'
 import { oakQuestionToBlocks, oakQuestionNeedsImage } from '../utils/oakConvert'
 import { supabase, isConfigured } from '../lib/supabase'
@@ -11,15 +12,7 @@ import type { Worksheet } from '../types/worksheet'
 import type { OakLessonDetail } from '../types/oak'
 import './NewSheetWizard.css'
 
-interface WizardResult {
-  qualification_id: string
-  exam_board: string
-  spec_point: string
-  topic_title: string
-}
-
 interface Props {
-  onConfirm: (result: WizardResult) => void
   onGenerated: (worksheet: Worksheet, worksheetType: string) => void
   onCancel: () => void
   entries?: WorksheetEntry[]
@@ -169,7 +162,7 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
   )
 }
 
-export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] }: Props) {
+export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
   const { profile } = useProfileContext()
   // Include all courses the teacher has added, including custom boards (where specDataId returns null)
   const courses = (profile?.user_courses ?? []).filter(c => getOffering(c.qualification_id) !== undefined)
@@ -290,13 +283,46 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
 
   function handleBlank() {
     if (!selectedCourse) return
-    const topicTitle = topics?.find(t => t.ref === selectedTopic)?.title ?? freeText
-    onConfirm({
-      qualification_id: selectedCourse.qualification_id,
-      exam_board: selectedCourse.exam_board,
-      spec_point: selectedPoint || freeText,
-      topic_title: topicTitle,
-    })
+    const resolvedTitle = topics?.find(t => t.ref === selectedTopic)?.title ?? freeText
+    const oakCtx: OakContext | undefined = oakLesson ? {
+      lessonTitle: oakLesson.lessonTitle,
+      learningPoints: oakLesson.keyLearningPoints,
+      keywords: oakLesson.keywords,
+      misconceptions: oakLesson.misconceptions,
+      images: [...oakLesson.starterQuiz, ...oakLesson.exitQuiz]
+        .map(q => q.questionImage?.url)
+        .filter((url): url is string => !!url)
+        .filter((url, i, arr) => arr.indexOf(url) === i),
+    } : undefined
+    const worksheet: import('../types/worksheet').Worksheet = {
+      id: crypto.randomUUID(),
+      oakContext: oakCtx,
+      blocks: [
+        {
+          id: crypto.randomUUID(),
+          type: 'header',
+          title: '',
+          topic: resolvedTitle,
+          examBoard: selectedCourse.exam_board as import('../types/worksheet').ExamBoard,
+          tier: 'higher',
+          showName: true,
+          showDate: true,
+          showClass: true,
+          qualification: selectedCourse.qualification_id,
+          specPoint: selectedPoint || freeText || undefined,
+        },
+        {
+          id: crypto.randomUUID(),
+          type: 'instructions',
+          items: [
+            'Answer all questions.',
+            'Write your answers in the spaces provided.',
+            'The marks for each question are shown in brackets.',
+          ],
+        },
+      ],
+    }
+    onGenerated(worksheet, 'blank')
   }
 
   async function handleGenerate() {

@@ -55,25 +55,9 @@ export function Home() {
 
   const showWelcome = profile && !profile.welcome_seen && !welcomeLoading
 
-  function handleWizardConfirm(result: {
-    qualification_id: string
-    exam_board: string
-    spec_point: string
-    topic_title: string
-  }) {
-    setShowWizard(false)
-    const params = new URLSearchParams({
-      qual: result.qualification_id,
-      board: result.exam_board,
-      spec: result.spec_point,
-      topic: result.topic_title,
-    })
-    navigate(`/editor?${params.toString()}`)
-  }
-
   function handleWizardGenerated(worksheet: Worksheet, worksheetType: string) {
     setShowWizard(false)
-    navigate('/editor', { state: { worksheet, aiGenerated: true, worksheetType } })
+    navigate('/editor', { state: { worksheet, aiGenerated: worksheetType !== 'blank', worksheetType } })
   }
 
   function handleOpenSheet(worksheet: Worksheet) {
@@ -132,7 +116,6 @@ export function Home() {
 
       {showWizard && (
         <NewSheetWizard
-          onConfirm={handleWizardConfirm}
           onGenerated={handleWizardGenerated}
           onCancel={() => setShowWizard(false)}
         />

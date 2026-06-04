@@ -174,8 +174,17 @@ export type Block =
 
 export type BlockType = Block['type']
 
+export interface OakContext {
+  lessonTitle: string
+  learningPoints: string[]
+  keywords: Array<{ keyword: string; description: string }>
+  misconceptions: Array<{ misconception: string; response: string }>
+  images?: string[]
+}
+
 export interface Worksheet {
   id: string
   blocks: Block[]
   showLines?: boolean
+  oakContext?: OakContext
 }

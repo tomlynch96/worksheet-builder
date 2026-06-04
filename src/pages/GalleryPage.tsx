@@ -197,22 +197,6 @@ export function GalleryPage() {
     navigate('/editor', { state: { preset: idx } })
   }
 
-  function handleWizardConfirm(result: {
-    qualification_id: string
-    exam_board: string
-    spec_point: string
-    topic_title: string
-  }) {
-    setShowWizard(false)
-    const params = new URLSearchParams({
-      qual: result.qualification_id,
-      board: result.exam_board,
-      spec: result.spec_point,
-      topic: result.topic_title,
-    })
-    navigate(`/editor?${params.toString()}`)
-  }
-
   function toggleExpanded(key: string) {
     setExpanded(prev => {
       const next = new Set(prev)
@@ -415,8 +399,7 @@ export function GalleryPage() {
       {showWizard && (
         <NewSheetWizard
           entries={entries}
-          onConfirm={handleWizardConfirm}
-          onGenerated={(w, wt) => { setShowWizard(false); navigate('/editor', { state: { worksheet: w, aiGenerated: true, worksheetType: wt } }) }}
+          onGenerated={(w, wt) => { setShowWizard(false); navigate('/editor', { state: { worksheet: w, aiGenerated: wt !== 'blank', worksheetType: wt } }) }}
           onCancel={() => setShowWizard(false)}
         />
       )}

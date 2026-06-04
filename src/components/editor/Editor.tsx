@@ -119,6 +119,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
         context: worksheetContext,
         request: blockAI.prompt,
         currentBlock: selectedBlock,
+        oakContext: worksheet.oakContext,
       })
       // Insert any attached data blocks (e.g. a data table/graph) before the current block
       for (const attached of attachedBlocks) {
@@ -141,10 +142,10 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
     try {
       if (selectedBlock.type === 'question' && selectedBlock.parts.length > 0) {
         // Multi-part question: add an extra sub-part rather than a whole new block
-        const { parts } = await generateExtraPart(selectedBlock, worksheetContext)
+        const { parts } = await generateExtraPart(selectedBlock, worksheetContext, worksheet.oakContext)
         dispatch({ type: 'UPDATE_BLOCK', id: selectedBlock.id, updates: { parts } })
       } else {
-        const varied = await generateVariation(selectedBlock, worksheetContext)
+        const varied = await generateVariation(selectedBlock, worksheetContext, worksheet.oakContext)
         dispatch({ type: 'ADD_BLOCK', block: varied, afterId: selectedBlock.id })
       }
     } catch (err) {
@@ -158,7 +159,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
     if (!selectedBlock) return
     setAddingWorkedEx(true)
     try {
-      const we = await generateWorkedExample(selectedBlock, worksheetContext)
+      const we = await generateWorkedExample(selectedBlock, worksheetContext, worksheet.oakContext)
       // Find the index of the current block and insert the worked example just before it
       const idx = blocks.findIndex(b => b.id === selectedBlock.id)
       const afterId = idx > 0 ? blocks[idx - 1].id : undefined
