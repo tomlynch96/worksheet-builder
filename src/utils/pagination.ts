@@ -1,8 +1,7 @@
 import type { Block, FigureBlock, QuestionBlock, SpacerBlock } from '../types/worksheet'
 
 // A4 at 96dpi = 1123px. Margins 68px top/bottom = 987px content area.
-// 44px is reserved at the bottom of every page for the footer zone.
-export const PAGE_CONTENT_HEIGHT = 943
+export const PAGE_CONTENT_HEIGHT = 987
 
 // Approximate height taken by the question stem row (number + text line).
 const QUESTION_STEM_OVERHEAD = 48

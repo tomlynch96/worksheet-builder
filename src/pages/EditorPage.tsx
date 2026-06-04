@@ -29,7 +29,6 @@ const printPageStyle = `
     page-break-after: always;
     break-after: page;
   }
-  .a4-page-footer { display: none !important; }
   [aria-hidden="true"] { display: none !important; }
   .preview-block-wrap { outline: none !important; cursor: default !important; }
   .preview-block-wrap::after { display: none !important; }

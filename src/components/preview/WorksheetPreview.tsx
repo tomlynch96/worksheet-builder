@@ -1006,7 +1006,6 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
               }
               return <PreviewBlock key={blockKey} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
             })}
-            <div className="a4-page-footer" />
           </div>
         ))}
       </div>
