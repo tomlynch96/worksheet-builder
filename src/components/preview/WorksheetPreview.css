@@ -27,6 +27,46 @@
   border-radius: 0 2px 0 3px;
   pointer-events: none;
 }
+.preview-block-wrap--draggable {
+  cursor: grab;
+}
+.preview-block-wrap--draggable:active {
+  cursor: grabbing;
+}
+.preview-block-wrap--draggable::after {
+  content: '⠿ drag to attach';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: #0891b2;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 0 2px 0 3px;
+  pointer-events: none;
+}
+.preview-block-wrap--drop-zone {
+  outline-color: #16a34a;
+  outline-style: dashed;
+}
+.preview-block-wrap--drop-zone::after {
+  content: 'Drop to attach';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: #16a34a;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 0 2px 0 3px;
+  pointer-events: none;
+}
 
 /* ── A4 page shell ──────────────────────────────────────
    210 × 297 mm at 96 dpi = 794 × 1123 px.
@@ -392,6 +432,25 @@
   height: 22px;
   border: 1.5px solid #374151;
   border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.pr-step-row--correct .pr-step-num { background: #15803d; }
+.pr-step-row--correct { color: #15803d; font-weight: 600; }
+
+.pr-order-ms-layout {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+.pr-order-ms-layout .pr-steps-list {
+  flex: 1;
+}
+.pr-order-ms-divider {
+  width: 1px;
+  align-self: stretch;
+  background: #d1d5db;
+  margin: 0 16px;
   flex-shrink: 0;
 }
 
