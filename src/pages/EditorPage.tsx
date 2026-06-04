@@ -20,7 +20,8 @@ import './EditorPage.css'
 
 const printPageStyle = `
   @page { size: A4; margin: 0; }
-  body { margin: 0; background: white; }
+  html, body { margin: 0; padding: 0; background: white; }
+  .ws-pages { display: block !important; }
   .a4-page {
     width: 794px !important;
     height: 1123px !important;
@@ -217,6 +218,23 @@ export function EditorPage() {
     e.target.value = ''
   }
 
+  function handleAttach(blockId: string, questionId: string) {
+    const dragged = worksheet.blocks.find(b => b.id === blockId)
+    const target = worksheet.blocks.find(b => b.id === questionId) as { attachedDataId?: string | null; attachedDataIds?: string[] | null } | undefined
+    if (!dragged || !target) return
+    if (dragged.type === 'figure') {
+      dispatch({ type: 'UPDATE_BLOCK', id: questionId, updates: { attachedFigureId: blockId } as Partial<typeof dragged> })
+    } else if (dragged.type === 'data') {
+      if (target.attachedDataIds?.length) {
+        dispatch({ type: 'UPDATE_BLOCK', id: questionId, updates: { attachedDataIds: [...target.attachedDataIds, blockId] } as Partial<typeof dragged> })
+      } else if (target.attachedDataId) {
+        dispatch({ type: 'UPDATE_BLOCK', id: questionId, updates: { attachedDataIds: [target.attachedDataId, blockId], attachedDataId: null } as Partial<typeof dragged> })
+      } else {
+        dispatch({ type: 'UPDATE_BLOCK', id: questionId, updates: { attachedDataId: blockId } as Partial<typeof dragged> })
+      }
+    }
+  }
+
   function handleDownloadJSON() {
     const json = JSON.stringify(worksheet, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -320,6 +338,7 @@ export function EditorPage() {
             worksheet={worksheet}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            onAttach={handleAttach}
             mode={mode}
           />
         </main>

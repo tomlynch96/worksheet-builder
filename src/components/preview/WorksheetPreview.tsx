@@ -3,7 +3,7 @@ import 'katex/contrib/mhchem'
 import { useRef, useLayoutEffect, useState, type RefObject } from 'react'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock, NumericalAnswersBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
-import { splitIntoPages, estimateBlockHeight } from '../../utils/pagination'
+import { splitIntoPages, estimateBlockHeight, type PageBlock } from '../../utils/pagination'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
 import './WorksheetPreview.css'
 
@@ -116,8 +116,41 @@ function resolveDataIds(b: { attachedDataId?: string; attachedDataIds?: string[]
   return b.attachedDataId ? [b.attachedDataId] : []
 }
 
-function PreviewQuestion({ block, blocks, num, showLines = true }: { block: QuestionBlock; blocks: Block[]; num: number; showLines?: boolean }) {
+function PreviewQuestionParts({ parts, blocks, showLines }: { parts: QuestionBlock['parts']; blocks: Block[]; showLines: boolean }) {
+  return (
+    <div className="pr-parts">
+      {parts.map(part => (
+        <div key={part.id} className="pr-part">
+          <div className="pr-part-stem">
+            <span className="pr-part-label">({part.label})</span>
+            <span className="pr-q-text">
+              {part.stem ? <RichText html={part.stem} /> : <em className="pr-placeholder">Sub-question…</em>}
+            </span>
+            {part.marks > 0 && (
+              <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
+            )}
+          </div>
+          {resolveDataIds(part).map(id => <InlineData key={id} dataId={id} blocks={blocks} />)}
+          {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
+          <AnswerLines count={part.lines} show={showLines} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function PreviewQuestion({ block, blocks, num, showLines = true, isContinuation = false }: { block: QuestionBlock; blocks: Block[]; num: number; showLines?: boolean; isContinuation?: boolean }) {
   const hasParts = block.parts.length > 0
+
+  if (isContinuation) {
+    return (
+      <div className="pr-question">
+        <div className="pr-q-continuation">Question {num} (continued)</div>
+        <PreviewQuestionParts parts={block.parts} blocks={blocks} showLines={showLines} />
+      </div>
+    )
+  }
+
   return (
     <div className="pr-question">
       <div className="pr-question-stem">
@@ -132,26 +165,7 @@ function PreviewQuestion({ block, blocks, num, showLines = true }: { block: Ques
       {resolveDataIds(block).map(id => <InlineData key={id} dataId={id} blocks={blocks} />)}
       {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {!hasParts && <AnswerLines count={block.lines} show={showLines} />}
-      {hasParts && (
-        <div className="pr-parts">
-          {block.parts.map(part => (
-            <div key={part.id} className="pr-part">
-              <div className="pr-part-stem">
-                <span className="pr-part-label">({part.label})</span>
-                <span className="pr-q-text">
-                  {part.stem ? <RichText html={part.stem} /> : <em className="pr-placeholder">Sub-question…</em>}
-                </span>
-                {part.marks > 0 && (
-                  <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
-                )}
-              </div>
-              {resolveDataIds(part).map(id => <InlineData key={id} dataId={id} blocks={blocks} />)}
-              {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
-              <AnswerLines count={part.lines} show={showLines} />
-            </div>
-          ))}
-        </div>
-      )}
+      {hasParts && <PreviewQuestionParts parts={block.parts} blocks={blocks} showLines={showLines} />}
     </div>
   )
 }
@@ -564,8 +578,41 @@ function MSAnswer({ html }: { html?: string }) {
   )
 }
 
-function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; blocks: Block[]; num: number }) {
+function PreviewQuestionMSParts({ parts, blocks }: { parts: QuestionBlock['parts']; blocks: Block[] }) {
+  return (
+    <div className="pr-parts">
+      {parts.map(part => (
+        <div key={part.id} className="pr-part">
+          <div className="pr-part-stem">
+            <span className="pr-part-label">({part.label})</span>
+            <span className="pr-q-text">
+              {part.stem ? <RichText html={part.stem} /> : <em className="pr-placeholder">Sub-question…</em>}
+            </span>
+            {part.marks > 0 && (
+              <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
+            )}
+          </div>
+          {resolveDataIds(part).map(id => <InlineData key={id} dataId={id} blocks={blocks} markScheme />)}
+          {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
+          <MSAnswer html={part.markScheme} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function PreviewQuestionMS({ block, blocks, num, isContinuation = false }: { block: QuestionBlock; blocks: Block[]; num: number; isContinuation?: boolean }) {
   const hasParts = block.parts.length > 0
+
+  if (isContinuation) {
+    return (
+      <div className="pr-question">
+        <div className="pr-q-continuation">Question {num} (continued)</div>
+        <PreviewQuestionMSParts parts={block.parts} blocks={blocks} />
+      </div>
+    )
+  }
+
   return (
     <div className="pr-question">
       <div className="pr-question-stem">
@@ -580,24 +627,7 @@ function PreviewQuestionMS({ block, blocks, num }: { block: QuestionBlock; block
       {resolveDataIds(block).map(id => <InlineData key={id} dataId={id} blocks={blocks} markScheme />)}
       {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {hasParts ? (
-        <div className="pr-parts">
-          {block.parts.map(part => (
-            <div key={part.id} className="pr-part">
-              <div className="pr-part-stem">
-                <span className="pr-part-label">({part.label})</span>
-                <span className="pr-q-text">
-                  {part.stem ? <RichText html={part.stem} /> : <em className="pr-placeholder">Sub-question…</em>}
-                </span>
-                {part.marks > 0 && (
-                  <span className="pr-marks">[{part.marks} mark{part.marks !== 1 ? 's' : ''}]</span>
-                )}
-              </div>
-              {resolveDataIds(part).map(id => <InlineData key={id} dataId={id} blocks={blocks} markScheme />)}
-              {part.attachedFigureId && <InlineFigure figureId={part.attachedFigureId} blocks={blocks} />}
-              <MSAnswer html={part.markScheme} />
-            </div>
-          ))}
-        </div>
+        <PreviewQuestionMSParts parts={block.parts} blocks={blocks} />
       ) : (
         <MSAnswer html={block.markScheme} />
       )}
@@ -657,29 +687,82 @@ function PreviewClozeMS({ block, num }: { block: ClozeBlock; num: number }) {
 }
 
 function PreviewMatchThemUpMS({ block, num }: { block: MatchThemUpBlock; num: number }) {
+  const PAIR_COLORS = ['#dc2626', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#db2777', '#0891b2']
+  const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
+
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const leftRefs = useRef<(HTMLDivElement | null)[]>([])
+  const rightRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [lines, setLines] = useState<{ x1: number; y1: number; x2: number; y2: number; color: string }[]>([])
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const cr = container.getBoundingClientRect()
+    const next = block.items.map((item, origIdx) => {
+      const si = shuffledRight.indexOf(item.right)
+      const le = leftRefs.current[origIdx]
+      const re = rightRefs.current[si]
+      if (!le || !re) return null
+      const lr = le.getBoundingClientRect()
+      const rr = re.getBoundingClientRect()
+      return {
+        x1: lr.right - cr.left, y1: lr.top + lr.height / 2 - cr.top,
+        x2: rr.left - cr.left,  y2: rr.top + rr.height / 2 - cr.top,
+        color: PAIR_COLORS[origIdx % PAIR_COLORS.length],
+      }
+    }).filter((l): l is NonNullable<typeof l> => l !== null)
+    setLines(prev =>
+      prev.length === next.length && prev.every((l, i) => l.x1 === next[i].x1 && l.y1 === next[i].y1 && l.x2 === next[i].x2 && l.y2 === next[i].y2)
+        ? prev : next
+    )
+  })
+
+  const containerRect = containerRef.current?.getBoundingClientRect()
+
   return (
     <div className="pr-match">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
         <span className="pr-q-text">{block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Match each term to its definition.</em>}</span>
       </div>
-      <div className="pr-match-table">
+      <div ref={containerRef} className="pr-match-table" style={{ position: 'relative' }}>
+        <svg
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible' }}
+          width={containerRect?.width ?? 0}
+          height={containerRect?.height ?? 0}
+        >
+          {lines.map((l, i) => (
+            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l.color} strokeWidth={1.5} />
+          ))}
+        </svg>
         <div className="pr-match-col">
-          {block.items.map((item, i) => (
-            <div key={item.id} className="pr-match-cell pr-match-cell--left">
-              {item.left ? <RichText html={item.left} /> : <em className="pr-placeholder">Term {i + 1}…</em>}
+          {block.items.map((item, origIdx) => (
+            <div
+              key={item.id}
+              ref={el => { leftRefs.current[origIdx] = el }}
+              className="pr-match-cell pr-match-cell--left"
+              style={{ borderColor: PAIR_COLORS[origIdx % PAIR_COLORS.length], background: PAIR_COLORS[origIdx % PAIR_COLORS.length] + '18' }}
+            >
+              {item.left ? <RichText html={item.left} /> : <em className="pr-placeholder">Term {origIdx + 1}…</em>}
             </div>
           ))}
         </div>
-        <div className="pr-match-arrow-col">
-          {block.items.map((_, i) => <div key={i} className="pr-match-arrow">→</div>)}
-        </div>
+        <div className="pr-match-gap" />
         <div className="pr-match-col">
-          {block.items.map((item, i) => (
-            <div key={item.id} className="pr-match-cell pr-match-cell--right pr-match-cell--correct">
-              {item.right ? <RichText html={item.right} /> : <em className="pr-placeholder">Definition {i + 1}…</em>}
-            </div>
-          ))}
+          {shuffledRight.map((right, si) => {
+            const origIdx = block.items.findIndex(item => item.right === right)
+            return (
+              <div
+                key={si}
+                ref={el => { rightRefs.current[si] = el }}
+                className="pr-match-cell pr-match-cell--right"
+                style={{ borderColor: PAIR_COLORS[origIdx % PAIR_COLORS.length], background: PAIR_COLORS[origIdx % PAIR_COLORS.length] + '18' }}
+              >
+                {right ? <RichText html={right} /> : <em className="pr-placeholder">Definition {si + 1}…</em>}
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
@@ -687,19 +770,31 @@ function PreviewMatchThemUpMS({ block, num }: { block: MatchThemUpBlock; num: nu
 }
 
 function PreviewOrderStepsMS({ block, num }: { block: OrderStepsBlock; num: number }) {
+  const shuffled = seededShuffle(block.steps, block.id)
   return (
     <div className="pr-order-steps">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
         <span className="pr-q-num">{num}.</span>
         <span className="pr-q-text">{block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Number these steps in the correct order.</em>}</span>
       </div>
-      <div className="pr-steps-list">
-        {block.steps.map((step, i) => (
-          <div key={i} className="pr-step-row">
-            <span className="pr-step-num">{i + 1}</span>
-            {step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}
-          </div>
-        ))}
+      <div className="pr-order-ms-layout">
+        <div className="pr-steps-list">
+          {shuffled.map((step, i) => (
+            <div key={i} className="pr-step-row">
+              <span className="pr-step-num">{block.steps.indexOf(step) + 1}</span>
+              {step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}
+            </div>
+          ))}
+        </div>
+        <div className="pr-order-ms-divider" />
+        <div className="pr-steps-list">
+          {block.steps.map((step, i) => (
+            <div key={i} className="pr-step-row pr-step-row--correct">
+              <span className="pr-step-num">{i + 1}</span>
+              {step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -745,16 +840,17 @@ function PreviewNumericalAnswers({ block, blocks }: { block: NumericalAnswersBlo
   )
 }
 
-function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks: Block[]; mode: 'worksheet' | 'markscheme'; showLines?: boolean }) {
+function PreviewBlock({ block, blocks, mode, showLines }: { block: PageBlock; blocks: Block[]; mode: 'worksheet' | 'markscheme'; showLines?: boolean }) {
+  const isContinuation = block._isContinuation ?? false
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   if (mode === 'markscheme') {
     switch (block.type) {
-      case 'header':          return <PreviewHeaderMS block={block} />
+      case 'header':          return isContinuation ? null : <PreviewHeaderMS block={block} />
       case 'instructions':    return null
       case 'information':     return null
       case 'worked_example':  return null
       case 'spacer':          return null
-      case 'question':        return <PreviewQuestionMS block={block} blocks={blocks} num={num} />
+      case 'question':        return <PreviewQuestionMS block={block} blocks={blocks} num={num} isContinuation={isContinuation} />
       case 'multiple_choice': return <PreviewMultipleChoiceMS block={block} num={num} />
       case 'cloze':           return <PreviewClozeMS block={block} num={num} />
       case 'match_them_up':   return <PreviewMatchThemUpMS block={block} num={num} />
@@ -769,9 +865,9 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
     }
   }
   switch (block.type) {
-    case 'header':          return <PreviewHeader block={block} />
-    case 'instructions':    return <PreviewInstructions block={block} />
-    case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} />
+    case 'header':          return isContinuation ? null : <PreviewHeader block={block} />
+    case 'instructions':    return isContinuation ? null : <PreviewInstructions block={block} />
+    case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} isContinuation={isContinuation} />
     case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} blocks={blocks} />
     case 'worked_example':  return <PreviewWorkedExample block={block} />
     case 'information':     return <PreviewInformation block={block} />
@@ -789,6 +885,7 @@ interface WorksheetPreviewProps {
   worksheet: Worksheet
   selectedId?: string | null
   onSelect?: (id: string) => void
+  onAttach?: (blockId: string, questionId: string) => void
   mode?: 'worksheet' | 'markscheme'
   printRef?: RefObject<HTMLDivElement | null>
 }
@@ -810,8 +907,9 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
   return ids
 }
 
-export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'worksheet', printRef }: WorksheetPreviewProps) {
+export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mode = 'worksheet', printRef }: WorksheetPreviewProps) {
   const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
+  const [draggingId, setDraggingId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   const attachedIds = getAttachedBlockIds(worksheet.blocks)
@@ -842,7 +940,8 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
   })
 
   const heightOf = (block: Block) => measuredHeights[block.id] ?? estimateBlockHeight(block)
-  const pages = splitIntoPages(renderableBlocks, heightOf)
+  const showLines = worksheet.showLines !== false
+  const pages = splitIntoPages(renderableBlocks, heightOf, showLines)
 
   return (
     <>
@@ -871,7 +970,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
         ))}
       </div>
 
-      <div ref={printRef}>
+      <div ref={printRef} className="ws-pages">
         {pages.map((pageBlocks, pageIdx) => (
           <div key={pageIdx} className="a4-page">
             {mode === 'markscheme' && (
@@ -880,20 +979,33 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, mode = 'work
               </div>
             )}
             {pageBlocks.map(block => {
+              const blockKey = block._isContinuation ? `${block.id}-cont-${pageIdx}` : block.id
               const isSelected = block.id === selectedId
               if (onSelect) {
+                const isDraggable = onAttach && !block._isContinuation && (block.type === 'figure' || block.type === 'data')
+                const isDropZone  = onAttach && draggingId && (block.type === 'question' || block.type === 'multiple_choice')
                 return (
                   <div
-                    key={block.id}
-                    className={`preview-block-wrap ${isSelected ? 'preview-block-wrap--selected' : ''}`}
+                    key={blockKey}
+                    draggable={isDraggable || undefined}
+                    className={[
+                      'preview-block-wrap',
+                      isSelected ? 'preview-block-wrap--selected' : '',
+                      isDraggable ? 'preview-block-wrap--draggable' : '',
+                      isDropZone  ? 'preview-block-wrap--drop-zone' : '',
+                    ].join(' ').trim()}
                     onClick={() => onSelect(block.id)}
-                    title="Click to edit"
+                    title={isDraggable ? 'Drag onto a question to attach' : 'Click to edit'}
+                    onDragStart={isDraggable ? e => { e.dataTransfer.setData('text/plain', block.id); setDraggingId(block.id) } : undefined}
+                    onDragEnd={isDraggable ? () => setDraggingId(null) : undefined}
+                    onDragOver={isDropZone ? e => e.preventDefault() : undefined}
+                    onDrop={isDropZone ? e => { e.preventDefault(); onAttach!(draggingId!, block.id); setDraggingId(null) } : undefined}
                   >
                     <PreviewBlock block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
                   </div>
                 )
               }
-              return <PreviewBlock key={block.id} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
+              return <PreviewBlock key={blockKey} block={block} blocks={worksheet.blocks} mode={mode} showLines={worksheet.showLines !== false} />
             })}
           </div>
         ))}

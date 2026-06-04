@@ -27,6 +27,46 @@
   border-radius: 0 2px 0 3px;
   pointer-events: none;
 }
+.preview-block-wrap--draggable {
+  cursor: grab;
+}
+.preview-block-wrap--draggable:active {
+  cursor: grabbing;
+}
+.preview-block-wrap--draggable::after {
+  content: '⠿ drag to attach';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: #0891b2;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 0 2px 0 3px;
+  pointer-events: none;
+}
+.preview-block-wrap--drop-zone {
+  outline-color: #16a34a;
+  outline-style: dashed;
+}
+.preview-block-wrap--drop-zone::after {
+  content: 'Drop to attach';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: #16a34a;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 0 2px 0 3px;
+  pointer-events: none;
+}
 
 /* ── A4 page shell ──────────────────────────────────────
    210 × 297 mm at 96 dpi = 794 × 1123 px.
@@ -46,6 +86,16 @@
   color: #000;
   flex-shrink: 0;
   position: relative;
+}
+
+
+/* Screen-only: stack pages with a gap so the purple background shows between them */
+@media screen {
+  .ws-pages {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
 }
 
 /* ── Shared typography ──────────────────────────────────── */
@@ -156,6 +206,13 @@
 /* ── Questions ───────────────────────────────────────────── */
 .pr-question {
   margin-bottom: 20px;
+}
+
+.pr-q-continuation {
+  font-size: 9pt;
+  font-style: italic;
+  color: #6b7280;
+  margin-bottom: 4px;
 }
 
 .pr-question-stem {
@@ -395,6 +452,34 @@
   flex-shrink: 0;
 }
 
+.pr-step-row--correct .pr-step-num {
+  background: #15803d;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.pr-step-row--correct { color: #15803d; font-weight: 600; }
+
+.pr-match-cell {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.pr-order-ms-layout {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+.pr-order-ms-layout .pr-steps-list {
+  flex: 1;
+}
+.pr-order-ms-divider {
+  width: 1px;
+  align-self: stretch;
+  background: #d1d5db;
+  margin: 0 16px;
+  flex-shrink: 0;
+}
+
 /* ── Figure ──────────────────────────────────────────────── */
 .pr-figure {
   display: flex;
@@ -423,7 +508,11 @@
 .pr-table { border-collapse: collapse; width: 100%; font-size: 10px; }
 .pr-th { padding: 5px 8px; background: #f3f4f6; border: 1px solid #d1d5db; font-weight: 600; color: #374151; text-align: center; }
 .pr-td { padding: 4px 8px; border: 1px solid #d1d5db; color: #1f2937; text-align: center; min-width: 50px; }
-.pr-td--was-hidden { background: #dcfce7; }
+.pr-td--was-hidden {
+  background: #dcfce7;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 .pr-data-graph { margin-bottom: 12px; }
 .pr-graph-svg { display: block; overflow: visible; margin: 0 auto; }
 
@@ -499,6 +588,8 @@
 .pr-match-cell--correct {
   border-color: #86efac;
   background: #f0fdf4;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .pr-step-num {
