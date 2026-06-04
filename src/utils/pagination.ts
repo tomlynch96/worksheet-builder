@@ -39,7 +39,7 @@ function estimatePartHeight(part: { lines: number }, showLines: boolean): number
 // A block that may represent a continuation of a question across a page break.
 export type PageBlock = Block & { _isContinuation?: boolean }
 
-export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => number, showLines = true): PageBlock[][] {
+export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => number, showLines = true, noSplitParts = false): PageBlock[][] {
   const h = heightOf ?? estimateBlockHeight
   const pages: PageBlock[][] = [[]]
   let used = 0
@@ -48,7 +48,7 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
   const newPage = () => { pages.push([]); used = 0 }
 
   for (const block of blocks) {
-    if (block.type === 'question' && (block as QuestionBlock).parts.length > 0) {
+    if (!noSplitParts && block.type === 'question' && (block as QuestionBlock).parts.length > 0) {
       const q = block as QuestionBlock
 
       // Derive the stem+attachments overhead from the measured/estimated total height.

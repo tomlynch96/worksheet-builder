@@ -957,7 +957,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
 
   const heightOf = (block: Block) => measuredHeights[block.id] ?? estimateBlockHeight(block)
   const showLines = worksheet.showLines !== false
-  const pages = splitIntoPages(renderableBlocks, heightOf, showLines)
+  const pages = splitIntoPages(renderableBlocks, heightOf, showLines, mode === 'markscheme')
 
   // Report actual page count once measurements have stabilised
   useEffect(() => {
