@@ -170,19 +170,11 @@
   position: relative;
 }
 
-.oak-tooltip-icon {
-  font-size: 10px;
-  opacity: 0.7;
-  margin-left: 4px;
-  vertical-align: middle;
-}
-
 .oak-tooltip {
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 230px;
+  left: 0;
+  width: 220px;
   background: #1f2937;
   color: #f9fafb;
   font-size: 12px;
@@ -202,8 +194,7 @@
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
   border: 6px solid transparent;
   border-top-color: #1f2937;
 }
