@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Worksheet, HeaderBlock } from '../types/worksheet'
+import { computeTotalMarks } from '../utils/marks'
 
 export interface GalleryEntry {
   id: string
@@ -9,6 +10,7 @@ export interface GalleryEntry {
   tier: string
   blockCount: number
   questionCount: number
+  totalMarks: number
   savedAt: string
   worksheet: Worksheet
 }
@@ -49,6 +51,7 @@ export function useSavedWorksheets() {
       ...meta,
       blockCount: worksheet.blocks.length,
       questionCount: worksheet.blocks.filter(b => questionTypes.has(b.type)).length,
+      totalMarks: computeTotalMarks(worksheet.blocks),
       savedAt: new Date().toISOString(),
       worksheet,
     }

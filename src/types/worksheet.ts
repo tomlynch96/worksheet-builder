@@ -11,6 +11,7 @@ export interface HeaderBlock {
   showName: boolean
   showDate: boolean
   showClass: boolean
+  showTotalMarks?: boolean
   qualification?: string
   specPoint?: string
 }

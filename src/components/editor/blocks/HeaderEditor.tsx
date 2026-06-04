@@ -89,6 +89,7 @@ export function HeaderEditor({ block, dispatch }: Props) {
       <CheckRow label="Show name field" checked={block.showName} onChange={v => update({ showName: v })} />
       <CheckRow label="Show date field" checked={block.showDate} onChange={v => update({ showDate: v })} />
       <CheckRow label="Show class field" checked={block.showClass} onChange={v => update({ showClass: v })} />
+      <CheckRow label="Show total marks" checked={block.showTotalMarks ?? false} onChange={v => update({ showTotalMarks: v })} />
     </div>
   )
 }

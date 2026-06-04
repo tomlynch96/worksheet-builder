@@ -1,6 +1,7 @@
 import type { GalleryEntry } from '../hooks/useSavedWorksheets'
 import type { Worksheet } from '../types/worksheet'
 import { PRESETS } from '../data/presets'
+import { computeTotalMarks } from '../utils/marks'
 import './Gallery.css'
 
 const BLOCK_TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -97,7 +98,7 @@ function WorksheetThumbnail({
       </div>
 
       <div className="gallery-card-meta">
-        <span>{entry.questionCount} question{entry.questionCount !== 1 ? 's' : ''} · {entry.blockCount} blocks</span>
+        <span>{entry.totalMarks ?? computeTotalMarks(entry.worksheet.blocks)} marks · {entry.blockCount} blocks</span>
         <span className="gallery-card-date">{formatDate(entry.savedAt)}</span>
       </div>
 
@@ -122,8 +123,7 @@ function TemplateCard({ idx, onLoad }: { idx: number; onLoad: (idx: number) => v
   const boardColor = BOARD_COLORS[examBoard] ?? '#374151'
   const tierLabel = tier === 'higher' ? 'Higher' : tier === 'foundation' ? 'Foundation' : ''
   const blockTypes = worksheet.blocks.map(b => b.type).filter(t => t !== 'header' && t !== 'instructions')
-  const questionTypes = new Set(['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'])
-  const questionCount = worksheet.blocks.filter(b => questionTypes.has(b.type)).length
+  const totalMarks = computeTotalMarks(worksheet.blocks)
 
   return (
     <div className="gallery-card gallery-card--template">
@@ -148,7 +148,7 @@ function TemplateCard({ idx, onLoad }: { idx: number; onLoad: (idx: number) => v
       </div>
 
       <div className="gallery-card-meta">
-        <span>{questionCount} question{questionCount !== 1 ? 's' : ''} · {worksheet.blocks.length} blocks</span>
+        <span>{totalMarks} marks · {worksheet.blocks.length} blocks</span>
       </div>
 
       <div className="gallery-card-actions">

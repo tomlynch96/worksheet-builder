@@ -129,10 +129,23 @@
   margin-bottom: 18px;
 }
 
+.pr-header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
 .pr-header-badges {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
+}
+
+.pr-total-marks {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
 }
 
 .pr-badge {

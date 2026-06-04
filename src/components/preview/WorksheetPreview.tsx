@@ -5,6 +5,7 @@ import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, W
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages, estimateBlockHeight, type PageBlock } from '../../utils/pagination'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
+import { computeTotalMarks } from '../../utils/marks'
 import './WorksheetPreview.css'
 
 const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
@@ -77,13 +78,19 @@ function PreviewHeaderMS({ block }: { block: HeaderBlock }) {
   )
 }
 
-function PreviewHeader({ block }: { block: HeaderBlock }) {
+function PreviewHeader({ block, allBlocks }: { block: HeaderBlock; allBlocks: Block[] }) {
+  const totalMarks = block.showTotalMarks ? computeTotalMarks(allBlocks) : 0
   return (
     <div className="pr-header">
-      <div className="pr-header-badges">
-        <span className="pr-badge pr-badge--board">{block.examBoard}</span>
-        {block.tier !== 'both' && (
-          <span className="pr-badge pr-badge--tier">{block.tier === 'higher' ? 'Higher Tier' : 'Foundation Tier'}</span>
+      <div className="pr-header-top-row">
+        <div className="pr-header-badges">
+          <span className="pr-badge pr-badge--board">{block.examBoard}</span>
+          {block.tier !== 'both' && (
+            <span className="pr-badge pr-badge--tier">{block.tier === 'higher' ? 'Higher Tier' : 'Foundation Tier'}</span>
+          )}
+        </div>
+        {block.showTotalMarks && totalMarks > 0 && (
+          <span className="pr-total-marks">{totalMarks} marks</span>
         )}
       </div>
       <h1 className="pr-title">{block.title || 'Worksheet Title'}</h1>
@@ -224,6 +231,7 @@ function PreviewInformation({ block }: { block: InformationBlock }) {
 
 function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
   const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
+  const marks = block.items.length
   return (
     <div className="pr-match">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
@@ -231,6 +239,7 @@ function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: numb
         <span className="pr-q-text">
           {block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Match each term to its definition.</em>}
         </span>
+        {marks > 0 && <span className="pr-marks">[{marks} mark{marks !== 1 ? 's' : ''}]</span>}
       </div>
       <div className="pr-match-table">
         <div className="pr-match-col">
@@ -256,6 +265,7 @@ function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: numb
 function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
   const parts = clozeToDisplayParts(block.text)
   const words = seededShuffle(extractClozeWords(block.text), block.id)
+  const marks = words.length
   return (
     <div className="pr-cloze">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
@@ -263,6 +273,7 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
         <span className="pr-q-text">
           {block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Fill in the blanks.</em>}
         </span>
+        {marks > 0 && <span className="pr-marks">[{marks} mark{marks !== 1 ? 's' : ''}]</span>}
       </div>
       {block.showWordBank && words.length > 0 && (
         <div className="pr-word-bank">
@@ -289,6 +300,7 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
 
 function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
   const shuffled = seededShuffle(block.steps, block.id)
+  const marks = block.steps.length
   return (
     <div className="pr-order-steps">
       <div className="pr-question-stem" style={{ marginBottom: 8 }}>
@@ -296,6 +308,7 @@ function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number
         <span className="pr-q-text">
           {block.heading ? <RichText html={block.heading} /> : <em className="pr-placeholder">Number these steps in the correct order.</em>}
         </span>
+        {marks > 0 && <span className="pr-marks">[{marks} mark{marks !== 1 ? 's' : ''}]</span>}
       </div>
       <div className="pr-steps-list">
         {shuffled.map((step, i) => (
@@ -865,7 +878,7 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: PageBlock; bl
     }
   }
   switch (block.type) {
-    case 'header':          return isContinuation ? null : <PreviewHeader block={block} />
+    case 'header':          return isContinuation ? null : <PreviewHeader block={block} allBlocks={blocks} />
     case 'instructions':    return isContinuation ? null : <PreviewInstructions block={block} />
     case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} isContinuation={isContinuation} />
     case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} blocks={blocks} />
