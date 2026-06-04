@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './TutorialWizard.css'
 
 export const TUTORIAL_KEY = 'wb_tutorial_v1'
@@ -125,6 +125,9 @@ export function TutorialWizard({ open, onClose }: Props) {
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
   const [waitMet, setWaitMet] = useState(false)
+  // Baseline element count captured when a step activates — auto-advance only
+  // triggers when the count *increases*, so pre-existing elements don't fire it.
+  const baselineCountRef = useRef(0)
 
   const step = STEPS[stepIdx]
   const total = STEPS.length
@@ -139,12 +142,15 @@ export function TutorialWizard({ open, onClose }: Props) {
     setWaitMet(false)
   }, [open])
 
+  // Capture baseline count whenever the step changes
   useEffect(() => {
     if (!open) return
     setWaitMet(false)
+    const sel = step.autoAdvanceSelector ?? step.waitSelector
+    baselineCountRef.current = sel ? document.querySelectorAll(sel).length : 0
     const t = setTimeout(refreshRect, 60)
     return () => clearTimeout(t)
-  }, [open, refreshRect, stepIdx])
+  }, [open, stepIdx, refreshRect, step.autoAdvanceSelector, step.waitSelector])
 
   useEffect(() => {
     window.addEventListener('resize', refreshRect)
@@ -157,15 +163,18 @@ export function TutorialWizard({ open, onClose }: Props) {
     if (!step.autoAdvanceSelector && !step.waitSelector) return
 
     const id = setInterval(() => {
-      if (step.autoAdvanceSelector && document.querySelector(step.autoAdvanceSelector)) {
-        // Auto-advance: step forward, refreshing rect for the new step
-        setStepIdx(s => s + 1)
-        setWaitMet(false)
-        clearInterval(id)
+      if (step.autoAdvanceSelector) {
+        const count = document.querySelectorAll(step.autoAdvanceSelector).length
+        if (count > baselineCountRef.current) {
+          setStepIdx(s => s + 1)
+          setWaitMet(false)
+          clearInterval(id)
+        }
         return
       }
-      if (step.waitSelector && document.querySelector(step.waitSelector)) {
-        setWaitMet(true)
+      if (step.waitSelector) {
+        const count = document.querySelectorAll(step.waitSelector).length
+        if (count > baselineCountRef.current) setWaitMet(true)
       }
     }, 150)
 
