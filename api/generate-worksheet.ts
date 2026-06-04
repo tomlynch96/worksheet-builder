@@ -456,7 +456,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     type ContentBlock = TextBlock | ImageBlock
     type Message = { role: string; content: string | ContentBlock[] }
 
-    const oakImages = mode === 'worksheet' ? (oakContext?.images ?? []) : []
+    const oakImages = ['worksheet', 'block', 'vary', 'add_part'].includes(mode as string)
+      ? (oakContext?.images ?? [])
+      : []
     let userContent: string | ContentBlock[]
     if (oakImages.length > 0) {
       userContent = [
