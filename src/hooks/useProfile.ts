@@ -42,8 +42,13 @@ export function useProfile() {
       .maybeSingle()
 
     if (error) console.error('[loadProfile] error:', error.code, error.message, error.details)
-    if (!error && data) setProfile(data as Profile)
-    else console.warn('[loadProfile] no profile found for', id)
+    if (!error && data) {
+      setProfile(data as Profile)
+      if (!sessionStorage.getItem('pv_logged')) {
+        sessionStorage.setItem('pv_logged', '1')
+        supabase.from('page_views').insert({ profile_id: id })
+      }
+    } else console.warn('[loadProfile] no profile found for', id)
     setLoading(false)
   }
 
