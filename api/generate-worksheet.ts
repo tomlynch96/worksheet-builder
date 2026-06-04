@@ -37,9 +37,10 @@ ATTACHING DATA BLOCKS TO QUESTIONS — use "attachedDataId" or "attachedDataIds"
 - Set "attachedDataId" on a specific PART if only that sub-question uses the data (e.g. part c asks pupils to plot a graph).
 - The data block MUST also exist as a standalone block in the worksheet (so it appears in the mark scheme), AND it must be referenced via attachedDataId/attachedDataIds on a question or part.
 - Set "attachedDataId": null when no data is attached (single attachment).
-- SHOWING BOTH TABLE AND GRAPH: when a question needs pupils to both read from a table AND plot a graph (very common in practicals), create TWO data blocks — one with display "table" and one with display "graph" (using linkedDataId pointing to the table block). Then use "attachedDataIds": ["table-block-id", "graph-block-id"] on the question/part so BOTH appear inline. Never use "attachedDataId" when you need two — use "attachedDataIds" instead.
+- SHOWING BOTH TABLE AND GRAPH: when a question needs pupils to both read from a table AND plot a graph (very common in practicals), create TWO data blocks — one with display "table" (with all the data in rows) and one with display "graph" (with linkedDataId pointing to the table block's id and rows set to []). The graph MUST use linkedDataId and NOT duplicate the data. Then use "attachedDataIds": ["table-block-id", "graph-block-id"] on the question/part so BOTH appear inline. Never use "attachedDataId" when you need two — use "attachedDataIds" instead.
 - Example: a practical question where part (b) asks pupils to plot the data AND part (c) asks them to read from the table:
-  Create data-001 (display "table") and data-002 (display "graph", linkedDataId "data-001"). Set "attachedDataIds": ["data-001","data-002"] on the question stem.
+  Create data-001 (display "table", rows with all data) and data-002 (display "graph", linkedDataId "data-001", rows []). Set "attachedDataIds": ["data-001","data-002"] on the question stem.
+- CRITICAL: When a graph block has a linkedDataId set, its own "rows" field MUST be [] — do not copy the data into both blocks.
 - Example: a question where part (d) alone uses a results table — set "attachedDataId" only on part d's object, leave it null on the others.
 
 question (single): { "id":"...", "type":"question", "stem":"...", "marks":1, "lines":2, "parts":[], "markScheme":"...", "numericalAnswer":"15", "attachedDataId": null, "attachedDataIds": null }
@@ -244,6 +245,90 @@ ${FORMATTING_RULES}`
 
 // ── Handler ───────────────────────────────────────────────────────────────
 
+// ── Post-processing types (minimal, matching worksheet types) ─────────────
+
+type Part = { attachedDataId?: string | null; attachedDataIds?: string[] | null }
+type QuestionBlock = { type: 'question'; id: string; attachedDataId?: string | null; attachedDataIds?: string[] | null; parts?: Part[] }
+type DataBlock = { type: 'data'; id: string; display?: string; rows?: string[][]; columns?: { label: string }[]; graph?: { linkedDataId?: string | null } }
+type Block = { type: string; id: string } & Partial<QuestionBlock> & Partial<DataBlock>
+
+// Collect all data IDs already referenced by questions/parts
+function referencedDataIds(blocks: Block[]): Set<string> {
+  const ids = new Set<string>()
+  for (const b of blocks) {
+    if (b.type !== 'question' && b.type !== 'multiple_choice') continue
+    const q = b as QuestionBlock
+    if (q.attachedDataId) ids.add(q.attachedDataId)
+    if (q.attachedDataIds) q.attachedDataIds.forEach(id => ids.add(id))
+    for (const p of q.parts ?? []) {
+      if (p.attachedDataId) ids.add(p.attachedDataId)
+      if (p.attachedDataIds) p.attachedDataIds.forEach(id => ids.add(id))
+    }
+  }
+  return ids
+}
+
+function fixDataBlocks(blocks: Block[]): Block[] {
+  // 1. Deduplicate table+graph pairs: if a graph/bar block has its own rows AND
+  //    there is a table block with the same column count, wire up linkedDataId
+  //    and clear the graph's rows.
+  const tableBlocks = blocks.filter(b => b.type === 'data' && (b as DataBlock).display === 'table') as DataBlock[]
+  for (const b of blocks) {
+    if (b.type !== 'data') continue
+    const d = b as DataBlock
+    if (d.display !== 'graph' && d.display !== 'bar') continue
+    if (d.graph?.linkedDataId) continue                     // already linked
+    if (!d.rows?.length) continue                            // no duplicate data
+    // Find a table with the same column count
+    const matchingTable = tableBlocks.find(t =>
+      t.columns?.length === d.columns?.length &&
+      t.columns?.every((col, i) => col.label === d.columns?.[i]?.label)
+    )
+    if (matchingTable) {
+      d.graph = { ...(d.graph ?? {}), linkedDataId: matchingTable.id }
+      d.rows = []
+    }
+  }
+
+  // 2. Attach any still-unattached data blocks to the nearest preceding question.
+  const referenced = referencedDataIds(blocks)
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i]
+    if (b.type !== 'data') continue
+    if (referenced.has(b.id)) continue
+    // Find the closest preceding question/multiple_choice block
+    let target: QuestionBlock | null = null
+    for (let j = i - 1; j >= 0; j--) {
+      if (blocks[j].type === 'question' || blocks[j].type === 'multiple_choice') {
+        target = blocks[j] as QuestionBlock
+        break
+      }
+    }
+    // Fall back to the next question if none precedes it
+    if (!target) {
+      for (let j = i + 1; j < blocks.length; j++) {
+        if (blocks[j].type === 'question' || blocks[j].type === 'multiple_choice') {
+          target = blocks[j] as QuestionBlock
+          break
+        }
+      }
+    }
+    if (!target) continue
+    // Attach: prefer attachedDataIds if already has one attachment, otherwise attachedDataId
+    if (target.attachedDataId) {
+      target.attachedDataIds = [target.attachedDataId, b.id]
+      target.attachedDataId = null
+    } else if (target.attachedDataIds?.length) {
+      target.attachedDataIds = [...target.attachedDataIds, b.id]
+    } else {
+      target.attachedDataId = b.id
+    }
+    referenced.add(b.id)
+  }
+
+  return blocks
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -414,16 +499,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const jsonStart = stripped.search(/[{[]/)
     const cleaned = jsonStart > 0 ? stripped.slice(jsonStart) : stripped
 
-    let finalJson = cleaned
+    let parsed: { id?: string; blocks?: unknown[] }
     try {
-      JSON.parse(cleaned)
+      parsed = JSON.parse(cleaned)
     } catch {
       return res.status(502).json({
         error: `The AI returned an unexpected response instead of JSON. Try rephrasing your request.\n\nModel said: "${stripped.slice(0, 200)}${stripped.length > 200 ? '…' : ''}"`,
       })
     }
 
-    return res.status(200).json({ result: finalJson })
+    // Post-process only full worksheet generations
+    if (mode === 'worksheet' && Array.isArray(parsed.blocks)) {
+      parsed.blocks = fixDataBlocks(parsed.blocks as Block[]) as unknown[]
+    }
+
+    return res.status(200).json({ result: JSON.stringify(parsed) })
   } catch (err) {
     return res.status(500).json({ error: String(err) })
   }
