@@ -9,7 +9,7 @@ interface Props {
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-const EXAM_BOARDS: ExamBoard[] = ['AQA', 'OCR', 'Edexcel', 'WJEC', 'Hodder']
+const EXAM_BOARDS: ExamBoard[] = ['AQA', 'OCR', 'Edexcel', 'WJEC', 'Pearson', 'IB']
 const TIERS: { value: Tier; label: string }[] = [
   { value: 'higher', label: 'Higher' },
   { value: 'foundation', label: 'Foundation' },

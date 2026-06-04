@@ -27,7 +27,7 @@ const bookletPrintStyle = `
 `
 
 const BOARD_COLORS: Record<string, string> = {
-  AQA: '#1e3a5f', OCR: '#1d4ed8', Edexcel: '#7c2d12', WJEC: '#166534', Hodder: '#065f46',
+  AQA: '#1e3a5f', OCR: '#1d4ed8', Edexcel: '#7c2d12', WJEC: '#166534', Pearson: '#0052cc', IB: '#00447c',
 }
 const BLOCK_TYPE_COLORS: Record<string, string> = {
   question: '#16a34a', multiple_choice: '#0891b2', worked_example: '#c2410c',

@@ -1,4 +1,4 @@
-export type ExamBoard = 'AQA' | 'OCR' | 'Edexcel' | 'WJEC' | 'Hodder'
+export type ExamBoard = 'AQA' | 'OCR' | 'Edexcel' | 'WJEC' | 'Pearson' | 'IB'
 export type Tier = 'foundation' | 'higher' | 'both'
 
 export interface HeaderBlock {

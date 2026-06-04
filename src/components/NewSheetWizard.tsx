@@ -26,7 +26,7 @@ interface Props {
 }
 
 const BOARD_COLORS: Record<string, string> = {
-  AQA: '#1e3a5f', OCR: '#1d4ed8', Edexcel: '#7c2d12', WJEC: '#166534',
+  AQA: '#1e3a5f', OCR: '#1d4ed8', Edexcel: '#7c2d12', WJEC: '#166534', Pearson: '#0052cc', IB: '#00447c',
 }
 
 type WorksheetType = 'maths' | 'knowledge' | 'practical'
@@ -190,8 +190,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
     return getSpecTopics(selectedCourse.qualification_id, selectedCourse.exam_board)
   }, [selectedCourse])
 
-  const isKS3 = selectedCourse?.qualification_id.startsWith('exploring-science') ?? false
-
   const [oakLesson, setOakLesson] = useState<OakLessonDetail | null>(null)
 
   function isOakCourse(qualId: string): boolean {
@@ -216,16 +214,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
     if (qualId.includes('biology')) return 'biology'
     if (qualId.includes('chemistry')) return 'chemistry'
     return 'physics'
-  }
-
-  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
-
-  function toggleTopicExpand(ref: string) {
-    setExpandedTopics(prev => {
-      const next = new Set(prev)
-      next.has(ref) ? next.delete(ref) : next.add(ref)
-      return next
-    })
   }
 
   const pointsForTopic = useMemo(() => {
@@ -427,43 +415,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
           <div className="wizard-body">
             <p className="wizard-hint">Which spec point does this cover?</p>
 
-            {topics && isKS3 ? (
-              <div className="wizard-accordion">
-                {selectedPoint && (
-                  <p className="wizard-accordion-selected">
-                    ✓ {selectedPoint} — {topics.flatMap(t => t.points).find(p => p.ref === selectedPoint)?.title}
-                  </p>
-                )}
-                {topics.map(topic => (
-                  <div key={topic.ref} className="wizard-accordion-section">
-                    <button
-                      type="button"
-                      className={`wizard-accordion-header${expandedTopics.has(topic.ref) ? ' wizard-accordion-header--open' : ''}`}
-                      onClick={() => toggleTopicExpand(topic.ref)}
-                    >
-                      <span className="wizard-accordion-ref">{topic.ref}</span>
-                      <span className="wizard-accordion-title">{topic.title}</span>
-                      <span className="wizard-accordion-chevron">{expandedTopics.has(topic.ref) ? '▾' : '▸'}</span>
-                    </button>
-                    {expandedTopics.has(topic.ref) && (
-                      <div className="wizard-accordion-body">
-                        {topic.points.map(point => (
-                          <button
-                            key={point.ref}
-                            type="button"
-                            className={`wizard-accordion-lesson${selectedPoint === point.ref ? ' wizard-accordion-lesson--selected' : ''}`}
-                            onClick={() => { setSelectedTopic(topic.ref); setSelectedPoint(point.ref) }}
-                          >
-                            <span className="wizard-accordion-lesson-ref">{point.ref}</span>
-                            <span>{point.title}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : topics ? (
+            {topics ? (
               <>
                 <div className="wizard-field">
                   <label className="wizard-label">Topic</label>

@@ -7,7 +7,8 @@ import './Onboarding.css'
 
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
 const boardQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length > 1)
-const singleQuals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards.length === 1)
+const ks3Quals = QUALIFICATION_OFFERINGS.filter(q => q.examBoards[0] === 'Pearson')
+const ibQuals  = QUALIFICATION_OFFERINGS.filter(q => q.examBoards[0] === 'IB')
 
 export function Onboarding() {
   const { authUserId, profile, loading, sendMagicLink, signInWithProvider, createProfile } = useProfileContext()
@@ -197,10 +198,33 @@ export function Onboarding() {
                 </div>
               </div>
             ))}
-            {singleQuals.length > 0 && (
+            {ks3Quals.length > 0 && (
               <div className="onboarding-single-section">
-                <div className="onboarding-single-label">KS3</div>
-                {singleQuals.map(qual => {
+                <div className="onboarding-single-label">KS3 — Pearson Exploring Science</div>
+                {ks3Quals.map(qual => {
+                  const board = qual.examBoards[0]
+                  const key = `${qual.id}:${board}`
+                  const checked = selected.has(key)
+                  return (
+                    <div key={qual.id} className="onboarding-single-row">
+                      <span className="onboarding-qual-name">{qual.label}</span>
+                      <button
+                        type="button"
+                        className={`onboarding-board-btn${checked ? ' onboarding-board-btn--on' : ''}`}
+                        onClick={() => toggle(qual.id, board)}
+                        aria-pressed={checked}
+                      >
+                        {checked ? '✓' : ''}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {ibQuals.length > 0 && (
+              <div className="onboarding-single-section">
+                <div className="onboarding-single-label">IB Diploma</div>
+                {ibQuals.map(qual => {
                   const board = qual.examBoards[0]
                   const key = `${qual.id}:${board}`
                   const checked = selected.has(key)
