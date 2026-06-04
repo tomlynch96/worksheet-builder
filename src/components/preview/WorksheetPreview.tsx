@@ -61,6 +61,22 @@ function AnswerLines({ count, show = true }: { count: number; show?: boolean }) 
   )
 }
 
+function PreviewHeaderMS({ block }: { block: HeaderBlock }) {
+  return (
+    <div className="pr-header">
+      <div className="pr-header-badges">
+        <span className="pr-badge pr-badge--board">{block.examBoard}</span>
+        {block.tier !== 'both' && (
+          <span className="pr-badge pr-badge--tier">{block.tier === 'higher' ? 'Higher Tier' : 'Foundation Tier'}</span>
+        )}
+      </div>
+      <h1 className="pr-title">{block.title || 'Worksheet Title'}</h1>
+      {block.topic && <p className="pr-topic">{block.topic}</p>}
+      <div className="pr-header-rule" />
+    </div>
+  )
+}
+
 function PreviewHeader({ block }: { block: HeaderBlock }) {
   return (
     <div className="pr-header">
@@ -246,7 +262,7 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
           ? <em className="pr-placeholder">Enter cloze text with [bracketed] words…</em>
           : parts.map((part, i) =>
               part.type === 'blank'
-                ? <span key={i} className="pr-cloze-blank">{'_'.repeat(Math.max(part.value.length + 4, 8))}</span>
+                ? <span key={i} className="pr-cloze-blank" style={{ width: `${Math.max(part.value.length * 0.55 + 2, 4)}em` }} />
                 : <span key={i}>{part.value.split('\n').map((line, j, arr) => (
                     <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
                   ))}</span>
@@ -300,7 +316,7 @@ function PreviewSpacer({ block }: { block: SpacerBlock }) {
 
 function PreviewDataTable({ block, markScheme = false }: { block: DataBlock; markScheme?: boolean }) {
   const { columns, rows, heading } = block
-  const hiddenCells = markScheme ? new Set<string>() : new Set(block.hiddenCells ?? [])
+  const originalHidden = new Set(block.hiddenCells ?? [])
   return (
     <div className="pr-data-table">
       {heading && <p className="pr-data-heading">{heading}</p>}
@@ -317,7 +333,15 @@ function PreviewDataTable({ block, markScheme = false }: { block: DataBlock; mar
         <tbody>
           {rows.map((row, r) => (
             <tr key={r}>
-              {row.map((cell, c) => <td key={c} className="pr-td">{hiddenCells.has(`${r},${c}`) ? '' : cell}</td>)}
+              {row.map((cell, c) => {
+                const wasHidden = originalHidden.has(`${r},${c}`)
+                const hide = !markScheme && wasHidden
+                return (
+                  <td key={c} className={`pr-td${markScheme && wasHidden ? ' pr-td--was-hidden' : ''}`}>
+                    {hide ? '' : cell}
+                  </td>
+                )
+              })}
             </tr>
           ))}
         </tbody>
@@ -493,18 +517,35 @@ function resolveData(block: DataBlock, blocks: Block[]): DataBlock {
   return linked ? { ...block, columns: linked.columns, rows: linked.rows } : block
 }
 
-function PreviewData({ block, blocks }: { block: DataBlock; blocks: Block[] }) {
+function applyMarkSchemeToData(block: DataBlock): DataBlock {
+  return {
+    ...block,
+    graph: {
+      ...block.graph,
+      omitRows: [],
+      showFitLine: true,
+      showXLabel: true,
+      showYLabel: true,
+      showXScale: true,
+      showYScale: true,
+    },
+  }
+}
+
+function PreviewData({ block, blocks, markScheme = false }: { block: DataBlock; blocks: Block[]; markScheme?: boolean }) {
   const resolved = resolveData(block, blocks)
-  if (resolved.display === 'graph') return <PreviewDataGraph block={resolved} />
-  if (resolved.display === 'bar') return <PreviewDataBar block={resolved} />
-  return <PreviewDataTable block={resolved} />
+  const display = markScheme && (resolved.display === 'graph' || resolved.display === 'bar')
+    ? applyMarkSchemeToData(resolved)
+    : resolved
+  if (display.display === 'graph') return <PreviewDataGraph block={display} />
+  if (display.display === 'bar') return <PreviewDataBar block={display} />
+  return <PreviewDataTable block={display} markScheme={markScheme} />
 }
 
 function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true }, hiddenCells: [] as string[] } : found
-  return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} /></div>
+  return <div className="pr-inline-data"><PreviewData block={found} blocks={blocks} markScheme={markScheme} /></div>
 }
 
 function InlineFigure({ figureId, blocks }: { figureId: string; blocks: Block[] }) {
@@ -708,6 +749,11 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
   const num = NUMBERED_TYPES.has(block.type) ? getQuestionNumber(blocks, block.id) : 0
   if (mode === 'markscheme') {
     switch (block.type) {
+      case 'header':          return <PreviewHeaderMS block={block} />
+      case 'instructions':    return null
+      case 'information':     return null
+      case 'worked_example':  return null
+      case 'spacer':          return null
       case 'question':        return <PreviewQuestionMS block={block} blocks={blocks} num={num} />
       case 'multiple_choice': return <PreviewMultipleChoiceMS block={block} num={num} />
       case 'cloze':           return <PreviewClozeMS block={block} num={num} />
@@ -715,8 +761,9 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: Block; blocks
       case 'order_steps':     return <PreviewOrderStepsMS block={block} num={num} />
       case 'data': {
         const b = block as DataBlock
-        if ((b.hiddenCells ?? []).length === 0) return null
-        return <PreviewData block={{ ...b, hiddenCells: [] }} blocks={blocks} />
+        // Always show graphs (completed graph is the answer); only show tables if they had hidden cells
+        if (b.display === 'table' && (b.hiddenCells ?? []).length === 0) return null
+        return <PreviewData block={b} blocks={blocks} markScheme />
       }
       default: break
     }
