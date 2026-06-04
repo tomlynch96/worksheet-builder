@@ -50,11 +50,19 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
   for (const block of blocks) {
     if (block.type === 'question' && (block as QuestionBlock).parts.length > 0) {
       const q = block as QuestionBlock
+
+      // Derive the stem+attachments overhead from the measured/estimated total height.
+      // h(block) covers stem + attached data/figures + all parts, so subtracting the
+      // estimated parts height gives us the true cost before any parts begin.
+      const partsEstimate = q.parts.reduce((acc, p) => acc + estimatePartHeight(p), 0)
+      const stemOverhead = Math.max(QUESTION_STEM_OVERHEAD, h(block) - partsEstimate)
+
       let partIdx = 0
       let isContinuation = false
 
       while (partIdx < q.parts.length) {
-        const overhead = isContinuation ? 0 : QUESTION_STEM_OVERHEAD
+        // Continuation pages only need a small label (~20px); no stem/figure re-render.
+        const overhead = isContinuation ? 20 : stemOverhead
 
         // Start a new page if this batch won't fit and current page isn't empty
         if (used + overhead > PAGE_CONTENT_HEIGHT && currentPage().length > 0) {

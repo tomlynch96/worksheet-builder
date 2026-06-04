@@ -20,7 +20,7 @@ import './EditorPage.css'
 
 const printPageStyle = `
   @page { size: A4; margin: 0; }
-  body { margin: 0; background: white; }
+  html, body { width: 794px; margin: 0; padding: 0; background: white; }
   .a4-page {
     width: 794px !important;
     height: 1123px !important;
