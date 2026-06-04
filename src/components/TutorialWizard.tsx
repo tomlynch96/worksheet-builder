@@ -34,8 +34,7 @@ const STEPS: StepDef[] = [
     bg: '#eef2ff',
     title: 'Select Question',
     body: 'Click "Question" to add your first question block to the worksheet.',
-    waitSelector: '.pr-question',
-    waitPrompt: 'Click Question to continue →',
+    autoAdvanceSelector: '.pr-question',
   },
   {
     targetId: 'ai-fill',
