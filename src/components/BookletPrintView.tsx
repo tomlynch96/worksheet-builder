@@ -94,7 +94,7 @@ export const BookletPrintView = forwardRef<HTMLDivElement, Props>(function Bookl
 
       {/* ── Mark scheme pages ──────────────────────────── */}
       {entries.map((entry, i) => {
-        const msPage = markSchemesStartPage + entries.slice(0, i).reduce((sum, _, j) => sum + 1, 0)
+        const msPage = markSchemesStartPage + i
         return (
           <WorksheetPreview
             key={`ms-${entry.id}`}
