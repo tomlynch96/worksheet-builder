@@ -435,8 +435,17 @@
   flex-shrink: 0;
 }
 
-.pr-step-row--correct .pr-step-num { background: #15803d; }
+.pr-step-row--correct .pr-step-num {
+  background: #15803d;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 .pr-step-row--correct { color: #15803d; font-weight: 600; }
+
+.pr-match-cell {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 
 .pr-order-ms-layout {
   display: flex;
@@ -482,7 +491,11 @@
 .pr-table { border-collapse: collapse; width: 100%; font-size: 10px; }
 .pr-th { padding: 5px 8px; background: #f3f4f6; border: 1px solid #d1d5db; font-weight: 600; color: #374151; text-align: center; }
 .pr-td { padding: 4px 8px; border: 1px solid #d1d5db; color: #1f2937; text-align: center; min-width: 50px; }
-.pr-td--was-hidden { background: #dcfce7; }
+.pr-td--was-hidden {
+  background: #dcfce7;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 .pr-data-graph { margin-bottom: 12px; }
 .pr-graph-svg { display: block; overflow: visible; margin: 0 auto; }
 
@@ -558,6 +571,8 @@
 .pr-match-cell--correct {
   border-color: #86efac;
   background: #f0fdf4;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .pr-step-num {
