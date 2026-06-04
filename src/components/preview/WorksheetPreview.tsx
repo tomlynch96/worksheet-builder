@@ -993,7 +993,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
               </div>
             )}
             {startPage !== undefined && (
-              <div className="a4-page-number">{startPage + pageIdx}</div>
+              <div className="a4-page-number" />
             )}
             {pageBlocks.map(block => {
               const blockKey = block._isContinuation ? `${block.id}-cont-${pageIdx}` : block.id

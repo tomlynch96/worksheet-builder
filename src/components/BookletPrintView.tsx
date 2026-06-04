@@ -79,7 +79,7 @@ export const BookletPrintView = forwardRef<HTMLDivElement, Props>(function Bookl
             </div>
           )}
         </div>
-        <div className="a4-page-number">2</div>
+        <div className="a4-page-number" />
       </div>
 
       {/* ── Worksheet pages ────────────────────────────── */}

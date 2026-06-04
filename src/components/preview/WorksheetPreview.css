@@ -102,6 +102,11 @@
   font-family: Arial, 'Helvetica Neue', sans-serif;
 }
 
+/* In a booklet, CSS counter fills the page number accurately */
+.booklet-print-root .a4-page-number::after {
+  content: counter(booklet-page);
+}
+
 /* Screen-only: stack pages with a gap so the purple background shows between them */
 @media screen {
   .ws-pages {

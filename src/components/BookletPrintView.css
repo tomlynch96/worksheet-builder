@@ -1,8 +1,15 @@
-/* Root wrapper — stacks all A4 pages for screen preview and print */
+/* Root wrapper — stacks all A4 pages for screen preview and print.
+   CSS counter increments on every .a4-page child so page numbers are
+   always accurate regardless of how many pages each worksheet renders. */
 .booklet-print-root {
   display: flex;
   flex-direction: column;
   gap: 48px;
+  counter-reset: booklet-page 0;
+}
+
+.booklet-print-root .a4-page {
+  counter-increment: booklet-page;
 }
 
 @media print {
