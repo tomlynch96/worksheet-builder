@@ -517,20 +517,35 @@ function resolveData(block: DataBlock, blocks: Block[]): DataBlock {
   return linked ? { ...block, columns: linked.columns, rows: linked.rows } : block
 }
 
+function applyMarkSchemeToData(block: DataBlock): DataBlock {
+  return {
+    ...block,
+    graph: {
+      ...block.graph,
+      omitRows: [],
+      showFitLine: true,
+      showXLabel: true,
+      showYLabel: true,
+      showXScale: true,
+      showYScale: true,
+    },
+  }
+}
+
 function PreviewData({ block, blocks, markScheme = false }: { block: DataBlock; blocks: Block[]; markScheme?: boolean }) {
   const resolved = resolveData(block, blocks)
-  if (resolved.display === 'graph') return <PreviewDataGraph block={resolved} />
-  if (resolved.display === 'bar') return <PreviewDataBar block={resolved} />
-  return <PreviewDataTable block={resolved} markScheme={markScheme} />
+  const display = markScheme && (resolved.display === 'graph' || resolved.display === 'bar')
+    ? applyMarkSchemeToData(resolved)
+    : resolved
+  if (display.display === 'graph') return <PreviewDataGraph block={display} />
+  if (display.display === 'bar') return <PreviewDataBar block={display} />
+  return <PreviewDataTable block={display} markScheme={markScheme} />
 }
 
 function InlineData({ dataId, blocks, markScheme }: { dataId: string; blocks: Block[]; markScheme?: boolean }) {
   const found = blocks.find(b => b.id === dataId && b.type === 'data') as DataBlock | undefined
   if (!found) return null
-  const block = markScheme
-    ? { ...found, graph: { ...found.graph, omitRows: [], showFitLine: true, showXLabel: true, showYLabel: true, showXScale: true, showYScale: true } }
-    : found
-  return <div className="pr-inline-data"><PreviewData block={block} blocks={blocks} markScheme={markScheme} /></div>
+  return <div className="pr-inline-data"><PreviewData block={found} blocks={blocks} markScheme={markScheme} /></div>
 }
 
 function InlineFigure({ figureId, blocks }: { figureId: string; blocks: Block[] }) {
