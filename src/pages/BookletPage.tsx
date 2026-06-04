@@ -1,12 +1,30 @@
 import { useState, useRef } from 'react'
-import { PDFDownloadLink } from '@react-pdf/renderer'
+import { useReactToPrint } from 'react-to-print'
 import { Topbar } from '../components/layout/Topbar'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import { offeringLabel } from '../data/qualifications'
-import { BookletPDF, type BookletEntry } from '../components/pdf/BookletPDF'
+import { type BookletEntry } from '../components/pdf/BookletPDF'
+import { BookletPrintView } from '../components/BookletPrintView'
 import type { Worksheet } from '../types/worksheet'
 import './BookletPage.css'
+
+const bookletPrintStyle = `
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; background: white; }
+  .booklet-print-root { display: block !important; gap: 0 !important; }
+  .a4-page {
+    width: 794px !important;
+    height: 1123px !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+  }
+  [aria-hidden="true"] { display: none !important; }
+  .preview-block-wrap { outline: none !important; cursor: default !important; }
+  .preview-block-wrap::after { display: none !important; }
+  .ws-pages { display: block !important; }
+`
 
 const BOARD_COLORS: Record<string, string> = {
   AQA: '#1e3a5f', OCR: '#1d4ed8', Edexcel: '#7c2d12', WJEC: '#166534', Hodder: '#065f46',
@@ -110,6 +128,14 @@ export function BookletPage() {
 
   // Drag state
   const dragIndex = useRef<number | null>(null)
+
+  // Print
+  const printRef = useRef<HTMLDivElement>(null)
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: bookletTitle || 'booklet',
+    pageStyle: bookletPrintStyle,
+  })
 
   const courseTabs = (profile?.user_courses ?? []).map(uc => ({
     key: `${uc.exam_board}:${uc.qualification_id}`,
@@ -298,37 +324,33 @@ export function BookletPage() {
               )}
             </section>
 
-            {/* Download */}
+            {/* Print */}
             <div className="booklet-download-bar">
-              {!canDownload ? (
-                <button className="booklet-download-btn booklet-download-btn--disabled" disabled>
-                  Download Booklet PDF
-                </button>
-              ) : (
-                <PDFDownloadLink
-                  document={
-                    <BookletPDF
-                      bookletTitle={bookletTitle}
-                      bookletSubtitle={bookletSubtitle || undefined}
-                      entries={bookletEntries}
-                    />
-                  }
-                  fileName={`${bookletTitle.replace(/\s+/g, '_')}.pdf`}
-                  className="booklet-download-btn"
-                >
-                  {({ loading: pdfLoading }) =>
-                    pdfLoading ? 'Preparing PDF…' : '↓ Download Booklet PDF'
-                  }
-                </PDFDownloadLink>
-              )}
+              <button
+                className={`booklet-download-btn${!canDownload ? ' booklet-download-btn--disabled' : ''}`}
+                disabled={!canDownload}
+                onClick={() => canDownload && handlePrint()}
+              >
+                Print / Save PDF
+              </button>
               {bookletEntries.length > 0 && (
                 <p className="booklet-download-hint">
-                  {bookletEntries.length} worksheet{bookletEntries.length !== 1 ? 's' : ''} · title page · contents page
+                  {bookletEntries.length} worksheet{bookletEntries.length !== 1 ? 's' : ''} · title page · contents page · mark schemes
                 </p>
               )}
             </div>
           </div>
         </main>
+      </div>
+
+      {/* Off-screen booklet for printing */}
+      <div className="booklet-print-hidden">
+        <BookletPrintView
+          ref={printRef}
+          bookletTitle={bookletTitle}
+          bookletSubtitle={bookletSubtitle || undefined}
+          entries={bookletEntries}
+        />
       </div>
     </div>
   )

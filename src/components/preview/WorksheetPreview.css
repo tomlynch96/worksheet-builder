@@ -89,6 +89,19 @@
 }
 
 
+/* ── Page number (booklet mode) ─────────────────────────── */
+.a4-page-number {
+  position: absolute;
+  bottom: 22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 8.5pt;
+  color: #9ca3af;
+  pointer-events: none;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
+
 /* Screen-only: stack pages with a gap so the purple background shows between them */
 @media screen {
   .ws-pages {

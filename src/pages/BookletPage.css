@@ -473,3 +473,18 @@
   color: #9ca3af;
   margin: 0;
 }
+
+.booklet-download-btn--disabled:hover {
+  background: #e5e7eb;
+}
+
+/* Hidden off-screen container for printing */
+.booklet-print-hidden {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+  width: 794px;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: visible;
+}

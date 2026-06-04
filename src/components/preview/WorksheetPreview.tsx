@@ -901,6 +901,7 @@ interface WorksheetPreviewProps {
   onAttach?: (blockId: string, questionId: string) => void
   mode?: 'worksheet' | 'markscheme'
   printRef?: RefObject<HTMLDivElement | null>
+  startPage?: number
 }
 
 function getAttachedBlockIds(blocks: Block[]): Set<string> {
@@ -920,7 +921,7 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
   return ids
 }
 
-export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mode = 'worksheet', printRef }: WorksheetPreviewProps) {
+export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mode = 'worksheet', printRef, startPage }: WorksheetPreviewProps) {
   const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -990,6 +991,9 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
               <div className="pr-ms-page-banner">
                 {pageIdx === 0 ? 'Mark Scheme' : `Mark Scheme — p.${pageIdx + 1}`}
               </div>
+            )}
+            {startPage !== undefined && (
+              <div className="a4-page-number">{startPage + pageIdx}</div>
             )}
             {pageBlocks.map(block => {
               const blockKey = block._isContinuation ? `${block.id}-cont-${pageIdx}` : block.id

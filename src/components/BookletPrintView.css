@@ -1,0 +1,179 @@
+/* Root wrapper — stacks all A4 pages for screen preview and print */
+.booklet-print-root {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+@media print {
+  .booklet-print-root {
+    gap: 0;
+  }
+}
+
+/* ── Title page ─────────────────────────────────────────── */
+
+.booklet-title-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.booklet-title-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px 60px 40px;
+  flex: 1;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.booklet-title-eyebrow {
+  font-size: 9pt;
+  color: #9ca3af;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
+
+.booklet-title-divider {
+  width: 56px;
+  height: 3px;
+  background: #4f46e5;
+  border-radius: 2px;
+  margin-bottom: 28px;
+}
+
+.booklet-title-text {
+  font-size: 28pt;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+  margin: 0 0 16px;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  text-align: center;
+}
+
+.booklet-subtitle-text {
+  font-size: 13pt;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  text-align: center;
+}
+
+.booklet-title-footer {
+  position: absolute;
+  bottom: 36px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 8pt;
+  color: #d1d5db;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
+
+/* ── Contents page ──────────────────────────────────────── */
+
+.booklet-contents-page {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.booklet-contents-inner {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.booklet-contents-heading {
+  font-size: 20pt;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 10px;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.booklet-contents-rule {
+  height: 2px;
+  background: #111827;
+  margin-bottom: 6px;
+}
+
+.booklet-contents-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.booklet-contents-row--ms {
+  margin-top: 12px;
+  border-bottom: none;
+}
+
+.booklet-contents-index {
+  font-size: 9pt;
+  font-weight: 700;
+  color: #6b7280;
+  width: 28px;
+  flex-shrink: 0;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
+
+.booklet-contents-text {
+  flex: 1;
+  min-width: 0;
+  padding-right: 8px;
+}
+
+.booklet-contents-entry-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
+
+.booklet-contents-entry-title--ms {
+  font-style: italic;
+  font-weight: 400;
+  color: #374151;
+}
+
+.booklet-contents-qual {
+  font-size: 8.5pt;
+  color: #6b7280;
+  margin-top: 1px;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
+
+.booklet-contents-dots {
+  flex: 1;
+  max-width: 120px;
+  border-bottom: 1.5px dotted #d1d5db;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.booklet-contents-pagenum {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #374151;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+}
