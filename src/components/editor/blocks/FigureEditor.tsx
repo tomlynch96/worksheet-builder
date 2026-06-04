@@ -35,6 +35,7 @@ export function FigureEditor({ block, dispatch }: Props) {
   }
 
   function handleZoneClick(e: React.MouseEvent<HTMLDivElement>) {
+    e.preventDefault()
     e.stopPropagation()
     pasteZoneRef.current?.focus()
     setPasteReady(true)
@@ -52,6 +53,8 @@ export function FigureEditor({ block, dispatch }: Props) {
 
   return (
     <div className="block-fields">
+      {/* File input lives outside Field so the wrapping <label> doesn't activate it on click */}
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
       <Field label="Image">
         <div
           ref={pasteZoneRef}
@@ -79,7 +82,6 @@ export function FigureEditor({ block, dispatch }: Props) {
             </button>
           )}
         </div>
-        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
       </Field>
       <Field label="Caption">
         <input value={block.caption} onChange={e => update({ caption: e.target.value })} placeholder="Figure 1: …" />
