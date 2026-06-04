@@ -198,6 +198,13 @@
   margin-bottom: 20px;
 }
 
+.pr-q-continuation {
+  font-size: 9pt;
+  font-style: italic;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
 .pr-question-stem {
   display: flex;
   gap: 6px;
