@@ -62,7 +62,7 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
           data = await fetchJson('/api/oak?ks3science=1')
         } else {
           const seq = `science-secondary-${examBoard ?? 'aqa'}`
-          data = await fetchJson(`/api/oak?sequence=${encodeURIComponent(seq)}`)
+          data = await fetchJson(`/api/oak?sequence=${encodeURIComponent(seq)}&childSubject=${subject}`)
         }
         if (!cancelled) setTopics(data.topics ?? [])
       } catch (e) {
@@ -74,7 +74,7 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
 
     load()
     return () => { cancelled = true }
-  }, [ks, examBoard])
+  }, [ks, examBoard, subject])
 
   async function toggleTopic(topic: Topic) {
     const slug = topic.unitSlug

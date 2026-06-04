@@ -83,19 +83,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  // ── Mode: KS4 physics topics via sequences endpoint ──────────────────────
-  // GET /api/oak?sequence=science-secondary-aqa
+  // ── Mode: KS4 topics via sequences endpoint ──────────────────────────────
+  // GET /api/oak?sequence=science-secondary-aqa[&childSubject=physics|biology|chemistry]
   if (req.query.sequence) {
     const seq = req.query.sequence as string
+    const childSubject = ((req.query.childSubject as string) || 'physics').toLowerCase()
     try {
       const [y10raw, y11raw] = await Promise.all([
         oakFetch(`/sequences/${seq}/units?year=10`, apiKey),
         oakFetch(`/sequences/${seq}/units?year=11`, apiKey),
       ])
 
-      function extractPhysics(raw: unknown, year: number) {
+      function extractSubject(raw: unknown, year: number) {
         if (!Array.isArray(raw)) return []
-        // The sequences endpoint may return year-filtered data as a single-element array
         const yearEntry = raw.find((y: Record<string, unknown>) =>
           y.year === year || y.year === String(year)
         ) ?? raw[0]
@@ -107,7 +107,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // KS4 science response shape: { year, examSubjects: [{ examSubjectTitle, tiers: [...] | units: [...] }] }
         if (yearEntry.examSubjects) {
           for (const es of yearEntry.examSubjects as Record<string, unknown>[]) {
-            if (!String(es.examSubjectTitle ?? '').toLowerCase().includes('physic')) continue
+            const title = String(es.examSubjectTitle ?? '').toLowerCase()
+            if (!title.includes(childSubject)) continue
             if (Array.isArray(es.tiers)) {
               for (const tier of es.tiers as Record<string, unknown>[]) {
                 for (const unit of (tier.units as Record<string, unknown>[]) ?? []) {
@@ -127,8 +128,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const topics = [
-        ...extractPhysics(y10raw, 10),
-        ...extractPhysics(y11raw, 11),
+        ...extractSubject(y10raw, 10),
+        ...extractSubject(y11raw, 11),
       ]
 
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
