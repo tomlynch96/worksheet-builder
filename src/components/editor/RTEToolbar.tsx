@@ -155,6 +155,7 @@ export function RTEToolbar() {
         <button
           type="button"
           className={`rtebar-btn${showMath ? ' rtebar-btn--on' : ''}`}
+          data-tutorial-id="math-editor"
           title="Insert equation (LaTeX)"
           disabled={!editor}
           onMouseDown={e => { e.preventDefault(); setShowMath(v => !v); setShowChem(false); setShowSymbols(false) }}
@@ -196,6 +197,7 @@ export function RTEToolbar() {
         <button
           type="button"
           className={`rtebar-btn${showChem || isChemActive ? ' rtebar-btn--on' : ''}`}
+          data-tutorial-id="chem-editor"
           title={isChemActive ? 'Edit chemical formula' : 'Insert chemical formula or equation'}
           disabled={!editor}
           onMouseDown={e => { e.preventDefault(); openChemPopover() }}
@@ -264,6 +266,7 @@ export function RTEToolbar() {
         <button
           type="button"
           className={`rtebar-btn${showSymbols ? ' rtebar-btn--on' : ''}`}
+          data-tutorial-id="symbol-picker"
           title="Insert symbol"
           disabled={!editor}
           onMouseDown={e => { e.preventDefault(); setShowSymbols(v => !v); closeAll(); setShowSymbols(true) }}

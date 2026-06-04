@@ -26,12 +26,14 @@ export function Topbar({ actions }: TopbarProps) {
           <Link className={`topbar-nav-link${pathname === '/booklet' ? ' topbar-nav-link--active' : ''}`} to="/booklet">
             Booklet
           </Link>
-          <Link className={`topbar-nav-link${pathname === '/oak' ? ' topbar-nav-link--active' : ''}`} to="/oak">
-            Oak
-          </Link>
           <Link className={`topbar-nav-link${pathname === '/library' ? ' topbar-nav-link--active' : ''}`} to="/library">
             Public Library
           </Link>
+          {profile?.is_admin && (
+            <Link className={`topbar-nav-link${pathname === '/oak' ? ' topbar-nav-link--active' : ''}`} to="/oak">
+              Oak
+            </Link>
+          )}
           {profile?.is_admin && (
             <Link className={`topbar-nav-link topbar-nav-link--admin${pathname === '/admin' ? ' topbar-nav-link--active' : ''}`} to="/admin">
               Admin
@@ -40,15 +42,16 @@ export function Topbar({ actions }: TopbarProps) {
         </nav>
       )}
 
-      {actions && <div className="topbar-actions">{actions}</div>}
-
-      <Link
-        to="/profile"
-        className={`topbar-avatar${pathname === '/profile' ? ' topbar-avatar--active' : ''}`}
-        title="Your profile"
-      >
-        {initial}
-      </Link>
+      <div className="topbar-right">
+        {actions && <div className="topbar-actions">{actions}</div>}
+        <Link
+          to="/profile"
+          className={`topbar-avatar${pathname === '/profile' ? ' topbar-avatar--active' : ''}`}
+          title="Your profile"
+        >
+          {initial}
+        </Link>
+      </div>
     </header>
   )
 }

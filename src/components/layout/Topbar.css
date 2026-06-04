@@ -37,11 +37,17 @@
 .topbar-nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.07); }
 .topbar-nav-link--active { color: #e2e8f0; background: rgba(255,255,255,0.1); }
 
-.topbar-actions {
+.topbar-right {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .topbar-avatar {

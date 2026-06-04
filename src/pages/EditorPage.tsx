@@ -7,6 +7,7 @@ import { WorksheetPreview } from '../components/preview/WorksheetPreview'
 import { SheetRateModal } from '../components/SheetRateModal'
 import { AnnotateNudge } from '../components/editor/AnnotateNudge'
 import { PublishExportModal } from '../components/PublishExportModal'
+import { TutorialWizard, TUTORIAL_KEY } from '../components/TutorialWizard'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useEditTracking } from '../hooks/useEditTracking'
@@ -14,7 +15,6 @@ import { useAnnotateNudge } from '../hooks/useAnnotateNudge'
 import { useProfileContext } from '../context/ProfileContext'
 import { supabase, isConfigured } from '../lib/supabase'
 import { PRESETS } from '../data/presets'
-import { LAYOUT_TEST_WORKSHEET } from '../data/layoutTest'
 import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
 import './EditorPage.css'
 
@@ -51,6 +51,7 @@ export function EditorPage() {
   const [sheetAnnotation, setSheetAnnotation] = useState('')
   const [showNudge, setShowNudge] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [tutorialOpen, setTutorialOpen] = useState(() => !localStorage.getItem(TUTORIAL_KEY))
   const openRef = useRef<HTMLInputElement>(null)
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -288,18 +289,22 @@ export function EditorPage() {
 
       <button
         className="btn-topbar"
-        onClick={() => { dispatch({ type: 'LOAD_WORKSHEET', worksheet: LAYOUT_TEST_WORKSHEET }); setSelectedId(null) }}
-        title="Load a calibration worksheet to compare PDF vs preview dimensions"
+        onClick={() => setTutorialOpen(true)}
+        title="Show tutorial"
       >
-        Layout Test
+        ? Tutorial
       </button>
 
-      <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
-        Open JSON
-      </button>
-      <button className="btn-topbar" onClick={handleDownloadJSON} title="Download as JSON">
-        Export JSON
-      </button>
+      {profile?.is_admin && (
+        <>
+          <button className="btn-topbar" onClick={() => openRef.current?.click()} title="Open a saved worksheet (.json)">
+            Open JSON
+          </button>
+          <button className="btn-topbar" onClick={handleDownloadJSON} title="Download as JSON">
+            Export JSON
+          </button>
+        </>
+      )}
       <input ref={openRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleOpen} />
 
       <button
@@ -382,6 +387,14 @@ export function EditorPage() {
           }}
         />
       )}
+
+      <TutorialWizard
+        open={tutorialOpen}
+        onClose={() => {
+          localStorage.setItem(TUTORIAL_KEY, '1')
+          setTutorialOpen(false)
+        }}
+      />
     </div>
   )
 }

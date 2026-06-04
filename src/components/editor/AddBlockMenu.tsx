@@ -113,7 +113,7 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
 
   return (
     <div className="add-block-menu">
-      <button type="button" className="add-block-trigger" onClick={() => { setOpen(o => !o); setAiFill(null) }}>
+      <button type="button" className="add-block-trigger" data-tutorial-id="add-block" onClick={() => { setOpen(o => !o); setAiFill(null) }}>
         + Add block
       </button>
       {open && (

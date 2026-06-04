@@ -190,10 +190,11 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
               </button>
               <span className="editor-focused-type">{BLOCK_LABELS[selectedBlock.type]}</span>
               <div className="editor-focused-controls">
-                <button type="button" className="ctrl-btn ctrl-btn--ai" onClick={() => setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })} title="AI fill this block" disabled={addingVariation || addingWorkedEx}>✦</button>
+                <button type="button" className="ctrl-btn ctrl-btn--ai" data-tutorial-id="ai-fill" onClick={() => setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })} title="AI fill this block" disabled={addingVariation || addingWorkedEx}>✦</button>
                 <button
                   type="button"
                   className="ctrl-btn ctrl-btn--vary"
+                  data-tutorial-id="make-similar"
                   onClick={handleAddVariation}
                   disabled={addingVariation || addingWorkedEx || blockAI !== null}
                   title="Add another like this"
@@ -202,6 +203,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
                   <button
                     type="button"
                     className="ctrl-btn ctrl-btn--we"
+                    data-tutorial-id="add-worked-example"
                     onClick={handleAddWorkedExample}
                     disabled={addingVariation || addingWorkedEx || blockAI !== null}
                     title="Add worked example before this question"
@@ -268,14 +270,6 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
             onAdded={id => onSelect(id)}
             worksheetContext={worksheetContext}
           />
-          <button
-            type="button"
-            className="editor-ai-btn"
-            onClick={() => setShowAIDialog(true)}
-            title="Ask AI to edit the whole worksheet"
-          >
-            ✦ Edit worksheet with AI
-          </button>
         </div>
       </div>
 
