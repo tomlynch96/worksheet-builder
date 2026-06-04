@@ -32,14 +32,14 @@ export function estimateBlockHeight(block: Block): number {
   }
 }
 
-function estimatePartHeight(part: { lines: number }): number {
-  return 40 + part.lines * 28
+function estimatePartHeight(part: { lines: number }, showLines: boolean): number {
+  return 40 + (showLines ? part.lines * 28 : 0)
 }
 
 // A block that may represent a continuation of a question across a page break.
 export type PageBlock = Block & { _isContinuation?: boolean }
 
-export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => number): PageBlock[][] {
+export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => number, showLines = true): PageBlock[][] {
   const h = heightOf ?? estimateBlockHeight
   const pages: PageBlock[][] = [[]]
   let used = 0
@@ -52,9 +52,9 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
       const q = block as QuestionBlock
 
       // Derive the stem+attachments overhead from the measured/estimated total height.
-      // h(block) covers stem + attached data/figures + all parts, so subtracting the
-      // estimated parts height gives us the true cost before any parts begin.
-      const partsEstimate = q.parts.reduce((acc, p) => acc + estimatePartHeight(p), 0)
+      // partsEstimate uses the same showLines flag so the subtraction is accurate even
+      // when answer lines are hidden (where estimates would otherwise go negative).
+      const partsEstimate = q.parts.reduce((acc, p) => acc + estimatePartHeight(p, showLines), 0)
       const stemOverhead = Math.max(QUESTION_STEM_OVERHEAD, h(block) - partsEstimate)
 
       let partIdx = 0
@@ -74,7 +74,7 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
         let batchEnd = partIdx
 
         while (batchEnd < q.parts.length) {
-          const ph = estimatePartHeight(q.parts[batchEnd])
+          const ph = estimatePartHeight(q.parts[batchEnd], showLines)
           if (pageUsed + ph > PAGE_CONTENT_HEIGHT && batchEnd > partIdx) break
           pageUsed += ph
           batchEnd++

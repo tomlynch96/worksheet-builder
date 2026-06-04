@@ -940,7 +940,8 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
   })
 
   const heightOf = (block: Block) => measuredHeights[block.id] ?? estimateBlockHeight(block)
-  const pages = splitIntoPages(renderableBlocks, heightOf)
+  const showLines = worksheet.showLines !== false
+  const pages = splitIntoPages(renderableBlocks, heightOf, showLines)
 
   return (
     <>
