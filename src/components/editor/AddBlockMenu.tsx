@@ -157,6 +157,7 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
                   <button
                     type="button"
                     className="add-block-option"
+                    data-tutorial-id={opt.type === 'question' ? 'block-option-question' : undefined}
                     onClick={() => add(opt.type)}
                   >
                     <span className="add-block-dot" style={{ background: opt.color }} />
