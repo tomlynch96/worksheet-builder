@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useState, useCallback } from 'react'
 import { WorksheetPreview } from './preview/WorksheetPreview'
 import { splitIntoPages } from '../utils/pagination'
 import { getPDFRenderableBlocks } from './pdf/WorksheetPDF'
@@ -21,8 +21,24 @@ export const BookletPrintView = forwardRef<HTMLDivElement, Props>(function Bookl
   { bookletTitle, bookletSubtitle, entries },
   ref,
 ) {
+  // Track actual page counts as WorksheetPreview reports them after measurement.
+  // Falls back to estimates until measured values arrive.
+  const [actualPageCounts, setActualPageCounts] = useState<(number | null)[]>(
+    () => entries.map(() => null),
+  )
+
+  const handlePageCount = useCallback((index: number, count: number) => {
+    setActualPageCounts(prev => {
+      if (prev[index] === count) return prev
+      const next = [...prev]
+      next[index] = count
+      return next
+    })
+  }, [])
+
+  const pageCounts = entries.map((e, i) => actualPageCounts[i] ?? estimatePageCount(e))
+
   // Page 1 = title, page 2 = contents, worksheets start at 3
-  const pageCounts = entries.map(e => estimatePageCount(e))
   const contentsRows = entries.map((entry, i) => ({
     entry,
     startPage: 3 + pageCounts.slice(0, i).reduce((a, b) => a + b, 0),
@@ -83,27 +99,25 @@ export const BookletPrintView = forwardRef<HTMLDivElement, Props>(function Bookl
       </div>
 
       {/* ── Worksheet pages ────────────────────────────── */}
-      {contentsRows.map(({ entry, startPage }) => (
+      {entries.map((entry, i) => (
         <WorksheetPreview
           key={entry.id}
           worksheet={entry.worksheet}
           mode="worksheet"
-          startPage={startPage}
+          startPage={contentsRows[i].startPage}
+          onPageCountChange={count => handlePageCount(i, count)}
         />
       ))}
 
       {/* ── Mark scheme pages ──────────────────────────── */}
-      {entries.map((entry, i) => {
-        const msPage = markSchemesStartPage + i
-        return (
-          <WorksheetPreview
-            key={`ms-${entry.id}`}
-            worksheet={entry.worksheet}
-            mode="markscheme"
-            startPage={msPage}
-          />
-        )
-      })}
+      {entries.map((entry, i) => (
+        <WorksheetPreview
+          key={`ms-${entry.id}`}
+          worksheet={entry.worksheet}
+          mode="markscheme"
+          startPage={markSchemesStartPage + i}
+        />
+      ))}
     </div>
   )
 })

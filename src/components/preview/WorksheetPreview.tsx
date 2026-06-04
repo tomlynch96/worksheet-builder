@@ -1,6 +1,6 @@
 import katex from 'katex'
 import 'katex/contrib/mhchem'
-import { useRef, useLayoutEffect, useState, type RefObject } from 'react'
+import { useRef, useLayoutEffect, useEffect, useState, type RefObject } from 'react'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock, NumericalAnswersBlock } from '../../types/worksheet'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages, estimateBlockHeight, type PageBlock } from '../../utils/pagination'
@@ -902,6 +902,7 @@ interface WorksheetPreviewProps {
   mode?: 'worksheet' | 'markscheme'
   printRef?: RefObject<HTMLDivElement | null>
   startPage?: number
+  onPageCountChange?: (count: number) => void
 }
 
 function getAttachedBlockIds(blocks: Block[]): Set<string> {
@@ -921,10 +922,11 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
   return ids
 }
 
-export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mode = 'worksheet', printRef, startPage }: WorksheetPreviewProps) {
+export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mode = 'worksheet', printRef, startPage, onPageCountChange }: WorksheetPreviewProps) {
   const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const reportedPageCountRef = useRef<number | null>(null)
 
   const attachedIds = getAttachedBlockIds(worksheet.blocks)
   const renderableBlocks = worksheet.blocks.filter(b => !attachedIds.has(b.id))
@@ -956,6 +958,17 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
   const heightOf = (block: Block) => measuredHeights[block.id] ?? estimateBlockHeight(block)
   const showLines = worksheet.showLines !== false
   const pages = splitIntoPages(renderableBlocks, heightOf, showLines)
+
+  // Report actual page count once measurements have stabilised
+  useEffect(() => {
+    if (!onPageCountChange) return
+    const hasMeasurements = Object.keys(measuredHeights).length > 0
+    if (!hasMeasurements) return
+    if (reportedPageCountRef.current !== pages.length) {
+      reportedPageCountRef.current = pages.length
+      onPageCountChange(pages.length)
+    }
+  })
 
   return (
     <>

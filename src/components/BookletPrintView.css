@@ -141,9 +141,9 @@
 }
 
 .booklet-contents-text {
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
-  padding-right: 8px;
+  padding-right: 10px;
 }
 
 .booklet-contents-entry-title {
@@ -169,10 +169,9 @@
 
 .booklet-contents-dots {
   flex: 1;
-  max-width: 120px;
   border-bottom: 1.5px dotted #d1d5db;
   margin-bottom: 4px;
-  flex-shrink: 0;
+  min-width: 16px;
 }
 
 .booklet-contents-pagenum {
