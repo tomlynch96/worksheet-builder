@@ -285,6 +285,45 @@
   background: #f5f3ff;
 }
 
+.onboarding-sso-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.onboarding-sso-btn--disabled:hover {
+  border-color: #d1d5db;
+  background: #fff;
+}
+
+.onboarding-sso-recommended-wrap {
+  position: relative;
+}
+
+.onboarding-sso-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin-bottom: 6px;
+}
+
+.onboarding-sso-coming-soon {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
 .onboarding-sso-icon {
   width: 18px;
   height: 18px;

@@ -14,7 +14,8 @@
   border-radius: 14px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.2);
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -52,6 +53,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
 }
 
 .wizard-hint {
@@ -223,11 +225,6 @@
   color: #1f2937;
 }
 
-.wizard-type-desc {
-  font-size: 11px;
-  color: #6b7280;
-}
-
 /* ── Extra notes textarea ── */
 .wizard-textarea {
   padding: 8px 10px;
@@ -265,14 +262,80 @@
   flex-wrap: wrap;
 }
 
-.wizard-btn--blank {
-  background: #f3f4f6;
-  color: #374151;
-  flex: 0;
-  white-space: nowrap;
+/* ── Start blank card ── */
+.wizard-blank-card {
+  width: 100%;
+  text-align: left;
+  background: #f5f3ff;
+  border: 2px solid #4f46e5;
+  border-left: 4px solid #4f46e5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
 }
-.wizard-btn--blank:hover { background: #e5e7eb; }
-.wizard-btn--blank:disabled { opacity: 0.5; cursor: not-allowed; }
+.wizard-blank-card:hover:not(:disabled) {
+  background: #ede9fe;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+.wizard-blank-card:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.wizard-blank-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.wizard-blank-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3730a3;
+}
+
+.wizard-blank-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+.wizard-blank-card-desc {
+  font-size: 12px;
+  color: #4338ca;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── AI section divider ── */
+.wizard-ai-divider {
+  text-align: center;
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  padding: 4px 0;
+}
+
+/* ── Type card desc expanded ── */
+.wizard-type-prefix {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: block;
+  margin-top: 2px;
+}
+
+.wizard-type-desc {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.5;
+}
 
 .wizard-btn--generate {
   background: #4f46e5;

@@ -32,9 +32,9 @@ const BOARD_COLORS: Record<string, string> = {
 type WorksheetType = 'maths' | 'knowledge' | 'practical'
 
 const WORKSHEET_TYPES: { id: WorksheetType; label: string; desc: string; icon: string }[] = [
-  { id: 'maths',     label: 'Maths / calculation', desc: '21+ scaffolded calculation questions with worked example', icon: '∑' },
-  { id: 'knowledge', label: 'Knowledge recall',     desc: 'Match-ups, gap-fills, and progressively harder recall',   icon: '🧠' },
-  { id: 'practical', label: 'Practical / graph',    desc: 'Scatter data, plotting task, and graph analysis questions', icon: '📈' },
+  { id: 'maths',     label: 'Maths / calculation', desc: '20+ scaffolded questions starting with direct substitution and building to multi-step problems. Includes a worked example and full mark scheme. Best for equation-heavy topics.', icon: '∑' },
+  { id: 'knowledge', label: 'Knowledge recall',     desc: 'A structured mix: match-up activity, fill-in-the-gaps passage, and progressively harder recall questions — all aligned to your spec point. Best for consolidation lessons.', icon: '🧠' },
+  { id: 'practical', label: 'Practical / graph',    desc: 'A realistic dataset, a results table, a graph plotting task and written analysis questions. Best for post-practical follow-up or teaching graph skills.', icon: '📈' },
 ]
 
 function CourseButton({
@@ -539,7 +539,20 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
         {/* Step 3: blank vs AI */}
         {!generating && step === 'mode' && (
           <div className="wizard-body">
-            <p className="wizard-hint">How do you want to start?</p>
+            <p className="wizard-hint">How would you like to create this worksheet?</p>
+
+            {/* Start blank — prominent recommended option */}
+            <button className="wizard-blank-card" onClick={handleBlank} disabled={generating}>
+              <div className="wizard-blank-card-top">
+                <span className="wizard-blank-card-title">✎ Start blank</span>
+                <span className="wizard-blank-badge">Recommended</span>
+              </div>
+              <p className="wizard-blank-card-desc">
+                Build your own worksheet in the editor. Use AI assistance to get suggestions for individual questions, add figures, graphs and mark schemes — but every decision is yours. Perfect if you know what you want to teach.
+              </p>
+            </button>
+
+            <div className="wizard-ai-divider">— or generate a full worksheet with AI —</div>
 
             <div className="wizard-type-grid">
               {WORKSHEET_TYPES.map(wt => (
@@ -552,6 +565,7 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
                   <span className="wizard-type-icon">{wt.icon}</span>
                   <span className="wizard-type-info">
                     <span className="wizard-type-label">{wt.label}</span>
+                    <span className="wizard-type-prefix">What you'll get: </span>
                     <span className="wizard-type-desc">{wt.desc}</span>
                   </span>
                 </button>
@@ -585,7 +599,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
                     {difficulty >= 5 && 'Heavy on rearranging, multi-step, and combining equations.'}
                   </p>
                 </div>
-
               </div>
             )}
 
@@ -610,9 +623,6 @@ export function NewSheetWizard({ onConfirm, onGenerated, onCancel, entries = [] 
             <div className="wizard-actions wizard-actions--mode">
               <button className="wizard-btn wizard-btn--back" onClick={handleBack} disabled={generating}>
                 ← Back
-              </button>
-              <button className="wizard-btn wizard-btn--blank" onClick={handleBlank} disabled={generating}>
-                Start blank
               </button>
               <button
                 className="wizard-btn wizard-btn--generate"

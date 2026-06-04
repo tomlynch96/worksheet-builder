@@ -184,20 +184,30 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
                                 </button>
                                 {isSelected && (
                                   <div className="oak-dir-lesson-actions">
-                                    <button
-                                      className="oak-dir-action-btn oak-dir-action-btn--seed"
-                                      onClick={() => handleAction('seed', lesson.lessonSlug)}
-                                      disabled={!!isActing}
-                                    >
-                                      {isActing ? '…' : '✦ Seed AI'}
-                                    </button>
-                                    <button
-                                      className="oak-dir-action-btn oak-dir-action-btn--import"
-                                      onClick={() => handleAction('import', lesson.lessonSlug)}
-                                      disabled={!!isActing}
-                                    >
-                                      {isActing ? '…' : '↓ Import questions'}
-                                    </button>
+                                    <div className="oak-tooltip-wrap">
+                                      <button
+                                        className="oak-dir-action-btn oak-dir-action-btn--seed"
+                                        onClick={() => handleAction('seed', lesson.lessonSlug)}
+                                        disabled={!!isActing}
+                                      >
+                                        {isActing ? '…' : <><span>✦ Seed AI</span><span className="oak-tooltip-icon">ⓘ</span></>}
+                                      </button>
+                                      <div className="oak-tooltip">
+                                        AI reads this lesson's learning objectives, keywords and common misconceptions, then generates a complete worksheet informed by them. You choose the format on the next screen.
+                                      </div>
+                                    </div>
+                                    <div className="oak-tooltip-wrap">
+                                      <button
+                                        className="oak-dir-action-btn oak-dir-action-btn--import"
+                                        onClick={() => handleAction('import', lesson.lessonSlug)}
+                                        disabled={!!isActing}
+                                      >
+                                        {isActing ? '…' : <><span>↓ Import questions</span><span className="oak-tooltip-icon">ⓘ</span></>}
+                                      </button>
+                                      <div className="oak-tooltip">
+                                        Exit quiz questions from this Oak lesson are converted directly into worksheet blocks — no AI involved. Quick and faithful to the lesson content.
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>
