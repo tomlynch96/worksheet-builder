@@ -17,7 +17,7 @@ function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph?: () => void; onAd
   return (
     <div className="q-attach-add">
       {open && <div className="q-attach-backdrop" onClick={() => setOpen(false)} />}
-      <button type="button" className="q-attach-btn" onClick={() => setOpen(v => !v)} title="Attach graph or figure">
+      <button type="button" className="q-attach-btn" data-tutorial-id="attach-graph" onClick={() => setOpen(v => !v)} title="Attach graph or figure">
         + Attach
       </button>
       {open && (

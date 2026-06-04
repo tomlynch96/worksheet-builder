@@ -157,3 +157,16 @@
   background: #4338ca;
   border-color: #4338ca;
 }
+
+.tutorial-btn--waiting {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: default;
+  font-size: 12px;
+}
+
+.tutorial-btn--waiting:hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}

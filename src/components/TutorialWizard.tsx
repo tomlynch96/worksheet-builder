@@ -3,6 +3,9 @@ import './TutorialWizard.css'
 
 export const TUTORIAL_KEY = 'wb_tutorial_v1'
 
+// Step index that waits for the user to add a question block before advancing
+const WAIT_FOR_QUESTION_STEP = 0
+
 interface StepDef {
   targetId?: string
   icon: string
@@ -10,6 +13,7 @@ interface StepDef {
   bg: string
   title: string
   body: string
+  waitPrompt?: string  // shown in place of Next while waiting
 }
 
 const STEPS: StepDef[] = [
@@ -19,7 +23,8 @@ const STEPS: StepDef[] = [
     color: '#4f46e5',
     bg: '#eef2ff',
     title: 'Add a block',
-    body: 'Click "+ Add block" at the bottom of the editor panel to insert any content type — questions, multiple choice, fill-in-the-gaps, graphs, worked examples and more. Each block type can also be pre-filled by AI.',
+    body: 'Click "+ Add block" at the bottom of the editor panel to insert any content type. Try adding a Question block now — then come back and click Next.',
+    waitPrompt: 'Add a Question block to continue →',
   },
   {
     targetId: 'ai-fill',
@@ -46,12 +51,12 @@ const STEPS: StepDef[] = [
     body: 'On question blocks, click WE to insert an AI-generated worked example immediately above the question — matched to the topic and level.',
   },
   {
-    targetId: undefined,
+    targetId: 'attach-graph',
     icon: '⊞',
     color: '#0d9488',
     bg: '#f0fdfa',
-    title: 'Attach a graph to a question',
-    body: 'Add a Data/Graph block anywhere in the worksheet. Then drag it onto a question block in the preview to attach it — the graph will print alongside that question\'s answer space.',
+    title: 'Attach a graph or figure',
+    body: 'Click "+ Attach" inside a question\'s editor to add a graph, data table, or figure inline. You can also drag a standalone Figure or Data/Graph block onto a question in the preview panel — it will print alongside that question\'s answer space.',
   },
   {
     targetId: 'math-editor',
@@ -85,6 +90,10 @@ function getTargetRect(targetId?: string): DOMRect | null {
   return el ? el.getBoundingClientRect() : null
 }
 
+function hasQuestionBlock(): boolean {
+  return document.querySelector('.pr-question') !== null
+}
+
 const CARD_W = 320
 
 function computeCardPos(rect: DOMRect): { top: number; left: number } {
@@ -95,10 +104,10 @@ function computeCardPos(rect: DOMRect): { top: number; left: number } {
   const cx = rect.left + rect.width / 2
   const left = Math.min(Math.max(cx - CARD_W / 2, GAP), vw - CARD_W - GAP)
 
-  if (rect.bottom + GAP + 240 < vh) {
+  if (rect.bottom + GAP + 260 < vh) {
     return { top: rect.bottom + GAP, left }
   }
-  return { top: Math.max(rect.top - GAP - 240, GAP), left }
+  return { top: Math.max(rect.top - GAP - 260, GAP), left }
 }
 
 interface Props {
@@ -109,6 +118,7 @@ interface Props {
 export function TutorialWizard({ open, onClose }: Props) {
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const [questionAdded, setQuestionAdded] = useState(false)
 
   const step = STEPS[stepIdx]
   const total = STEPS.length
@@ -120,6 +130,7 @@ export function TutorialWizard({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return
     setStepIdx(0)
+    setQuestionAdded(false)
   }, [open])
 
   useEffect(() => {
@@ -133,8 +144,22 @@ export function TutorialWizard({ open, onClose }: Props) {
     return () => window.removeEventListener('resize', refreshRect)
   }, [refreshRect])
 
+  // Poll for a question block while on the waiting step
+  useEffect(() => {
+    if (!open || stepIdx !== WAIT_FOR_QUESTION_STEP || questionAdded) return
+    const id = setInterval(() => {
+      if (hasQuestionBlock()) {
+        setQuestionAdded(true)
+        clearInterval(id)
+      }
+    }, 400)
+    return () => clearInterval(id)
+  }, [open, stepIdx, questionAdded])
+
   if (!open) return null
 
+  const isWaitStep = stepIdx === WAIT_FOR_QUESTION_STEP
+  const nextBlocked = isWaitStep && !questionAdded
   const cardPos = rect ? computeCardPos(rect) : null
 
   function next() {
@@ -196,8 +221,15 @@ export function TutorialWizard({ open, onClose }: Props) {
             {stepIdx > 0 && (
               <button className="tutorial-btn tutorial-btn--prev" onClick={prev}>← Back</button>
             )}
-            <button className="tutorial-btn tutorial-btn--next" onClick={next}>
-              {stepIdx < total - 1 ? 'Next →' : 'Finish ✓'}
+            <button
+              className={`tutorial-btn tutorial-btn--next${nextBlocked ? ' tutorial-btn--waiting' : ''}`}
+              onClick={nextBlocked ? undefined : next}
+              disabled={nextBlocked}
+              title={nextBlocked ? 'Add a Question block first' : undefined}
+            >
+              {nextBlocked
+                ? (step.waitPrompt ?? 'Waiting…')
+                : stepIdx < total - 1 ? 'Next →' : 'Finish ✓'}
             </button>
           </div>
         </div>
