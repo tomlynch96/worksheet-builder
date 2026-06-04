@@ -20,8 +20,8 @@ import './EditorPage.css'
 
 const printPageStyle = `
   @page { size: 210mm 297mm; margin: 0; }
-  html { width: 210mm; overflow: hidden; }
-  body { width: 210mm; margin: 0; padding: 0; background: white; }
+  html, body { width: 794px; max-width: 794px; margin: 0; padding: 0; overflow: hidden; background: white; }
+  .print-only { width: 794px !important; }
   .ws-pages { display: block !important; gap: 0 !important; }
   .a4-page {
     width: 210mm !important;
