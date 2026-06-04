@@ -32,9 +32,10 @@ question (multi-part):
 IMPORTANT: every part MUST have a "label" field set to "a", "b", "c" etc. and a unique "id".
 
 ATTACHING DATA BLOCKS TO QUESTIONS — use "attachedDataId" or "attachedDataIds" to display a table or graph inline with a question:
+- EVERY data block MUST be attached to at least one question or part. Never leave a data block unattached — it will only appear as floating content with no context.
 - Set "attachedDataId" on the QUESTION block if ALL parts refer to the same data (e.g. "Use the table to answer parts a–d").
 - Set "attachedDataId" on a specific PART if only that sub-question uses the data (e.g. part c asks pupils to plot a graph).
-- The data block MUST also exist as a standalone block in the worksheet (so it appears in the mark scheme).
+- The data block MUST also exist as a standalone block in the worksheet (so it appears in the mark scheme), AND it must be referenced via attachedDataId/attachedDataIds on a question or part.
 - Set "attachedDataId": null when no data is attached (single attachment).
 - SHOWING BOTH TABLE AND GRAPH: when a question needs pupils to both read from a table AND plot a graph (very common in practicals), create TWO data blocks — one with display "table" and one with display "graph" (using linkedDataId pointing to the table block). Then use "attachedDataIds": ["table-block-id", "graph-block-id"] on the question/part so BOTH appear inline. Never use "attachedDataId" when you need two — use "attachedDataIds" instead.
 - Example: a practical question where part (b) asks pupils to plot the data AND part (c) asks them to read from the table:
@@ -134,7 +135,8 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 3. Every question / part must have a markScheme using [1] notation.
 4. Use correct exam command words: state, give, describe, explain, calculate, suggest, evaluate.
 5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
-6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.`
+6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.
+7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
