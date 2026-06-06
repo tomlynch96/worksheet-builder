@@ -312,7 +312,7 @@ export function Onboarding() {
         <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
         <h1 className="onboarding-title">The Worksheet Project</h1>
         <p className="onboarding-body">
-          A free AI worksheet generation platform for secondary science teachers.
+          A free preview trial for secondary science teachers.
         </p>
 
         {!sent && (

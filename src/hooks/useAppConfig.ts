@@ -8,7 +8,7 @@ export interface WelcomeConfig {
 
 const DEFAULTS: WelcomeConfig = {
   title: 'Welcome to The Worksheet Project — Early Access',
-  message: 'Thanks for joining the trial. This is a free tool built for secondary science teachers.',
+  message: 'Thanks for joining the free preview trial. This tool is built for secondary science teachers.',
 }
 
 export function useWelcomeConfig() {

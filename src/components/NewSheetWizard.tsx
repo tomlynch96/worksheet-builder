@@ -94,44 +94,6 @@ const GENERIC_PHRASES = [
   'Cross-referencing the spec…',
 ]
 
-function AtomGraphic() {
-  return (
-    <svg className="gen-atom" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      {/* Nucleus */}
-      <circle cx="60" cy="60" r="8" fill="#4f46e5" className="gen-nucleus" />
-      {/* Orbit 1 */}
-      <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="#c7d2fe" strokeWidth="1.5" className="gen-orbit gen-orbit--1" />
-      <circle r="5" fill="#818cf8" className="gen-electron gen-electron--1">
-        <animateMotion dur="1.8s" repeatCount="indefinite">
-          <mpath href="#orbit1path" />
-        </animateMotion>
-      </circle>
-      {/* Orbit 2 */}
-      <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="#c7d2fe" strokeWidth="1.5"
-        transform="rotate(60 60 60)" className="gen-orbit gen-orbit--2" />
-      <circle r="4" fill="#a5b4fc" className="gen-electron gen-electron--2">
-        <animateMotion dur="2.4s" repeatCount="indefinite">
-          <mpath href="#orbit2path" />
-        </animateMotion>
-      </circle>
-      {/* Orbit 3 */}
-      <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="#c7d2fe" strokeWidth="1.5"
-        transform="rotate(120 60 60)" className="gen-orbit gen-orbit--3" />
-      <circle r="4" fill="#6366f1" className="gen-electron gen-electron--3">
-        <animateMotion dur="3.1s" repeatCount="indefinite" keyTimes="0;1" keyPoints="1;0">
-          <mpath href="#orbit3path" />
-        </animateMotion>
-      </circle>
-      {/* Hidden motion paths */}
-      <defs>
-        <path id="orbit1path" d="M 108,60 A 48,18 0 1,1 107.99,60.01" />
-        <path id="orbit2path" d="M 84,19.6 A 48,18 60 1,1 83.99,19.61" />
-        <path id="orbit3path" d="M 36,19.6 A 48,18 120 1,1 35.99,19.61" />
-      </defs>
-    </svg>
-  )
-}
-
 function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
   const [progress, setProgress] = useState(0)
   const [phraseIdx, setPhraseIdx] = useState(0)
@@ -152,7 +114,7 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
 
   return (
     <div className="gen-screen">
-      <AtomGraphic />
+      <img src="/logo.svg" className="gen-logo" alt="" />
       <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
       <div className="gen-bar-track">
         <div className="gen-bar-fill" style={{ width: `${progress}%` }} />

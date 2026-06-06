@@ -13,10 +13,10 @@ export function LandingPage() {
       />
       <div className="landing-overlay">
         <p className="landing-tagline">
-          A free AI worksheet platform for secondary science teachers.
+          A free preview trial AI worksheet platform for secondary science teachers.
         </p>
         <a className="landing-cta" href="/onboarding">
-          Get started — it's free
+          Get started — free preview trial
         </a>
       </div>
     </div>
