@@ -22,18 +22,9 @@
   gap: 20px;
 }
 
-.welcome-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  letter-spacing: -0.5px;
+.welcome-logo-img {
+  height: 56px;
+  display: block;
 }
 
 .welcome-title {

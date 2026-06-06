@@ -7,7 +7,7 @@ export interface WelcomeConfig {
 }
 
 const DEFAULTS: WelcomeConfig = {
-  title: 'Welcome to Worksheet Builder — Early Access',
+  title: 'Welcome to The Worksheet Project — Early Access',
   message: 'Thanks for joining the trial. This is a free tool built for secondary science teachers.',
 }
 

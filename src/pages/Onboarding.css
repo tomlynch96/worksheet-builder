@@ -24,18 +24,10 @@
   background: #fff5f5;
 }
 
-.onboarding-logo {
-  width: 48px;
-  height: 48px;
-  background: #4f46e5;
-  color: #fff;
-  border-radius: 12px;
-  font-size: 18px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  letter-spacing: -0.5px;
+.onboarding-logo-img {
+  height: 56px;
+  margin-bottom: 8px;
+  display: block;
 }
 
 .onboarding-title {

@@ -51,7 +51,10 @@ export function EditorPage() {
   const [sheetAnnotation, setSheetAnnotation] = useState('')
   const [showNudge, setShowNudge] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
-  const [tutorialOpen, setTutorialOpen] = useState(() => !localStorage.getItem(TUTORIAL_KEY))
+  const [tutorialOpen, setTutorialOpen] = useState(() =>
+    !!(location.state as { tutorialMode?: boolean } | null)?.tutorialMode
+    || !localStorage.getItem(TUTORIAL_KEY)
+  )
   const openRef = useRef<HTMLInputElement>(null)
   const printRef = useRef<HTMLDivElement>(null)
 

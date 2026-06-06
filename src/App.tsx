@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { ProfileProvider, useProfileContext } from './context/ProfileContext'
 import { Onboarding } from './pages/Onboarding'
-import { Home } from './pages/Home'
+import { RootPage } from './pages/RootPage'
 import { EditorPage } from './pages/EditorPage'
 import { GalleryPage } from './pages/GalleryPage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -39,7 +39,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/" element={<AuthGate><Home /></AuthGate>} />
+          <Route path="/" element={<RootPage />} />
           <Route path="/editor" element={<AuthGate><EditorPage /></AuthGate>} />
           <Route path="/gallery" element={<AuthGate><GalleryPage /></AuthGate>} />
           <Route path="/profile" element={<AuthGate><ProfilePage /></AuthGate>} />
