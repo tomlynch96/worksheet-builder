@@ -311,7 +311,9 @@ export function Onboarding() {
   return (
     <div className="onboarding-layout">
       <div className="onboarding-card">
-        <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
+        <div className="onboarding-logo-clip">
+          <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
+        </div>
         <h1 className="onboarding-title">The Worksheet Project</h1>
         <p className="onboarding-body">
           A free preview trial for secondary science teachers.
