@@ -29,6 +29,7 @@
   overflow: hidden;
   display: flex;
   align-items: center;
+  align-self: center;
 }
 
 .onboarding-logo-img {
