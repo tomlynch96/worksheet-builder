@@ -140,7 +140,7 @@ export const TUTORIAL_WORKSHEET: Worksheet = {
       type: 'figure',
       caption: 'Figure block — upload an image or paste a URL in the editor. This Oak diagram is shown as an example. Attach a figure to a question by dragging it onto the question block.',
       size: 'medium',
-      imageUrl: 'https://placehold.co/600x280/eef2ff/4f46e5?text=Upload+an+image+or+paste+a+URL',
+      imageUrl: '/logo.svg',
     },
     {
       id: b('spacer'),
