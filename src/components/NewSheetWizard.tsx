@@ -167,7 +167,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
   // Include all courses the teacher has added, including custom boards (where specDataId returns null)
   const courses = (profile?.user_courses ?? []).filter(c => getOffering(c.qualification_id) !== undefined)
 
-  const [step, setStep] = useState<'course' | 'oak-dir' | 'spec' | 'mode'>('course')
+  const [step, setStep] = useState<'course' | 'oak-prompt' | 'oak-dir' | 'spec' | 'mode'>('course')
   const [selectedCourse, setSelectedCourse] = useState<UserCourse | null>(null)
   const [selectedTopic, setSelectedTopic] = useState('')
   const [selectedPoint, setSelectedPoint] = useState('')
@@ -237,8 +237,9 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
 
   function handleBack() {
     const qualId = selectedCourse?.qualification_id ?? ''
-    if (step === 'mode') { setStep(isOakCourse(qualId) ? 'oak-dir' : 'spec'); setGenError(null); return }
-    if (step === 'oak-dir') { setStep('spec'); return }
+    if (step === 'mode') { setStep(isOakCourse(qualId) ? 'oak-prompt' : 'spec'); setGenError(null); return }
+    if (step === 'oak-dir') { setStep('oak-prompt'); return }
+    if (step === 'oak-prompt') { setStep('spec'); return }
     if (step === 'spec') {
       setStep('course')
       setSelectedTopic('')
@@ -490,14 +491,53 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
 
             <div className="wizard-actions">
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
-              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep(isOakCourse(selectedCourse?.qualification_id ?? '') ? 'oak-dir' : 'mode') }}>
+              <button className="wizard-btn wizard-btn--confirm" onClick={() => { setGenError(null); setStep(isOakCourse(selectedCourse?.qualification_id ?? '') ? 'oak-prompt' : 'mode') }}>
                 Next →
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Oak directory */}
+        {/* Step 2a: Oak opt-in prompt */}
+        {!generating && step === 'oak-prompt' && selectedCourse && (
+          <div className="wizard-body">
+            <div className="oak-prompt-card">
+              <div className="oak-prompt-badge">
+                <span className="oak-prompt-dot" />
+                Oak National Academy
+              </div>
+              <p className="oak-prompt-heading">Seed from an Oak lesson? <span className="oak-prompt-optional">(optional)</span></p>
+              <p className="oak-prompt-desc">
+                Oak lessons include verified learning objectives, key vocabulary, common misconceptions and diagrams.
+                Linking one gives the AI richer context — and lets you browse lesson images when adding figures.
+              </p>
+              <div className="oak-prompt-benefits">
+                <span>✦ Seed AI with learning objectives &amp; keywords</span>
+                <span>↓ Import exit-quiz questions directly</span>
+                <span>🖼 Browse lesson diagrams for figures</span>
+              </div>
+              <div className="oak-prompt-actions">
+                <button
+                  className="wizard-btn wizard-btn--confirm"
+                  onClick={() => setStep('oak-dir')}
+                >
+                  Browse Oak lessons →
+                </button>
+                <button
+                  className="wizard-btn wizard-btn--back"
+                  onClick={() => { setOakLesson(null); setStep('mode') }}
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+            <div className="wizard-actions" style={{ marginTop: 8 }}>
+              <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2b: Oak directory */}
         {!generating && step === 'oak-dir' && selectedCourse && (
           <div className="wizard-body">
             <OakDirectoryPicker

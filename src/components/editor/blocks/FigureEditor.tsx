@@ -6,9 +6,10 @@ import { Field } from '../EditorPrimitives'
 interface Props {
   block: FigureBlock
   dispatch: React.Dispatch<WorksheetAction>
+  oakImages?: string[]
 }
 
-export function FigureEditor({ block, dispatch }: Props) {
+export function FigureEditor({ block, dispatch, oakImages }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const pasteZoneRef = useRef<HTMLDivElement>(null)
   const [pasteReady, setPasteReady] = useState(false)
@@ -83,6 +84,24 @@ export function FigureEditor({ block, dispatch }: Props) {
           )}
         </div>
       </Field>
+      {oakImages && oakImages.length > 0 && (
+        <Field label="Oak lesson images">
+          <p className="figure-oak-hint">Images from the linked Oak lesson — click one to use it.</p>
+          <div className="figure-oak-grid">
+            {oakImages.map((url, i) => (
+              <button
+                key={url}
+                type="button"
+                className={`figure-oak-thumb${block.imageUrl === url ? ' figure-oak-thumb--selected' : ''}`}
+                onClick={() => update({ imageUrl: url, imageData: undefined })}
+                title={`Oak lesson image ${i + 1}`}
+              >
+                <img src={url} alt={`Oak image ${i + 1}`} />
+              </button>
+            ))}
+          </div>
+        </Field>
+      )}
       <Field label="Caption">
         <input value={block.caption} onChange={e => update({ caption: e.target.value })} placeholder="Figure 1: …" />
       </Field>

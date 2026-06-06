@@ -254,7 +254,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
             )}
 
             <div className="editor-focused-body">
-              <BlockEditor block={selectedBlock} blocks={blocks} dispatch={dispatch} />
+              <BlockEditor block={selectedBlock} blocks={blocks} dispatch={dispatch} oakContext={worksheet.oakContext} />
             </div>
           </>
         ) : (

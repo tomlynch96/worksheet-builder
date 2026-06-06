@@ -650,3 +650,72 @@
   padding: 0;
   flex-shrink: 0;
 }
+
+/* ── Oak opt-in prompt step ── */
+
+.oak-prompt-card {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oak-prompt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+  width: fit-content;
+}
+
+.oak-prompt-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+  flex-shrink: 0;
+}
+
+.oak-prompt-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.oak-prompt-optional {
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.oak-prompt-desc {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.oak-prompt-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.oak-prompt-benefits span {
+  font-size: 12.5px;
+  color: #166534;
+  font-weight: 500;
+}
+
+.oak-prompt-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}

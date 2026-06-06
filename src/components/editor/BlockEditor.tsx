@@ -1,4 +1,4 @@
-import type { Block, DataBlock } from '../../types/worksheet'
+import type { Block, DataBlock, OakContext } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { HeaderEditor } from './blocks/HeaderEditor'
 import { InstructionsEditor } from './blocks/InstructionsEditor'
@@ -18,9 +18,10 @@ interface Props {
   block: Block
   blocks: Block[]
   dispatch: React.Dispatch<WorksheetAction>
+  oakContext?: OakContext
 }
 
-export function BlockEditor({ block, blocks, dispatch }: Props) {
+export function BlockEditor({ block, blocks, dispatch, oakContext }: Props) {
   switch (block.type) {
     case 'header':          return <HeaderEditor block={block} dispatch={dispatch} />
     case 'instructions':    return <InstructionsEditor block={block} dispatch={dispatch} />
@@ -31,7 +32,7 @@ export function BlockEditor({ block, blocks, dispatch }: Props) {
     case 'match_them_up':   return <MatchThemUpEditor block={block} dispatch={dispatch} />
     case 'cloze':           return <ClozeEditor block={block} dispatch={dispatch} />
     case 'order_steps':     return <OrderStepsEditor block={block} dispatch={dispatch} />
-    case 'figure':             return <FigureEditor block={block} dispatch={dispatch} />
+    case 'figure':             return <FigureEditor block={block} dispatch={dispatch} oakImages={oakContext?.images} />
     case 'spacer':             return <SpacerEditor block={block} dispatch={dispatch} />
     case 'data':               return <DataEditor block={block as DataBlock} dispatch={dispatch} blocks={blocks} />
     case 'numerical_answers':  return <NumericalAnswersEditor block={block} dispatch={dispatch} />

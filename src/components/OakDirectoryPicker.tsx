@@ -42,6 +42,7 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
   const [topicLessons, setTopicLessons] = useState<Map<string, OakLesson[]>>(new Map())
   const [loadingTopics, setLoadingTopics] = useState<Set<string>>(new Set())
 
+  const [search, setSearch] = useState('')
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -120,9 +121,13 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
     }
   }
 
-  const filteredTopics = ks === 'ks4'
+  const baseTopics = ks === 'ks4'
     ? topics.filter(t => !t.tier || t.tier === 'higher')
     : topics
+
+  const filteredTopics = search.trim()
+    ? baseTopics.filter(t => t.unitTitle.toLowerCase().includes(search.trim().toLowerCase()))
+    : baseTopics
 
   const years = ks === 'ks3' ? [7, 8, 9] : [10, 11]
 
@@ -136,6 +141,14 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
       {error && <div className="oak-dir-error">{error}</div>}
 
       {!loading && !error && (
+        <>
+        <input
+          className="oak-dir-search"
+          type="search"
+          placeholder="Search topics…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
         <div className="oak-dir-tree">
           {years.map(year => {
             const yearTopics = filteredTopics
@@ -222,6 +235,7 @@ export function OakDirectoryPicker({ ks, examBoard, subject = 'physics', onSeed,
             )
           })}
         </div>
+        </>
       )}
 
       {actionError && <div className="oak-dir-error" style={{ marginTop: 4 }}>{actionError}</div>}
