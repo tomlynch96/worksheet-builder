@@ -16,8 +16,15 @@
   align-items: center;
 }
 
-.topbar-logo {
+.topbar-logo-clip {
   height: 88px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.topbar-logo {
+  height: calc(88px / 0.6);
   display: block;
   filter: invert(1);
 }

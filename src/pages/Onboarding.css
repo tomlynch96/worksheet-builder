@@ -24,9 +24,15 @@
   background: #fff5f5;
 }
 
-.onboarding-logo-img {
+.onboarding-logo-clip {
   height: 320px;
-  margin-bottom: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.onboarding-logo-img {
+  height: calc(320px / 0.6);
   display: block;
 }
 

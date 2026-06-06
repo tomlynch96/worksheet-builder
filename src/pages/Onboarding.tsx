@@ -152,7 +152,9 @@ export function Onboarding() {
     return (
       <div className="onboarding-layout">
         <form className="onboarding-card" onSubmit={handleCreateProfile}>
-          <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
+          <div className="onboarding-logo-clip">
+            <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
+          </div>
           <h1 className="onboarding-title">One more step</h1>
           <p className="onboarding-body">
             Tell us which courses you teach so we can organise your worksheets and pre-fill new ones.
