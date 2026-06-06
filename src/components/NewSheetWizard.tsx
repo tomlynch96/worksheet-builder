@@ -184,6 +184,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
   }, [selectedCourse])
 
   const [oakLesson, setOakLesson] = useState<OakLessonDetail | null>(null)
+  const [oakTopicImages, setOakTopicImages] = useState<string[]>([])
 
   function isOakCourse(qualId: string): boolean {
     return qualId.startsWith('exploring-science') ||
@@ -232,6 +233,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
     setSelectedPoint('')
     setFreeText('')
     setOakLesson(null)
+    setOakTopicImages([])
     setStep('spec')
   }
 
@@ -246,6 +248,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
       setSelectedPoint('')
       setFreeText('')
       setOakLesson(null)
+      setOakTopicImages([])
       return
     }
     setStep('course')
@@ -290,10 +293,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
       learningPoints: oakLesson.keyLearningPoints,
       keywords: oakLesson.keywords,
       misconceptions: oakLesson.misconceptions,
-      images: [...oakLesson.starterQuiz, ...oakLesson.exitQuiz]
-        .map(q => q.questionImage?.url)
-        .filter((url): url is string => !!url)
-        .filter((url, i, arr) => arr.indexOf(url) === i),
+      images: oakTopicImages.length > 0 ? oakTopicImages : undefined,
     } : undefined
     const worksheet: import('../types/worksheet').Worksheet = {
       id: crypto.randomUUID(),
@@ -388,10 +388,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
           learningPoints: oakLesson.keyLearningPoints,
           keywords: oakLesson.keywords,
           misconceptions: oakLesson.misconceptions,
-          images: [...oakLesson.starterQuiz, ...oakLesson.exitQuiz]
-            .map(q => q.questionImage?.url)
-            .filter((url): url is string => !!url)
-            .filter((url, i, arr) => arr.indexOf(url) === i), // deduplicate
+          images: oakTopicImages.length > 0 ? oakTopicImages : undefined,
         } satisfies OakContext) : undefined,
       })
       onGenerated(worksheet, worksheetType)
@@ -525,7 +522,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
                 </button>
                 <button
                   className="wizard-btn wizard-btn--back"
-                  onClick={() => { setOakLesson(null); setStep('mode') }}
+                  onClick={() => { setOakLesson(null); setOakTopicImages([]); setStep('mode') }}
                 >
                   Skip
                 </button>
@@ -544,9 +541,9 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
               ks={getOakKs(selectedCourse.qualification_id)}
               examBoard={getOakKs(selectedCourse.qualification_id) === 'ks4' ? getOakBoard(selectedCourse.exam_board) : undefined}
               subject={getOakKs(selectedCourse.qualification_id) === 'ks4' ? getOakSubject(selectedCourse.qualification_id) : undefined}
-              onSeed={lesson => { setOakLesson(lesson); setStep('mode') }}
+              onSeed={(lesson, topicImages) => { setOakLesson(lesson); setOakTopicImages(topicImages); setStep('mode') }}
               onImport={handleOakImport}
-              onSkip={() => { setOakLesson(null); setStep('mode') }}
+              onSkip={() => { setOakLesson(null); setOakTopicImages([]); setStep('mode') }}
             />
             <div className="wizard-actions" style={{ marginTop: 4 }}>
               <button className="wizard-btn wizard-btn--back" onClick={handleBack}>← Back</button>

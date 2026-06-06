@@ -275,3 +275,9 @@
   border-color: #4f46e5;
   box-shadow: 0 0 0 2px rgba(79,70,229,0.12);
 }
+
+.oak-dir-search-loading {
+  font-size: 11px;
+  color: #9ca3af;
+  padding: 2px 0;
+}

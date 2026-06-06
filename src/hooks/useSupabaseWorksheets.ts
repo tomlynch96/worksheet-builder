@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
-import type { Worksheet, HeaderBlock } from '../types/worksheet'
+import type { Worksheet, HeaderBlock, OakContext } from '../types/worksheet'
 
 export interface WorksheetEntry {
   id: string
@@ -47,7 +47,11 @@ function rowToEntry(row: Record<string, unknown>): WorksheetEntry {
     author_name: (row.author_name as string) ?? undefined,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
-    worksheet: { id: row.id as string, blocks: row.blocks as Worksheet['blocks'] },
+    worksheet: {
+      id: row.id as string,
+      blocks: row.blocks as Worksheet['blocks'],
+      oakContext: (row.oak_context as OakContext) ?? undefined,
+    },
   }
 }
 
@@ -83,6 +87,7 @@ export function useSupabaseWorksheets(profileId: string | null) {
       exam_board: header?.examBoard || 'AQA',
       tier: header?.tier || 'higher',
       blocks: worksheet.blocks,
+      oak_context: worksheet.oakContext ?? null,
     }
 
     // On the first save of an AI-generated worksheet, record the original blocks
