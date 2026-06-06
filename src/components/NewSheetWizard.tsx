@@ -288,6 +288,8 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
   function handleBlank() {
     if (!selectedCourse) return
     const resolvedTitle = topics?.find(t => t.ref === selectedTopic)?.title ?? freeText
+    const specPointTitle = pointsForTopic.find(p => p.ref === selectedPoint)?.title ?? freeText
+    const defaultTitle = specPointTitle || resolvedTitle
     const oakCtx: OakContext | undefined = oakLesson ? {
       lessonTitle: oakLesson.lessonTitle,
       learningPoints: oakLesson.keyLearningPoints,
@@ -302,7 +304,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
         {
           id: crypto.randomUUID(),
           type: 'header',
-          title: '',
+          title: defaultTitle,
           topic: resolvedTitle,
           examBoard: selectedCourse.exam_board as import('../types/worksheet').ExamBoard,
           tier: 'higher',
