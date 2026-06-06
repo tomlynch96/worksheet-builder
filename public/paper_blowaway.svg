@@ -1,0 +1,353 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <filter id="shadow1" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="4" dy="6" stdDeviation="6" flood-color="#00000033"/>
+    </filter>
+    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="5" stdDeviation="5" flood-color="#00000028"/>
+    </filter>
+    <filter id="shadow3" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#00000020"/>
+    </filter>
+
+    <!-- Tiny torn paper bits -->
+    <rect id="bit1" width="28" height="22" rx="3" fill="#ffffff" stroke="#222" stroke-width="2"/>
+    <rect id="bit2" width="18" height="24" rx="2" fill="#f5f5f5" stroke="#222" stroke-width="2"/>
+    <rect id="bit3" width="22" height="16" rx="2" fill="#eeeeee" stroke="#222" stroke-width="1.5"/>
+    <rect id="bit4" width="14" height="18" rx="2" fill="#ffffff" stroke="#222" stroke-width="1.5"/>
+    <rect id="bit5" width="30" height="18" rx="3" fill="#f8f8f8" stroke="#222" stroke-width="2"/>
+    <rect id="bit6" width="16" height="26" rx="2" fill="#ebebeb" stroke="#222" stroke-width="1.5"/>
+    <rect id="bit7" width="24" height="14" rx="2" fill="#f0f0f0" stroke="#222" stroke-width="1.5"/>
+    <rect id="bit8" width="20" height="20" rx="3" fill="#fafafa" stroke="#222" stroke-width="2"/>
+    <rect id="bit9" width="26" height="16" rx="2" fill="#e8e8e8" stroke="#222" stroke-width="1.5"/>
+    <rect id="bit10" width="12" height="20" rx="2" fill="#ffffff" stroke="#222" stroke-width="1.5"/>
+    <rect id="bit11" width="34" height="20" rx="3" fill="#f2f2f2" stroke="#222" stroke-width="2"/>
+    <rect id="bit12" width="18" height="28" rx="3" fill="#eeeeee" stroke="#222" stroke-width="1.5"/>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="800" fill="#f0ede8"/>
+
+  <!-- ===================== -->
+  <!-- PAPER SHEET 1 (back)  -->
+  <!-- ===================== -->
+  <g id="paper1" filter="url(#shadow3)">
+    <!-- Initial: back-left position. Shuffles then flies away -->
+    <animateTransform attributeName="transform" type="translate"
+      values="
+        155,120;
+        155,120;
+        110,80;
+        175,135;
+        145,110;
+        155,120;
+        155,120;
+        155,120;
+        -200,-400
+      "
+      keyTimes="0; 0.05; 0.18; 0.28; 0.38; 0.48; 0.55; 0.65; 1"
+      calcMode="spline"
+      keySplines="0 0 1 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; 0 0 1 1; 0 0 1 1; .4 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-8; -8; -18; -4; -12; -8; -8; -8; -55"
+      keyTimes="0; 0.05; 0.18; 0.28; 0.38; 0.48; 0.55; 0.65; 1"
+      calcMode="spline"
+      keySplines="0 0 1 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; 0 0 1 1; 0 0 1 1; .4 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <animate attributeName="opacity"
+      values="1;1;1;1;1;1;1;1;0"
+      keyTimes="0;0.05;0.18;0.28;0.38;0.48;0.55;0.75;1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <rect x="0" y="0" width="310" height="390" rx="26" ry="26"
+      fill="#ffffff" stroke="#111111" stroke-width="16"/>
+    <!-- lines on paper -->
+    <line x1="40" y1="80" x2="270" y2="80" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="120" x2="270" y2="120" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="160" x2="200" y2="160" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="200" x2="230" y2="200" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="240" x2="180" y2="240" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="280" x2="250" y2="280" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="320" x2="210" y2="320" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===================== -->
+  <!-- PAPER SHEET 2 (mid)   -->
+  <!-- ===================== -->
+  <g id="paper2" filter="url(#shadow2)">
+    <animateTransform attributeName="transform" type="translate"
+      values="
+        230,215;
+        230,215;
+        260,180;
+        200,240;
+        240,210;
+        230,215;
+        230,215;
+        230,215;
+        800,50
+      "
+      keyTimes="0; 0.05; 0.18; 0.28; 0.38; 0.48; 0.55; 0.65; 1"
+      calcMode="spline"
+      keySplines="0 0 1 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; 0 0 1 1; 0 0 1 1; .4 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-4; -4; 6; -14; 0; -4; -4; -4; 40"
+      keyTimes="0; 0.05; 0.18; 0.28; 0.38; 0.48; 0.55; 0.65; 1"
+      calcMode="spline"
+      keySplines="0 0 1 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; 0 0 1 1; 0 0 1 1; .4 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <animate attributeName="opacity"
+      values="1;1;1;1;1;1;1;1;0"
+      keyTimes="0;0.05;0.18;0.28;0.38;0.48;0.55;0.80;1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <rect x="0" y="0" width="310" height="390" rx="26" ry="26"
+      fill="#f7f7f7" stroke="#111111" stroke-width="16"/>
+    <line x1="40" y1="80" x2="270" y2="80" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="120" x2="240" y2="120" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="160" x2="270" y2="160" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="200" x2="190" y2="200" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="240" x2="255" y2="240" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="280" x2="215" y2="280" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="320" x2="270" y2="320" stroke="#ddd" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===================== -->
+  <!-- PAPER SHEET 3 (front) -->
+  <!-- ===================== -->
+  <g id="paper3" filter="url(#shadow1)">
+    <animateTransform attributeName="transform" type="translate"
+      values="
+        305,310;
+        305,310;
+        340,360;
+        280,290;
+        320,325;
+        305,310;
+        305,310;
+        305,310;
+        900,600
+      "
+      keyTimes="0; 0.05; 0.18; 0.28; 0.38; 0.48; 0.55; 0.65; 1"
+      calcMode="spline"
+      keySplines="0 0 1 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; 0 0 1 1; 0 0 1 1; .4 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0; 0; 10; -8; 4; 0; 0; 0; 60"
+      keyTimes="0; 0.05; 0.18; 0.28; 0.38; 0.48; 0.55; 0.65; 1"
+      calcMode="spline"
+      keySplines="0 0 1 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; .4 0 .2 1; 0 0 1 1; 0 0 1 1; .4 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <animate attributeName="opacity"
+      values="1;1;1;1;1;1;1;1;0"
+      keyTimes="0;0.05;0.18;0.28;0.38;0.48;0.55;0.85;1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <rect x="0" y="0" width="310" height="390" rx="26" ry="26"
+      fill="#eeeeee" stroke="#111111" stroke-width="16"/>
+    <line x1="40" y1="80" x2="270" y2="80" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="120" x2="215" y2="120" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="160" x2="250" y2="160" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="200" x2="270" y2="200" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="240" x2="200" y2="240" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="280" x2="260" y2="280" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="320" x2="230" y2="320" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- ========================== -->
+  <!-- SCATTERED BITS OF PAPER    -->
+  <!-- These appear at ~65% then blow away -->
+  <!-- ========================== -->
+
+  <!-- Bit A -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.62;0.68;0.82;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="310,400; 310,400; 310,400; 310,400; 310,400; 310,400; 310,400; 310,400; -80,200; -300,-100"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.62;0.68;0.82;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0;0;0;0;0;0;0;0;-120;-280"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.62;0.68;0.82;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit1"/>
+  </g>
+
+  <!-- Bit B -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.64;0.70;0.85;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="400,350; 400,350; 400,350; 400,350; 400,350; 400,350; 400,350; 400,350; 750,120; 950,-150"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.64;0.70;0.85;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="15;15;15;15;15;15;15;15;200;380"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.64;0.70;0.85;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit2"/>
+  </g>
+
+  <!-- Bit C -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.66;0.72;0.88;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="480,480; 480,480; 480,480; 480,480; 480,480; 480,480; 480,480; 480,480; 680,650; 800,800"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.66;0.72;0.88;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-20;-20;-20;-20;-20;-20;-20;-20;100;260"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.66;0.72;0.88;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit3"/>
+  </g>
+
+  <!-- Bit D -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.65;0.71;0.87;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="250,430; 250,430; 250,430; 250,430; 250,430; 250,430; 250,430; 250,430; 30,600; -200,780"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.65;0.71;0.87;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="30;30;30;30;30;30;30;30;180;330"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.65;0.71;0.87;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit4"/>
+  </g>
+
+  <!-- Bit E -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.67;0.73;0.90;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="370,300; 370,300; 370,300; 370,300; 370,300; 370,300; 370,300; 370,300; 600,80; 820,-180"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.67;0.73;0.90;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-10;-10;-10;-10;-10;-10;-10;-10;150;320"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.67;0.73;0.90;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit5"/>
+  </g>
+
+  <!-- Bit F -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.68;0.74;0.91;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="500,360; 500,360; 500,360; 500,360; 500,360; 500,360; 500,360; 500,360; 720,200; 900,30"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.68;0.74;0.91;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="45;45;45;45;45;45;45;45;230;400"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.68;0.74;0.91;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit6"/>
+  </g>
+
+  <!-- Bit G -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.66;0.72;0.89;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="200,300; 200,300; 200,300; 200,300; 200,300; 200,300; 200,300; 200,300; -100,100; -350,-80"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.66;0.72;0.89;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-35;-35;-35;-35;-35;-35;-35;-35;-200;-380"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.66;0.72;0.89;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit7"/>
+  </g>
+
+  <!-- Bit H -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.69;0.75;0.92;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="450,500; 450,500; 450,500; 450,500; 450,500; 450,500; 450,500; 450,500; 650,700; 800,880"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.69;0.75;0.92;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="55;55;55;55;55;55;55;55;260;450"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.69;0.75;0.92;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit8"/>
+  </g>
+
+  <!-- Bit I -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.65;0.71;0.86;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="280,200; 280,200; 280,200; 280,200; 280,200; 280,200; 280,200; 280,200; 60,-50; -180,-280"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.65;0.71;0.86;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-50;-50;-50;-50;-50;-50;-50;-50;-220;-420"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.65;0.71;0.86;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit9"/>
+  </g>
+
+  <!-- Bit J -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.70;0.76;0.93;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="550,420; 550,420; 550,420; 550,420; 550,420; 550,420; 550,420; 550,420; 780,300; 1000,150"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.70;0.76;0.93;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="25;25;25;25;25;25;25;25;190;360"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.70;0.76;0.93;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit10"/>
+  </g>
+
+  <!-- Bit K -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.68;0.74;0.91;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="180,510; 180,510; 180,510; 180,510; 180,510; 180,510; 180,510; 180,510; -80,680; -330,860"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.68;0.74;0.91;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="70;70;70;70;70;70;70;70;280;500"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.68;0.74;0.91;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit11"/>
+  </g>
+
+  <!-- Bit L -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.67;0.73;0.90;1" dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate"
+      values="420,260; 420,260; 420,260; 420,260; 420,260; 420,260; 420,260; 420,260; 650,60; 870,-160"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.67;0.73;0.90;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="-60;-60;-60;-60;-60;-60;-60;-60;-240;-440"
+      keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.67;0.73;0.90;1" calcMode="spline"
+      keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;.3 0 .1 1;.3 0 .1 1"
+      dur="3.8s" repeatCount="indefinite" additive="sum"/>
+    <use href="#bit12"/>
+  </g>
+
+</svg>

@@ -7,6 +7,7 @@ import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import { useWelcomeConfig } from '../hooks/useAppConfig'
 import { offeringLabel } from '../data/qualifications'
+import { TUTORIAL_WORKSHEET } from '../data/tutorialWorksheet'
 import type { Worksheet } from '../types/worksheet'
 import './Home.css'
 
@@ -122,7 +123,18 @@ export function Home() {
       )}
 
       {showWelcome && (
-        <WelcomeModal config={welcomeConfig} onAccept={acceptWelcome} />
+        <WelcomeModal
+          config={welcomeConfig}
+          onAccept={async () => {
+            await acceptWelcome()
+            navigate('/editor', {
+              state: {
+                worksheet: { ...TUTORIAL_WORKSHEET, id: crypto.randomUUID() },
+                tutorialMode: true,
+              },
+            })
+          }}
+        />
       )}
     </div>
   )

@@ -23,7 +23,7 @@ export function WelcomeModal({ config, onAccept }: Props) {
   return (
     <div className="welcome-backdrop">
       <div className="welcome-modal">
-        <div className="welcome-logo">WB</div>
+        <img src="/logo.svg" className="welcome-logo-img" alt="The Worksheet Project" />
         <h1 className="welcome-title">{config.title}</h1>
 
         <div className="welcome-body">

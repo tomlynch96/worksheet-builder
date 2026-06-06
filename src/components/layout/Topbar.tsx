@@ -13,7 +13,11 @@ export function Topbar({ actions }: TopbarProps) {
 
   return (
     <header className="topbar">
-      <Link to="/" className="topbar-brand">Worksheet Builder</Link>
+      <Link to="/" className="topbar-brand">
+        <span className="topbar-logo-clip">
+          <img src="/logo.svg" className="topbar-logo" alt="The Worksheet Project" />
+        </span>
+      </Link>
 
       {pathname !== '/editor' && (
         <nav className="topbar-nav">

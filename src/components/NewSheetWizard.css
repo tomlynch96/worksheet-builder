@@ -461,23 +461,10 @@
   gap: 20px;
 }
 
-.gen-atom {
-  width: 120px;
-  height: 120px;
+.gen-logo {
+  width: 200px;
   flex-shrink: 0;
 }
-
-.gen-nucleus {
-  animation: gen-pulse 1.6s ease-in-out infinite;
-  transform-origin: 60px 60px;
-}
-
-@keyframes gen-pulse {
-  0%, 100% { r: 8; opacity: 1; }
-  50%       { r: 11; opacity: 0.75; }
-}
-
-.gen-orbit { opacity: 0.7; }
 
 .gen-phrase {
   font-size: 14px;

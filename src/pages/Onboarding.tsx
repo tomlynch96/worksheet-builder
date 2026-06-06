@@ -152,7 +152,9 @@ export function Onboarding() {
     return (
       <div className="onboarding-layout">
         <form className="onboarding-card" onSubmit={handleCreateProfile}>
-          <div className="onboarding-logo">WB</div>
+          <div className="onboarding-logo-clip">
+            <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
+          </div>
           <h1 className="onboarding-title">One more step</h1>
           <p className="onboarding-body">
             Tell us which courses you teach so we can organise your worksheets and pre-fill new ones.
@@ -309,10 +311,12 @@ export function Onboarding() {
   return (
     <div className="onboarding-layout">
       <div className="onboarding-card">
-        <div className="onboarding-logo">WB</div>
-        <h1 className="onboarding-title">Worksheet Builder</h1>
+        <div className="onboarding-logo-clip">
+          <img src="/logo.svg" className="onboarding-logo-img" alt="The Worksheet Project" />
+        </div>
+        <h1 className="onboarding-title">The Worksheet Project</h1>
         <p className="onboarding-body">
-          A free AI worksheet generation platform for secondary science teachers.
+          A free preview trial for secondary science teachers.
         </p>
 
         {!sent && (
