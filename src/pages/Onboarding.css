@@ -25,14 +25,14 @@
 }
 
 .onboarding-logo-clip {
-  height: 320px;
+  height: 200px;
   overflow: hidden;
   display: flex;
   align-items: center;
 }
 
 .onboarding-logo-img {
-  height: calc(320px / 0.6);
+  height: calc(200px / 0.6);
   display: block;
 }
 
