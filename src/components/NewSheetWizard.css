@@ -462,14 +462,8 @@
 }
 
 .gen-logo {
-  width: 160px;
+  width: 200px;
   flex-shrink: 0;
-  animation: gen-breathe 2s ease-in-out infinite;
-}
-
-@keyframes gen-breathe {
-  0%, 100% { opacity: 1;    transform: scale(1); }
-  50%       { opacity: 0.6; transform: scale(0.94); }
 }
 
 .gen-phrase {

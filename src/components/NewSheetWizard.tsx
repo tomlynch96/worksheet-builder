@@ -114,7 +114,7 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
 
   return (
     <div className="gen-screen">
-      <img src="/logo.svg" className="gen-logo" alt="" />
+      <img src="/paper_blowaway.svg" className="gen-logo" alt="" />
       <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
       <div className="gen-bar-track">
         <div className="gen-bar-fill" style={{ width: `${progress}%` }} />
