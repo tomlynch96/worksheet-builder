@@ -12,7 +12,6 @@ export function LandingPage() {
         src="/intro.mp4"
       />
       <div className="landing-overlay">
-        <img src="/logo.svg" className="landing-logo" alt="The Worksheet Project" />
         <p className="landing-tagline">
           A free AI worksheet platform for secondary science teachers.
         </p>
