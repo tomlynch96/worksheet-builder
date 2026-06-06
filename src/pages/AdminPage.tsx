@@ -5,6 +5,7 @@ import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useWelcomeConfig } from '../hooks/useAppConfig'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
+import { TUTORIAL_WORKSHEET } from '../data/tutorialWorksheet'
 import { supabase } from '../lib/supabase'
 import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import './AdminPage.css'
@@ -195,6 +196,12 @@ export function AdminPage() {
           <p className="admin-subtitle">
             {results.length} public worksheet{results.length !== 1 ? 's' : ''}
           </p>
+          <button
+            className="admin-save-btn"
+            onClick={() => navigate('/editor', { state: { worksheet: { ...TUTORIAL_WORKSHEET, id: crypto.randomUUID() } } })}
+          >
+            Preview tutorial worksheet
+          </button>
         </div>
 
         {/* Stat cards */}
