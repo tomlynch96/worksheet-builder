@@ -13,7 +13,7 @@ export function LandingPage() {
       />
       <div className="landing-overlay">
         <p className="landing-tagline">
-          A free preview trial AI worksheet platform for secondary science teachers.
+          Join the initial trial of The Worksheet Project — the AI worksheet platform where teachers take control.
         </p>
         <a className="landing-cta" href="/onboarding">
           Get started — free preview trial
