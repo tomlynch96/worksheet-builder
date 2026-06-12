@@ -304,17 +304,81 @@ function referencedDataIds(blocks: Block[]): Set<string> {
 }
 
 function fixDataBlocks(blocks: Block[]): Block[] {
-  // 1. Deduplicate table+graph pairs: if a graph/bar block has its own rows AND
-  //    there is a table block with the same column count, wire up linkedDataId
-  //    and clear the graph's rows.
+  const blockIds = new Set(blocks.map(b => b.id))
   const tableBlocks = blocks.filter(b => b.type === 'data' && (b as DataBlock).display === 'table') as DataBlock[]
+
+  // Step 0: Resolve stale cross-reference IDs.
+  // The AI frequently generates UUID block ids but writes short placeholder IDs
+  // (e.g. "tbl-001", "gph-001") in linkedDataId / attachedDataIds, so they never match.
+  // Fix graph.linkedDataId: if the value isn't a real block id, find the matching table.
   for (const b of blocks) {
     if (b.type !== 'data') continue
     const d = b as DataBlock
     if (d.display !== 'graph' && d.display !== 'bar') continue
-    if (d.graph?.linkedDataId) continue                     // already linked
+    if (!d.graph?.linkedDataId || blockIds.has(d.graph.linkedDataId)) continue
+    // Stale linkedDataId — resolve by column-label match first, then proximity
+    const byColumns = tableBlocks.find(t =>
+      t.columns?.length === d.columns?.length &&
+      t.columns?.every((col, i) => col.label === d.columns?.[i]?.label)
+    )
+    const graphIdx = blocks.indexOf(b)
+    const byProximity = (() => {
+      for (let k = graphIdx - 1; k >= 0; k--) {
+        const c = blocks[k] as DataBlock
+        if (c.type === 'data' && c.display === 'table') return c
+      }
+      return null
+    })()
+    const resolved = byColumns ?? byProximity
+    if (resolved) {
+      d.graph = { ...d.graph, linkedDataId: resolved.id }
+      d.rows = []
+    }
+  }
+
+  // Fix question.attachedDataIds / attachedDataId: replace non-existent IDs with
+  // real block IDs of nearby data blocks.
+  for (let qi = 0; qi < blocks.length; qi++) {
+    const b = blocks[qi]
+    if (b.type !== 'question' && b.type !== 'multiple_choice') continue
+    const q = b as QuestionBlock
+
+    if (q.attachedDataIds?.length) {
+      const hasInvalid = q.attachedDataIds.some(id => !blockIds.has(id))
+      if (hasInvalid) {
+        // Find data blocks within a ±6 window, preserving table-before-graph order
+        const lo = Math.max(0, qi - 6), hi = Math.min(blocks.length - 1, qi + 6)
+        const nearby = blocks.slice(lo, hi + 1).filter(nb => nb.type === 'data' && nb !== b) as DataBlock[]
+        const nearbyTables = nearby.filter(d => d.display === 'table')
+        const nearbyGraphs = nearby.filter(d => d.display === 'graph' || d.display === 'bar')
+        const fixed = q.attachedDataIds.map(id => {
+          if (blockIds.has(id)) return id
+          if (/tbl|table/i.test(id) && nearbyTables.length) return nearbyTables[0].id
+          if (/gph|graph|bar/i.test(id) && nearbyGraphs.length) return nearbyGraphs[0].id
+          return nearby.shift()?.id ?? id
+        })
+        const deduped = [...new Set(fixed)].filter(id => blockIds.has(id))
+        q.attachedDataIds = deduped.length ? deduped : null as unknown as string[]
+        if ((q.attachedDataIds?.length ?? 0) > 1) q.attachedDataId = null
+      }
+    }
+
+    if (q.attachedDataId && !blockIds.has(q.attachedDataId)) {
+      for (let k = qi - 1; k >= 0; k--) {
+        const c = blocks[k] as DataBlock
+        if (c.type === 'data' && c.display === 'table') { q.attachedDataId = c.id; break }
+      }
+    }
+  }
+
+  // Step 1. Deduplicate table+graph pairs: if a graph block has its own rows AND
+  // no linkedDataId yet, wire up linkedDataId and clear the graph's rows.
+  for (const b of blocks) {
+    if (b.type !== 'data') continue
+    const d = b as DataBlock
+    if (d.display !== 'graph' && d.display !== 'bar') continue
+    if (d.graph?.linkedDataId) continue                     // already linked (including from Step 0)
     if (!d.rows?.length) continue                            // no duplicate data
-    // Find a table with the same column count
     const matchingTable = tableBlocks.find(t =>
       t.columns?.length === d.columns?.length &&
       t.columns?.every((col, i) => col.label === d.columns?.[i]?.label)
@@ -325,13 +389,12 @@ function fixDataBlocks(blocks: Block[]): Block[] {
     }
   }
 
-  // 2. Attach any still-unattached data blocks to the nearest preceding question.
+  // Step 2. Attach any still-unattached data blocks to the nearest preceding question.
   const referenced = referencedDataIds(blocks)
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i]
     if (b.type !== 'data') continue
     if (referenced.has(b.id)) continue
-    // Find the closest preceding question/multiple_choice block
     let target: QuestionBlock | null = null
     for (let j = i - 1; j >= 0; j--) {
       if (blocks[j].type === 'question' || blocks[j].type === 'multiple_choice') {
@@ -339,7 +402,6 @@ function fixDataBlocks(blocks: Block[]): Block[] {
         break
       }
     }
-    // Fall back to the next question if none precedes it
     if (!target) {
       for (let j = i + 1; j < blocks.length; j++) {
         if (blocks[j].type === 'question' || blocks[j].type === 'multiple_choice') {
@@ -349,7 +411,6 @@ function fixDataBlocks(blocks: Block[]): Block[] {
       }
     }
     if (!target) continue
-    // Attach: prefer attachedDataIds if already has one attachment, otherwise attachedDataId
     if (target.attachedDataId) {
       target.attachedDataIds = [target.attachedDataId, b.id]
       target.attachedDataId = null
