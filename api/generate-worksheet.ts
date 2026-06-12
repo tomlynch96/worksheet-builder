@@ -423,7 +423,10 @@ function fixDataBlocks(blocks: Block[]): Block[] {
     }
   }
 
-  // Step 2. Attach any still-unattached data blocks to the nearest preceding question.
+  // Step 2. Attach any still-unattached data blocks to the nearest preceding question,
+  // but only if that question doesn't already have a full table+graph attachment.
+  // This prevents spurious AI-generated extra data blocks from polluting a question
+  // that is already correctly wired.
   const referenced = referencedDataIds(blocks)
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i]
@@ -445,6 +448,8 @@ function fixDataBlocks(blocks: Block[]): Block[] {
       }
     }
     if (!target) continue
+    // Skip if the question already has two or more data attachments — it's fully wired
+    if ((target.attachedDataIds?.length ?? 0) >= 2) continue
     if (target.attachedDataId) {
       target.attachedDataIds = [target.attachedDataId, b.id]
       target.attachedDataId = null
