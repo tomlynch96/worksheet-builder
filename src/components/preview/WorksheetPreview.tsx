@@ -203,12 +203,13 @@ function PreviewMultipleChoice({ block, num, blocks }: { block: MultipleChoiceBl
   )
 }
 
-function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
+function PreviewWorkedExample({ block, blocks }: { block: WorkedExampleBlock; blocks: Block[] }) {
   return (
     <div className="pr-worked-example">
       <div className="pr-worked-title">
         {block.title ? <RichText html={block.title} /> : 'Worked example'}
       </div>
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       <div className="pr-worked-steps">
         {block.steps.map((step, i) => (
           <div key={i} className="pr-worked-step">{step ? <RichText html={step} /> : <em className="pr-placeholder">Step…</em>}</div>
@@ -218,10 +219,11 @@ function PreviewWorkedExample({ block }: { block: WorkedExampleBlock }) {
   )
 }
 
-function PreviewInformation({ block }: { block: InformationBlock }) {
+function PreviewInformation({ block, blocks }: { block: InformationBlock; blocks: Block[] }) {
   return (
     <div className="pr-information">
       {block.heading && <div className="pr-information-heading"><RichText html={block.heading} /></div>}
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       <div className="pr-information-content">
         {block.content ? <RichText html={block.content} /> : <em className="pr-placeholder">Information text…</em>}
       </div>
@@ -229,7 +231,7 @@ function PreviewInformation({ block }: { block: InformationBlock }) {
   )
 }
 
-function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: number }) {
+function PreviewMatchThemUp({ block, num, blocks }: { block: MatchThemUpBlock; num: number; blocks: Block[] }) {
   const shuffledRight = seededShuffle(block.items.map(i => i.right), block.id)
   const marks = block.items.length
   return (
@@ -241,6 +243,7 @@ function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: numb
         </span>
         {marks > 0 && <span className="pr-marks">[{marks} mark{marks !== 1 ? 's' : ''}]</span>}
       </div>
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       <div className="pr-match-table">
         <div className="pr-match-col">
           {block.items.map((item, i) => (
@@ -262,7 +265,7 @@ function PreviewMatchThemUp({ block, num }: { block: MatchThemUpBlock; num: numb
   )
 }
 
-function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
+function PreviewCloze({ block, num, blocks }: { block: ClozeBlock; num: number; blocks: Block[] }) {
   const parts = clozeToDisplayParts(block.text)
   const words = seededShuffle(extractClozeWords(block.text), block.id)
   const marks = words.length
@@ -275,6 +278,7 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
         </span>
         {marks > 0 && <span className="pr-marks">[{marks} mark{marks !== 1 ? 's' : ''}]</span>}
       </div>
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       {block.showWordBank && words.length > 0 && (
         <div className="pr-word-bank">
           {words.map((w, i) => (
@@ -298,7 +302,7 @@ function PreviewCloze({ block, num }: { block: ClozeBlock; num: number }) {
   )
 }
 
-function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number }) {
+function PreviewOrderSteps({ block, num, blocks }: { block: OrderStepsBlock; num: number; blocks: Block[] }) {
   const shuffled = seededShuffle(block.steps, block.id)
   const marks = block.steps.length
   return (
@@ -310,6 +314,7 @@ function PreviewOrderSteps({ block, num }: { block: OrderStepsBlock; num: number
         </span>
         {marks > 0 && <span className="pr-marks">[{marks} mark{marks !== 1 ? 's' : ''}]</span>}
       </div>
+      {block.attachedFigureId && <InlineFigure figureId={block.attachedFigureId} blocks={blocks} />}
       <div className="pr-steps-list">
         {shuffled.map((step, i) => (
           <div key={i} className="pr-step-row">
@@ -882,11 +887,11 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: PageBlock; bl
     case 'instructions':    return isContinuation ? null : <PreviewInstructions block={block} />
     case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} isContinuation={isContinuation} />
     case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} blocks={blocks} />
-    case 'worked_example':  return <PreviewWorkedExample block={block} />
-    case 'information':     return <PreviewInformation block={block} />
-    case 'match_them_up':   return <PreviewMatchThemUp block={block} num={num} />
-    case 'cloze':           return <PreviewCloze block={block} num={num} />
-    case 'order_steps':     return <PreviewOrderSteps block={block} num={num} />
+    case 'worked_example':  return <PreviewWorkedExample block={block} blocks={blocks} />
+    case 'information':     return <PreviewInformation block={block} blocks={blocks} />
+    case 'match_them_up':   return <PreviewMatchThemUp block={block} num={num} blocks={blocks} />
+    case 'cloze':           return <PreviewCloze block={block} num={num} blocks={blocks} />
+    case 'order_steps':     return <PreviewOrderSteps block={block} num={num} blocks={blocks} />
     case 'figure':             return <PreviewFigure block={block} />
     case 'spacer':             return <PreviewSpacer block={block} />
     case 'data':               return <PreviewData block={block as DataBlock} blocks={blocks} />
@@ -915,7 +920,7 @@ function getAttachedBlockIds(blocks: Block[]): Set<string> {
         resolveDataIds(p).forEach(id => ids.add(id))
         if (p.attachedFigureId) ids.add(p.attachedFigureId)
       }
-    } else if (b.type === 'multiple_choice') {
+    } else if (b.type === 'multiple_choice' || b.type === 'information' || b.type === 'worked_example' || b.type === 'cloze' || b.type === 'match_them_up' || b.type === 'order_steps') {
       if (b.attachedFigureId) ids.add(b.attachedFigureId)
     }
   }

@@ -1,15 +1,17 @@
-import type { ClozeBlock } from '../../../types/worksheet'
+import type { ClozeBlock, Block } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, CheckRow } from '../EditorPrimitives'
 import { RichTextEditor } from '../RichTextEditor'
 import { extractClozeWords } from '../../../utils/shuffle'
+import { FigureAttachment } from '../FigureAttachment'
 
 interface Props {
   block: ClozeBlock
+  blocks: Block[]
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-export function ClozeEditor({ block, dispatch }: Props) {
+export function ClozeEditor({ block, blocks, dispatch }: Props) {
   function update(updates: Partial<ClozeBlock>) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
@@ -38,6 +40,13 @@ export function ClozeEditor({ block, dispatch }: Props) {
         label="Show word bank"
         checked={block.showWordBank}
         onChange={v => update({ showWordBank: v })}
+      />
+      <FigureAttachment
+        figureId={block.attachedFigureId}
+        blocks={blocks}
+        afterId={block.id}
+        dispatch={dispatch}
+        onChangeFigureId={id => update({ attachedFigureId: id })}
       />
     </div>
   )

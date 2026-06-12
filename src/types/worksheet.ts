@@ -54,6 +54,7 @@ export interface WorkedExampleBlock {
   type: 'worked_example'
   title: string
   steps: string[]
+  attachedFigureId?: string
 }
 
 export interface FigureBlock {
@@ -76,6 +77,7 @@ export interface InformationBlock {
   type: 'information'
   heading: string
   content: string
+  attachedFigureId?: string
 }
 
 export interface MatchItem {
@@ -89,6 +91,7 @@ export interface MatchThemUpBlock {
   type: 'match_them_up'
   heading: string
   items: MatchItem[]
+  attachedFigureId?: string
 }
 
 // Text with [word] syntax marking blanks — e.g. "The [frequency] of a wave..."
@@ -98,6 +101,7 @@ export interface ClozeBlock {
   heading: string
   text: string
   showWordBank: boolean
+  attachedFigureId?: string
 }
 
 export interface OrderStepsBlock {
@@ -105,6 +109,7 @@ export interface OrderStepsBlock {
   type: 'order_steps'
   heading: string
   steps: string[]
+  attachedFigureId?: string
 }
 
 export interface MultipleChoiceBlock {
