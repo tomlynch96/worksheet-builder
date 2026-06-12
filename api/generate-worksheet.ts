@@ -163,12 +163,14 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 
 ## Rules
 1. Use short IDs: "id-001", "id-002", "part-001", "item-001" etc. Every array item needs a unique id.
+   CRITICAL — ID consistency: the id you assign to a block MUST exactly match every linkedDataId, attachedDataId, and attachedDataIds reference to that block elsewhere in the worksheet. Never copy the example IDs (data-001, data-002, q-001) literally — generate your own unique short IDs (e.g. "tbl-001", "gph-001") and use those same IDs in all cross-references. If you create a table with "id":"tbl-001", the linked graph MUST have "linkedDataId":"tbl-001" and the question MUST have "attachedDataIds":["tbl-001","gph-001"]. Mismatched IDs cause the graph to be blank and the attachment to break.
 2. Always start: header block → instructions block → information block (key facts).
 3. Every question / part must have a markScheme using [1] notation.
 4. Use correct exam command words: state, give, describe, explain, calculate, suggest, evaluate.
 5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
 6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.
-7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.`
+7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.
+8. Column order for table+graph pairs: put the independent variable (x-axis) in column 0 and the dependent variable (y-axis) in column 1. Use xCol:0, yCol:1 on both the table and the linked graph. Never swap column order between table and graph — the linked graph inherits column definitions from the table.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
