@@ -32,14 +32,38 @@ export function estimateBlockHeight(block: Block): number {
   }
 }
 
-function estimatePartHeight(part: { lines: number }, showLines: boolean): number {
-  return 40 + (showLines ? part.lines * 28 : 0)
+function resolveAttachedDataIds(b: { attachedDataId?: string | null; attachedDataIds?: string[] | null }): string[] {
+  if (b.attachedDataIds?.length) return b.attachedDataIds
+  return b.attachedDataId ? [b.attachedDataId] : []
+}
+
+function attachedDataHeight(ids: string[], allBlocks: Block[]): number {
+  return ids.reduce((acc, id) => {
+    const found = allBlocks.find(b => b.id === id)
+    return acc + (found ? estimateBlockHeight(found) : 0)
+  }, 0)
+}
+
+function estimatePartHeight(
+  part: { lines: number; attachedDataId?: string | null; attachedDataIds?: string[] | null },
+  showLines: boolean,
+  allBlocks?: Block[]
+): number {
+  let h = 40 + (showLines ? part.lines * 28 : 0)
+  if (allBlocks) h += attachedDataHeight(resolveAttachedDataIds(part), allBlocks)
+  return h
 }
 
 // A block that may represent a continuation of a question across a page break.
 export type PageBlock = Block & { _isContinuation?: boolean }
 
-export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => number, showLines = true, noSplitParts = false): PageBlock[][] {
+export function splitIntoPages(
+  blocks: Block[],
+  heightOf?: (block: Block) => number,
+  showLines = true,
+  noSplitParts = false,
+  allBlocks?: Block[]
+): PageBlock[][] {
   const h = heightOf ?? estimateBlockHeight
   const pages: PageBlock[][] = [[]]
   let used = 0
@@ -51,11 +75,19 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
     if (!noSplitParts && block.type === 'question' && (block as QuestionBlock).parts.length > 0) {
       const q = block as QuestionBlock
 
-      // Derive the stem+attachments overhead from the measured/estimated total height.
-      // partsEstimate uses the same showLines flag so the subtraction is accurate even
-      // when answer lines are hidden (where estimates would otherwise go negative).
-      const partsEstimate = q.parts.reduce((acc, p) => acc + estimatePartHeight(p, showLines), 0)
-      const stemOverhead = Math.max(QUESTION_STEM_OVERHEAD, h(block) - partsEstimate)
+      // Estimate part heights including any attached data blocks
+      const partsEstimate = q.parts.reduce(
+        (acc, p) => acc + estimatePartHeight(p, showLines, allBlocks),
+        0
+      )
+
+      // Question-level attached data (rendered before the parts)
+      const qDataH = allBlocks ? attachedDataHeight(resolveAttachedDataIds(q), allBlocks) : 0
+
+      // stemOverhead = question number + stem text + question-level inline data.
+      // Use max(QUESTION_STEM_OVERHEAD, measured - partsEstimate) so we don't go
+      // below the bare minimum when measurements aren't yet available.
+      const stemOverhead = Math.max(QUESTION_STEM_OVERHEAD + qDataH, h(block) - partsEstimate)
 
       let partIdx = 0
       let isContinuation = false
@@ -74,7 +106,7 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
         let batchEnd = partIdx
 
         while (batchEnd < q.parts.length) {
-          const ph = estimatePartHeight(q.parts[batchEnd], showLines)
+          const ph = estimatePartHeight(q.parts[batchEnd], showLines, allBlocks)
           if (pageUsed + ph > PAGE_CONTENT_HEIGHT && batchEnd > partIdx) break
           pageUsed += ph
           batchEnd++
@@ -109,3 +141,4 @@ export function splitIntoPages(blocks: Block[], heightOf?: (block: Block) => num
 
   return pages
 }
+
