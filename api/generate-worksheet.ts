@@ -170,7 +170,7 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
 6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.
 7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.
-8. Column indices for graphs: xCol and yCol are zero-based indices into the columns array. The linked graph's columns array is always a full copy of the table's columns array. Set xCol and yCol to the indices of the variables named in the graph heading — e.g. for a table with columns [Force, Original length, New length, Extension] and a heading "Force against extension", use xCol:0 (Force) and yCol:3 (Extension), NOT yCol:1 (Original length). Always read the graph heading to determine which column indices to use.`
+8. Column indices for graphs and bar charts: xCol and yCol are zero-based indices into the columns array. The linked graph or bar chart's columns array MUST be an exact full copy of the table's columns array — never abbreviate it to just the two plotted columns. Set xCol and yCol to the indices of the variables named in the graph/chart heading — e.g. for a 4-column table [Object, Mass, Volume, Density] and a bar chart heading "Density of objects", use xCol:0 (Object) and yCol:3 (Density), NOT yCol:1 (Mass). Always read the heading to pick the correct indices.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
@@ -380,6 +380,27 @@ function fixDataBlocks(blocks: Block[]): Block[] {
       for (let k = qi - 1; k >= 0; k--) {
         const c = blocks[k] as DataBlock
         if (c.type === 'data' && c.display === 'table') { q.attachedDataId = c.id; break }
+      }
+    }
+
+    // Fix stale attachedDataId/attachedDataIds on individual parts too
+    for (const part of q.parts ?? []) {
+      const p = part as Part & { attachedDataIds?: string[] | null }
+      if (p.attachedDataId && !blockIds.has(p.attachedDataId)) {
+        const precedingData: DataBlock[] = []
+        for (let k = qi - 1; k >= 0 && precedingData.length < 8; k--) {
+          const c = blocks[k] as DataBlock
+          if (c.type === 'data') precedingData.push(c)
+        }
+        const precTables = precedingData.filter(d => d.display === 'table')
+        const precGraphsOrBars = precedingData.filter(d => d.display === 'graph' || d.display === 'bar')
+        if (/tbl|table/i.test(p.attachedDataId) && precTables.length) p.attachedDataId = precTables[0].id
+        else if (/gph|graph|bar/i.test(p.attachedDataId) && precGraphsOrBars.length) p.attachedDataId = precGraphsOrBars[0].id
+        else if (precTables.length) p.attachedDataId = precTables[0].id
+      }
+      if (p.attachedDataIds?.length && p.attachedDataIds.some(id => !blockIds.has(id))) {
+        p.attachedDataIds = p.attachedDataIds.map(id => blockIds.has(id) ? id : id).filter(id => blockIds.has(id))
+        if (!p.attachedDataIds.length) p.attachedDataIds = null
       }
     }
   }

@@ -135,6 +135,13 @@ export async function generateBlock(params: {
         if (q.attachedDataIds?.length) {
           q.attachedDataIds = q.attachedDataIds.map(id => idMap.get(id) ?? id)
         }
+        for (const part of q.parts ?? []) {
+          const p = part as typeof part & { attachedDataIds?: string[] }
+          if (p.attachedDataId) p.attachedDataId = idMap.get(p.attachedDataId) ?? p.attachedDataId
+          if (p.attachedDataIds?.length) {
+            p.attachedDataIds = p.attachedDataIds.map(id => idMap.get(id) ?? id)
+          }
+        }
       }
     }
 
