@@ -337,29 +337,42 @@ function fixDataBlocks(blocks: Block[]): Block[] {
   }
 
   // Fix question.attachedDataIds / attachedDataId: replace non-existent IDs with
-  // real block IDs of nearby data blocks.
+  // real block IDs of the immediately-preceding data blocks.
   for (let qi = 0; qi < blocks.length; qi++) {
     const b = blocks[qi]
     if (b.type !== 'question' && b.type !== 'multiple_choice') continue
     const q = b as QuestionBlock
 
     if (q.attachedDataIds?.length) {
+      const validIds = q.attachedDataIds.filter(id => blockIds.has(id))
       const hasInvalid = q.attachedDataIds.some(id => !blockIds.has(id))
       if (hasInvalid) {
-        // Find data blocks within a ±6 window, preserving table-before-graph order
-        const lo = Math.max(0, qi - 6), hi = Math.min(blocks.length - 1, qi + 6)
-        const nearby = blocks.slice(lo, hi + 1).filter(nb => nb.type === 'data' && nb !== b) as DataBlock[]
-        const nearbyTables = nearby.filter(d => d.display === 'table')
-        const nearbyGraphs = nearby.filter(d => d.display === 'graph' || d.display === 'bar')
-        const fixed = q.attachedDataIds.map(id => {
-          if (blockIds.has(id)) return id
-          if (/tbl|table/i.test(id) && nearbyTables.length) return nearbyTables[0].id
-          if (/gph|graph|bar/i.test(id) && nearbyGraphs.length) return nearbyGraphs[0].id
-          return nearby.shift()?.id ?? id
-        })
-        const deduped = [...new Set(fixed)].filter(id => blockIds.has(id))
-        q.attachedDataIds = deduped.length ? deduped : null as unknown as string[]
-        if ((q.attachedDataIds?.length ?? 0) > 1) q.attachedDataId = null
+        if (validIds.length > 0) {
+          // Already has some real IDs mixed in — strip the stale ones, keep the real ones
+          q.attachedDataIds = validIds
+          if (validIds.length > 1) q.attachedDataId = null
+        } else {
+          // All IDs are stale — resolve by looking backwards from the question,
+          // closest-first. This correctly handles multiple trios on the same page
+          // because it picks the immediately-preceding trio's blocks, not earlier ones.
+          const precedingData: DataBlock[] = []
+          for (let k = qi - 1; k >= 0 && precedingData.length < 8; k--) {
+            const c = blocks[k] as DataBlock
+            if (c.type === 'data') precedingData.push(c)
+          }
+          // precedingData is closest-first
+          const precTables = precedingData.filter(d => d.display === 'table')
+          const precGraphs = precedingData.filter(d => d.display === 'graph' || d.display === 'bar')
+          const fixed = q.attachedDataIds.map(id => {
+            if (blockIds.has(id)) return id
+            if (/tbl|table/i.test(id) && precTables.length) return precTables[0].id
+            if (/gph|graph|bar/i.test(id) && precGraphs.length) return precGraphs[0].id
+            return precedingData[0]?.id ?? id
+          })
+          const deduped = [...new Set(fixed)].filter(id => blockIds.has(id))
+          q.attachedDataIds = deduped.length ? deduped : null as unknown as string[]
+          if ((q.attachedDataIds?.length ?? 0) > 1) q.attachedDataId = null
+        }
       }
     }
 
