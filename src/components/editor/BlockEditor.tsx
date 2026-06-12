@@ -27,11 +27,11 @@ export function BlockEditor({ block, blocks, dispatch, oakContext }: Props) {
     case 'instructions':    return <InstructionsEditor block={block} dispatch={dispatch} />
     case 'question':        return <QuestionEditor block={block} blocks={blocks} dispatch={dispatch} />
     case 'multiple_choice': return <MultipleChoiceEditor block={block} blocks={blocks} dispatch={dispatch} />
-    case 'worked_example':  return <WorkedExampleEditor block={block} dispatch={dispatch} />
-    case 'information':     return <InformationEditor block={block} dispatch={dispatch} />
-    case 'match_them_up':   return <MatchThemUpEditor block={block} dispatch={dispatch} />
-    case 'cloze':           return <ClozeEditor block={block} dispatch={dispatch} />
-    case 'order_steps':     return <OrderStepsEditor block={block} dispatch={dispatch} />
+    case 'worked_example':  return <WorkedExampleEditor block={block} blocks={blocks} dispatch={dispatch} />
+    case 'information':     return <InformationEditor block={block} blocks={blocks} dispatch={dispatch} />
+    case 'match_them_up':   return <MatchThemUpEditor block={block} blocks={blocks} dispatch={dispatch} />
+    case 'cloze':           return <ClozeEditor block={block} blocks={blocks} dispatch={dispatch} />
+    case 'order_steps':     return <OrderStepsEditor block={block} blocks={blocks} dispatch={dispatch} />
     case 'figure':             return <FigureEditor block={block} dispatch={dispatch} oakImages={oakContext?.images} />
     case 'spacer':             return <SpacerEditor block={block} dispatch={dispatch} />
     case 'data':               return <DataEditor block={block as DataBlock} dispatch={dispatch} blocks={blocks} />

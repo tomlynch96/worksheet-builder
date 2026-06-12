@@ -1,7 +1,8 @@
-import type { MultipleChoiceBlock, Block, FigureBlock } from '../../../types/worksheet'
+import type { MultipleChoiceBlock, Block } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field } from '../EditorPrimitives'
 import { RichTextEditor } from '../RichTextEditor'
+import { FigureAttachment } from '../FigureAttachment'
 
 interface Props {
   block: MultipleChoiceBlock
@@ -51,10 +52,6 @@ export function MultipleChoiceEditor({ block, blocks, dispatch }: Props) {
 
   const LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
 
-  const figBlock = block.attachedFigureId
-    ? blocks.find(b => b.id === block.attachedFigureId && b.type === 'figure') as FigureBlock | undefined
-    : undefined
-
   return (
     <div className="block-fields">
       <Field label="Question stem">
@@ -65,15 +62,13 @@ export function MultipleChoiceEditor({ block, blocks, dispatch }: Props) {
         />
       </Field>
 
-      {figBlock && (
-        <Field label="Figure">
-          <img
-            src={figBlock.imageData ?? figBlock.imageUrl}
-            alt={figBlock.caption}
-            style={{ maxWidth: '100%', maxHeight: 220, objectFit: 'contain', display: 'block', borderRadius: 4 }}
-          />
-        </Field>
-      )}
+      <FigureAttachment
+        figureId={block.attachedFigureId}
+        blocks={blocks}
+        afterId={block.id}
+        dispatch={dispatch}
+        onChangeFigureId={id => update({ attachedFigureId: id })}
+      />
 
       <Field label="Marks">
         <input type="number" min={1} value={block.marks} onChange={e => update({ marks: +e.target.value })} style={{ maxWidth: 80 }} />

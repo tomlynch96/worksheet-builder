@@ -112,6 +112,11 @@ data — represents a results table, line graph, or bar chart. One block can onl
     If set to another data block's id, this graph takes its data from that block instead of its own rows.
     Use when you want a table AND a graph of the same data as separate blocks — set the graph block's linkedDataId to the table block's id so you only maintain one set of data.
 
+CRITICAL omitRows rule: rows listed in omitRows are the ones PUPILS must plot — they are NOT pre-plotted by the app. Rows NOT listed are pre-plotted by the app.
+  - All rows omitted (e.g. [0,1,2,3,4]): pupils plot everything.
+  - Subset omitted (e.g. [2,3,4,5]): app pre-plots rows 0 and 1, pupils plot the rest. Use this for "plot the remaining points" questions.
+  - Empty [] : all points pre-plotted (reference graph only — not for pupil tasks).
+
 Example — practical worksheet graph (pupils plot all points, draw their own best-fit line):
 { "id":"...", "type":"data", "heading":"Table 1: Extension results",
   "columns":[ {"label":"Force","unit":"N"}, {"label":"Extension","unit":"cm"} ],
@@ -119,6 +124,32 @@ Example — practical worksheet graph (pupils plot all points, draw their own be
   "display":"graph",
   "hiddenCells":[],
   "graph":{ "xCol":0, "yCol":1, "showXLabel":true, "showYLabel":true, "showXScale":true, "showYScale":true, "omitRows":[0,1,2,3,4], "fitType":"linear", "showFitLine":false, "linkedDataId":null } }
+
+Example — table + linked graph + question (REQUIRED pattern for any "plot the graph" question):
+This is THREE separate blocks. The graph block pulls its data from the table via linkedDataId — do NOT duplicate the rows.
+
+Block 1 — table (contains all data):
+{ "id":"data-001", "type":"data", "heading":"Table 1: Activity of a radioactive isotope",
+  "columns":[{"label":"Time","unit":"days"},{"label":"Activity","unit":"Bq"}],
+  "rows":[["0","6400"],["8","3200"],["16","1600"],["24","800"],["32","400"],["40","200"]],
+  "display":"table", "hiddenCells":[],
+  "graph":{"xCol":0,"yCol":1,"fitType":"curve","omitRows":[],"showXLabel":true,"showXScale":true,"showYLabel":true,"showYScale":true,"showFitLine":false,"linkedDataId":null} }
+
+Block 2 — graph linked to table (rows MUST be [], columns MUST match the table):
+{ "id":"data-002", "type":"data", "heading":"Graph 1: Activity of a radioactive isotope",
+  "columns":[{"label":"Time","unit":"days"},{"label":"Activity","unit":"Bq"}],
+  "rows":[],
+  "display":"graph", "hiddenCells":[],
+  "graph":{"xCol":0,"yCol":1,"fitType":"curve","omitRows":[2,3,4,5],"showXLabel":true,"showXScale":true,"showYLabel":true,"showYScale":true,"showFitLine":false,"linkedDataId":"data-001"} }
+
+Block 3 — question referencing BOTH blocks via attachedDataIds:
+{ "id":"q-001", "type":"question", "stem":"Use Table 1 and Graph 1 to answer the following questions.",
+  "marks":0, "lines":0, "attachedDataId":null, "attachedDataIds":["data-001","data-002"],
+  "parts":[
+    {"id":"part-001","label":"a","stem":"Identify the half-life from the table.","marks":1,"lines":2,"markScheme":"8 days [1].","numericalAnswer":"8","attachedDataId":null,"attachedDataIds":null},
+    {"id":"part-002","label":"b","stem":"Plot the remaining data points on Graph 1 and draw a smooth curve of best fit through all the points.","marks":3,"lines":2,"markScheme":"All remaining points plotted correctly [2]; smooth curve of best fit [1].","numericalAnswer":"","attachedDataId":null,"attachedDataIds":null},
+    {"id":"part-003","label":"c","stem":"Use your graph to estimate the activity after 12 days.","marks":1,"lines":2,"markScheme":"Accept any value in range 2100–2300 Bq [1].","numericalAnswer":"","attachedDataId":null,"attachedDataIds":null}
+  ], "markScheme":"" }
 
 Example — "complete the table" (density column hidden, pupils calculate it):
 { "id":"...", "type":"data", "heading":"Table 2: Density calculations",
@@ -132,12 +163,14 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 
 ## Rules
 1. Use short IDs: "id-001", "id-002", "part-001", "item-001" etc. Every array item needs a unique id.
+   CRITICAL — ID consistency: the id you assign to a block MUST exactly match every linkedDataId, attachedDataId, and attachedDataIds reference to that block elsewhere in the worksheet. Never copy the example IDs (data-001, data-002, q-001) literally — generate your own unique short IDs (e.g. "tbl-001", "gph-001") and use those same IDs in all cross-references. If you create a table with "id":"tbl-001", the linked graph MUST have "linkedDataId":"tbl-001" and the question MUST have "attachedDataIds":["tbl-001","gph-001"]. Mismatched IDs cause the graph to be blank and the attachment to break.
 2. Always start: header block → instructions block → information block (key facts).
 3. Every question / part must have a markScheme using [1] notation.
 4. Use correct exam command words: state, give, describe, explain, calculate, suggest, evaluate.
 5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
 6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.
-7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.`
+7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.
+8. Column order for table+graph pairs: put the independent variable (x-axis) in column 0 and the dependent variable (y-axis) in column 1. Use xCol:0, yCol:1 on both the table and the linked graph. Never swap column order between table and graph — the linked graph inherits column definitions from the table.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
@@ -195,14 +228,16 @@ PEDAGOGICAL RULES — follow exactly:
 
 1. Open with an information block relevant to the experiment.
 2. Create a data block with realistic scattered data (±5–10% noise). Assign it a unique id (e.g. "data-001").
-   Set ~40% of row indices in omitRows so pupils must plot those points themselves.
-3. The first question block MUST have data attached so pupils can see it while answering.
-   - If the question asks pupils to BOTH read from a table AND plot a graph: create two data blocks (table + linked graph) and use "attachedDataIds": ["data-001","data-002"] on the question.
-   - If only one display is needed: use "attachedDataId": "data-001".
-   - Set the attachment on the QUESTION block (not on individual parts) when all parts refer to the same data.
-4. Graph questions inside that block: plot remaining points [2], draw best fit [1], extract a value [2–3].
-5. Follow-up: conclusion question, evaluation question.
-6. All markScheme fields must show full marking points with [marks].
+3. ALWAYS use the table + linked graph + question trio (shown in the format guide) for any question where pupils plot points. Never use a standalone graph block for pupil plotting tasks.
+   - Create data-001 (display "table", all rows of data).
+   - Create data-002 (display "graph", rows:[], linkedDataId:"data-001", columns matching data-001).
+   - Set omitRows on the GRAPH block to the rows pupils must plot. Pre-plot only the first 1–2 rows so pupils can see the scale before plotting (e.g. omitRows:[2,3,4,5] if 6 rows total).
+   - Use "attachedDataIds":["data-001","data-002"] on the question so both appear inline.
+4. For any topic involving exponential or non-linear change (radioactive decay, cooling curves, charging/discharging, population growth): set fitType:"curve" and showFitLine:false on the graph block. Never use fitType:"linear" for these topics.
+5. For linear relationships (Hooke's law, V=IR, F=ma): set fitType:"linear" and showFitLine:false so pupils draw their own best-fit line.
+6. Graph question parts must include: plot remaining points [2 marks], draw curve/line of best fit [1 mark], extract a value from the graph [1–2 marks].
+7. Follow-up: conclusion question, evaluation question.
+8. All markScheme fields must show full marking points with [marks].
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
@@ -269,17 +304,94 @@ function referencedDataIds(blocks: Block[]): Set<string> {
 }
 
 function fixDataBlocks(blocks: Block[]): Block[] {
-  // 1. Deduplicate table+graph pairs: if a graph/bar block has its own rows AND
-  //    there is a table block with the same column count, wire up linkedDataId
-  //    and clear the graph's rows.
+  const blockIds = new Set(blocks.map(b => b.id))
   const tableBlocks = blocks.filter(b => b.type === 'data' && (b as DataBlock).display === 'table') as DataBlock[]
+
+  // Step 0: Resolve stale cross-reference IDs.
+  // The AI frequently generates UUID block ids but writes short placeholder IDs
+  // (e.g. "tbl-001", "gph-001") in linkedDataId / attachedDataIds, so they never match.
+  // Fix graph.linkedDataId: if the value isn't a real block id, find the matching table.
   for (const b of blocks) {
     if (b.type !== 'data') continue
     const d = b as DataBlock
     if (d.display !== 'graph' && d.display !== 'bar') continue
-    if (d.graph?.linkedDataId) continue                     // already linked
+    if (!d.graph?.linkedDataId || blockIds.has(d.graph.linkedDataId)) continue
+    // Stale linkedDataId — resolve by column-label match first, then proximity
+    const byColumns = tableBlocks.find(t =>
+      t.columns?.length === d.columns?.length &&
+      t.columns?.every((col, i) => col.label === d.columns?.[i]?.label)
+    )
+    const graphIdx = blocks.indexOf(b)
+    const byProximity = (() => {
+      for (let k = graphIdx - 1; k >= 0; k--) {
+        const c = blocks[k] as DataBlock
+        if (c.type === 'data' && c.display === 'table') return c
+      }
+      return null
+    })()
+    const resolved = byColumns ?? byProximity
+    if (resolved) {
+      d.graph = { ...d.graph, linkedDataId: resolved.id }
+      d.rows = []
+    }
+  }
+
+  // Fix question.attachedDataIds / attachedDataId: replace non-existent IDs with
+  // real block IDs of the immediately-preceding data blocks.
+  for (let qi = 0; qi < blocks.length; qi++) {
+    const b = blocks[qi]
+    if (b.type !== 'question' && b.type !== 'multiple_choice') continue
+    const q = b as QuestionBlock
+
+    if (q.attachedDataIds?.length) {
+      const validIds = q.attachedDataIds.filter(id => blockIds.has(id))
+      const hasInvalid = q.attachedDataIds.some(id => !blockIds.has(id))
+      if (hasInvalid) {
+        if (validIds.length > 0) {
+          // Already has some real IDs mixed in — strip the stale ones, keep the real ones
+          q.attachedDataIds = validIds
+          if (validIds.length > 1) q.attachedDataId = null
+        } else {
+          // All IDs are stale — resolve by looking backwards from the question,
+          // closest-first. This correctly handles multiple trios on the same page
+          // because it picks the immediately-preceding trio's blocks, not earlier ones.
+          const precedingData: DataBlock[] = []
+          for (let k = qi - 1; k >= 0 && precedingData.length < 8; k--) {
+            const c = blocks[k] as DataBlock
+            if (c.type === 'data') precedingData.push(c)
+          }
+          // precedingData is closest-first
+          const precTables = precedingData.filter(d => d.display === 'table')
+          const precGraphs = precedingData.filter(d => d.display === 'graph' || d.display === 'bar')
+          const fixed = q.attachedDataIds.map(id => {
+            if (blockIds.has(id)) return id
+            if (/tbl|table/i.test(id) && precTables.length) return precTables[0].id
+            if (/gph|graph|bar/i.test(id) && precGraphs.length) return precGraphs[0].id
+            return precedingData[0]?.id ?? id
+          })
+          const deduped = [...new Set(fixed)].filter(id => blockIds.has(id))
+          q.attachedDataIds = deduped.length ? deduped : null as unknown as string[]
+          if ((q.attachedDataIds?.length ?? 0) > 1) q.attachedDataId = null
+        }
+      }
+    }
+
+    if (q.attachedDataId && !blockIds.has(q.attachedDataId)) {
+      for (let k = qi - 1; k >= 0; k--) {
+        const c = blocks[k] as DataBlock
+        if (c.type === 'data' && c.display === 'table') { q.attachedDataId = c.id; break }
+      }
+    }
+  }
+
+  // Step 1. Deduplicate table+graph pairs: if a graph block has its own rows AND
+  // no linkedDataId yet, wire up linkedDataId and clear the graph's rows.
+  for (const b of blocks) {
+    if (b.type !== 'data') continue
+    const d = b as DataBlock
+    if (d.display !== 'graph' && d.display !== 'bar') continue
+    if (d.graph?.linkedDataId) continue                     // already linked (including from Step 0)
     if (!d.rows?.length) continue                            // no duplicate data
-    // Find a table with the same column count
     const matchingTable = tableBlocks.find(t =>
       t.columns?.length === d.columns?.length &&
       t.columns?.every((col, i) => col.label === d.columns?.[i]?.label)
@@ -290,13 +402,12 @@ function fixDataBlocks(blocks: Block[]): Block[] {
     }
   }
 
-  // 2. Attach any still-unattached data blocks to the nearest preceding question.
+  // Step 2. Attach any still-unattached data blocks to the nearest preceding question.
   const referenced = referencedDataIds(blocks)
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i]
     if (b.type !== 'data') continue
     if (referenced.has(b.id)) continue
-    // Find the closest preceding question/multiple_choice block
     let target: QuestionBlock | null = null
     for (let j = i - 1; j >= 0; j--) {
       if (blocks[j].type === 'question' || blocks[j].type === 'multiple_choice') {
@@ -304,7 +415,6 @@ function fixDataBlocks(blocks: Block[]): Block[] {
         break
       }
     }
-    // Fall back to the next question if none precedes it
     if (!target) {
       for (let j = i + 1; j < blocks.length; j++) {
         if (blocks[j].type === 'question' || blocks[j].type === 'multiple_choice') {
@@ -314,7 +424,6 @@ function fixDataBlocks(blocks: Block[]): Block[] {
       }
     }
     if (!target) continue
-    // Attach: prefer attachedDataIds if already has one attachment, otherwise attachedDataId
     if (target.attachedDataId) {
       target.attachedDataIds = [target.attachedDataId, b.id]
       target.attachedDataId = null
