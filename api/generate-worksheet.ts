@@ -112,6 +112,11 @@ data — represents a results table, line graph, or bar chart. One block can onl
     If set to another data block's id, this graph takes its data from that block instead of its own rows.
     Use when you want a table AND a graph of the same data as separate blocks — set the graph block's linkedDataId to the table block's id so you only maintain one set of data.
 
+CRITICAL omitRows rule: rows listed in omitRows are the ones PUPILS must plot — they are NOT pre-plotted by the app. Rows NOT listed are pre-plotted by the app.
+  - All rows omitted (e.g. [0,1,2,3,4]): pupils plot everything.
+  - Subset omitted (e.g. [2,3,4,5]): app pre-plots rows 0 and 1, pupils plot the rest. Use this for "plot the remaining points" questions.
+  - Empty [] : all points pre-plotted (reference graph only — not for pupil tasks).
+
 Example — practical worksheet graph (pupils plot all points, draw their own best-fit line):
 { "id":"...", "type":"data", "heading":"Table 1: Extension results",
   "columns":[ {"label":"Force","unit":"N"}, {"label":"Extension","unit":"cm"} ],
@@ -119,6 +124,32 @@ Example — practical worksheet graph (pupils plot all points, draw their own be
   "display":"graph",
   "hiddenCells":[],
   "graph":{ "xCol":0, "yCol":1, "showXLabel":true, "showYLabel":true, "showXScale":true, "showYScale":true, "omitRows":[0,1,2,3,4], "fitType":"linear", "showFitLine":false, "linkedDataId":null } }
+
+Example — table + linked graph + question (REQUIRED pattern for any "plot the graph" question):
+This is THREE separate blocks. The graph block pulls its data from the table via linkedDataId — do NOT duplicate the rows.
+
+Block 1 — table (contains all data):
+{ "id":"data-001", "type":"data", "heading":"Table 1: Activity of a radioactive isotope",
+  "columns":[{"label":"Time","unit":"days"},{"label":"Activity","unit":"Bq"}],
+  "rows":[["0","6400"],["8","3200"],["16","1600"],["24","800"],["32","400"],["40","200"]],
+  "display":"table", "hiddenCells":[],
+  "graph":{"xCol":0,"yCol":1,"fitType":"curve","omitRows":[],"showXLabel":true,"showXScale":true,"showYLabel":true,"showYScale":true,"showFitLine":false,"linkedDataId":null} }
+
+Block 2 — graph linked to table (rows MUST be [], columns MUST match the table):
+{ "id":"data-002", "type":"data", "heading":"Graph 1: Activity of a radioactive isotope",
+  "columns":[{"label":"Time","unit":"days"},{"label":"Activity","unit":"Bq"}],
+  "rows":[],
+  "display":"graph", "hiddenCells":[],
+  "graph":{"xCol":0,"yCol":1,"fitType":"curve","omitRows":[2,3,4,5],"showXLabel":true,"showXScale":true,"showYLabel":true,"showYScale":true,"showFitLine":false,"linkedDataId":"data-001"} }
+
+Block 3 — question referencing BOTH blocks via attachedDataIds:
+{ "id":"q-001", "type":"question", "stem":"Use Table 1 and Graph 1 to answer the following questions.",
+  "marks":0, "lines":0, "attachedDataId":null, "attachedDataIds":["data-001","data-002"],
+  "parts":[
+    {"id":"part-001","label":"a","stem":"Identify the half-life from the table.","marks":1,"lines":2,"markScheme":"8 days [1].","numericalAnswer":"8","attachedDataId":null,"attachedDataIds":null},
+    {"id":"part-002","label":"b","stem":"Plot the remaining data points on Graph 1 and draw a smooth curve of best fit through all the points.","marks":3,"lines":2,"markScheme":"All remaining points plotted correctly [2]; smooth curve of best fit [1].","numericalAnswer":"","attachedDataId":null,"attachedDataIds":null},
+    {"id":"part-003","label":"c","stem":"Use your graph to estimate the activity after 12 days.","marks":1,"lines":2,"markScheme":"Accept any value in range 2100–2300 Bq [1].","numericalAnswer":"","attachedDataId":null,"attachedDataIds":null}
+  ], "markScheme":"" }
 
 Example — "complete the table" (density column hidden, pupils calculate it):
 { "id":"...", "type":"data", "heading":"Table 2: Density calculations",
@@ -195,14 +226,16 @@ PEDAGOGICAL RULES — follow exactly:
 
 1. Open with an information block relevant to the experiment.
 2. Create a data block with realistic scattered data (±5–10% noise). Assign it a unique id (e.g. "data-001").
-   Set ~40% of row indices in omitRows so pupils must plot those points themselves.
-3. The first question block MUST have data attached so pupils can see it while answering.
-   - If the question asks pupils to BOTH read from a table AND plot a graph: create two data blocks (table + linked graph) and use "attachedDataIds": ["data-001","data-002"] on the question.
-   - If only one display is needed: use "attachedDataId": "data-001".
-   - Set the attachment on the QUESTION block (not on individual parts) when all parts refer to the same data.
-4. Graph questions inside that block: plot remaining points [2], draw best fit [1], extract a value [2–3].
-5. Follow-up: conclusion question, evaluation question.
-6. All markScheme fields must show full marking points with [marks].
+3. ALWAYS use the table + linked graph + question trio (shown in the format guide) for any question where pupils plot points. Never use a standalone graph block for pupil plotting tasks.
+   - Create data-001 (display "table", all rows of data).
+   - Create data-002 (display "graph", rows:[], linkedDataId:"data-001", columns matching data-001).
+   - Set omitRows on the GRAPH block to the rows pupils must plot. Pre-plot only the first 1–2 rows so pupils can see the scale before plotting (e.g. omitRows:[2,3,4,5] if 6 rows total).
+   - Use "attachedDataIds":["data-001","data-002"] on the question so both appear inline.
+4. For any topic involving exponential or non-linear change (radioactive decay, cooling curves, charging/discharging, population growth): set fitType:"curve" and showFitLine:false on the graph block. Never use fitType:"linear" for these topics.
+5. For linear relationships (Hooke's law, V=IR, F=ma): set fitType:"linear" and showFitLine:false so pupils draw their own best-fit line.
+6. Graph question parts must include: plot remaining points [2 marks], draw curve/line of best fit [1 mark], extract a value from the graph [1–2 marks].
+7. Follow-up: conclusion question, evaluation question.
+8. All markScheme fields must show full marking points with [marks].
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
