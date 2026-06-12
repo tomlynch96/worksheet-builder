@@ -619,9 +619,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // Post-process only full worksheet generations
+    // Post-process: repair stale cross-reference IDs the AI generates
     if (mode === 'worksheet' && Array.isArray(parsed.blocks)) {
       parsed.blocks = fixDataBlocks(parsed.blocks as Block[]) as unknown[]
+    } else if ((mode === 'block' || mode === 'vary') && Array.isArray(parsed)) {
+      // Block-mode trio responses ([table, graph, question]) need the same repair
+      parsed = fixDataBlocks(parsed as unknown as Block[]) as unknown as typeof parsed
     }
 
     return res.status(200).json({ result: JSON.stringify(parsed) })
