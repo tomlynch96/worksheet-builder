@@ -135,7 +135,7 @@ Block 1 — table (contains all data):
   "display":"table", "hiddenCells":[],
   "graph":{"xCol":0,"yCol":1,"fitType":"curve","omitRows":[],"showXLabel":true,"showXScale":true,"showYLabel":true,"showYScale":true,"showFitLine":false,"linkedDataId":null} }
 
-Block 2 — graph linked to table (rows MUST be [], columns array MUST be identical to the table's columns array — same labels, same order, same length; xCol/yCol select which columns to plot):
+Block 2 — graph linked to table (rows MUST be [], columns MUST be a full copy of the table's columns array; xCol/yCol select which columns to plot):
 { "id":"data-002", "type":"data", "heading":"Graph 1: Activity of a radioactive isotope",
   "columns":[{"label":"Time","unit":"days"},{"label":"Activity","unit":"Bq"}],
   "rows":[],
@@ -170,10 +170,7 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
 6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.
 7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.
-8. Column selection for linked graphs: xCol and yCol are zero-based indices into the table's columns array. The linked graph's columns array MUST be identical to the table's columns array (same labels, same order, same length) — never abbreviate it. Choose xCol/yCol to select the scientifically meaningful variables for the graph:
-   - For a 2-column table (e.g. Force, Extension): xCol:0, yCol:1.
-   - For a multi-column table (e.g. Force | Original length | New length | Extension): choose the independent variable for xCol and the primary measured/calculated variable for yCol. For a force-extension graph from this table, use xCol:0 (Force) and yCol:3 (Extension) — NOT yCol:1 (Original length). Always pick the column that represents the quantity named in the graph heading.
-   - The same xCol/yCol values apply to both the table block's graph object and the linked graph block.`
+8. Column indices for graphs: xCol and yCol are zero-based indices into the columns array. The linked graph's columns array is always a full copy of the table's columns array. Set xCol and yCol to the indices of the variables named in the graph heading — e.g. for a table with columns [Force, Original length, New length, Extension] and a heading "Force against extension", use xCol:0 (Force) and yCol:3 (Extension), NOT yCol:1 (Original length). Always read the graph heading to determine which column indices to use.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
