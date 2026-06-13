@@ -264,7 +264,6 @@ export function LandingPage() {
 
       {/* ── Nav ── */}
       <nav className="landing-nav">
-        <img src="/logo.svg" className="landing-nav-logo" alt="The Worksheet Project" />
         <a className="landing-nav-cta" href="/onboarding">Log in / Sign up</a>
       </nav>
 

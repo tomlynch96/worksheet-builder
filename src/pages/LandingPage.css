@@ -8,21 +8,9 @@
 .landing-nav {
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
   z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 32px;
-  /* Subtle top gradient so logo is readable over the video */
-  background: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%);
-}
-
-.landing-nav-logo {
-  height: 28px;
-  filter: brightness(0) invert(1);
-  opacity: 0.95;
+  padding: 18px 28px;
 }
 
 .landing-nav-cta {
