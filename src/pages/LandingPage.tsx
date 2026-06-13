@@ -262,6 +262,12 @@ export function LandingPage() {
   return (
     <div className="landing">
 
+      {/* ── Nav ── */}
+      <nav className="landing-nav">
+        <img src="/logo.svg" className="landing-nav-logo" alt="The Worksheet Project" />
+        <a className="landing-nav-cta" href="/onboarding">Log in / Sign up</a>
+      </nav>
+
       {/* ── Hero: full-viewport video only ── */}
       <section className="landing-hero">
         <video className="landing-video" autoPlay muted loop playsInline src="/intro.mp4" />

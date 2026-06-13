@@ -3,6 +3,46 @@
 }
 
 /* ════════════════════════════════════════════
+   Nav
+════════════════════════════════════════════ */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  /* Subtle top gradient so logo is readable over the video */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%);
+}
+
+.landing-nav-logo {
+  height: 28px;
+  filter: brightness(0) invert(1);
+  opacity: 0.95;
+}
+
+.landing-nav-cta {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  padding: 8px 18px;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s;
+}
+.landing-nav-cta:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.55);
+}
+
+/* ════════════════════════════════════════════
    Hero — full viewport, video only
 ════════════════════════════════════════════ */
 .landing-hero {
