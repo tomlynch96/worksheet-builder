@@ -591,15 +591,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     type ContentBlock = TextBlock | ImageBlock
     type Message = { role: string; content: string | ContentBlock[] }
 
-    const oakImages = ['worksheet', 'block', 'vary', 'add_part'].includes(mode as string)
+    // Cloudinary URLs support on-the-fly resizing via upload transformation params.
+    // Anthropic's many-image limit is 2000px per dimension; cap at 1500px to be safe.
+    // Also cap total images at 10 — the API becomes slow and expensive beyond that.
+    function resizeCloudinaryUrl(url: string): string {
+      return url.replace(
+        /\/image\/upload\//,
+        '/image/upload/w_1500,h_1500,c_limit,f_auto/'
+      )
+    }
+
+    const rawOakImages = ['worksheet', 'block', 'vary', 'add_part'].includes(mode as string)
       ? (oakContext?.images ?? [])
       : []
+    const oakImages = rawOakImages.slice(0, 10).map(resizeCloudinaryUrl)
     let userContent: string | ContentBlock[]
     if (oakImages.length > 0) {
       userContent = [
         { type: 'text', text: userMessage },
         ...oakImages.map((url): ImageBlock => ({ type: 'image', source: { type: 'url', url } })),
-        { type: 'text', text: `The ${oakImages.length} image(s) above are diagrams from the Oak lesson. Their URLs (in order) are:\n${oakImages.map((url, i) => `Image ${i + 1}: ${url}`).join('\n')}\nWhen using an image in a question, set the figure block's imageUrl to the exact URL listed above.` },
+        { type: 'text', text: `The ${oakImages.length} image(s) above are diagrams from the Oak lesson. Their URLs (in order) are:\n${rawOakImages.slice(0, 10).map((url, i) => `Image ${i + 1}: ${url}`).join('\n')}\nWhen using an image in a question, set the figure block's imageUrl to the exact URL listed above (use the original URL, not the resized one).` },
       ]
     } else {
       userContent = userMessage
