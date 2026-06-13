@@ -135,7 +135,7 @@ Block 1 — table (contains all data):
   "display":"table", "hiddenCells":[],
   "graph":{"xCol":0,"yCol":1,"fitType":"curve","omitRows":[],"showXLabel":true,"showXScale":true,"showYLabel":true,"showYScale":true,"showFitLine":false,"linkedDataId":null} }
 
-Block 2 — graph linked to table (rows MUST be [], columns MUST match the table):
+Block 2 — graph linked to table (rows MUST be [], columns MUST be a full copy of the table's columns array; xCol/yCol select which columns to plot):
 { "id":"data-002", "type":"data", "heading":"Graph 1: Activity of a radioactive isotope",
   "columns":[{"label":"Time","unit":"days"},{"label":"Activity","unit":"Bq"}],
   "rows":[],
@@ -170,7 +170,7 @@ spacer: { "id":"...", "type":"spacer", "size":"small" }
 5. Output ONLY the raw JSON object — no markdown fences, no text before or after it.
 6. numericalAnswer: for any question or part whose answer is a single number, set "numericalAnswer" to that number as a plain string with no units (e.g. "9.8", "0.025", "1500"). For non-numerical questions (describe, explain, etc.) set "numericalAnswer" to "". Never include units in numericalAnswer.
 7. Every data block MUST be attached to a question or part via attachedDataId or attachedDataIds. It is an error to have a data block in the blocks array that is not referenced by any question or part.
-8. Column order for table+graph pairs: put the independent variable (x-axis) in column 0 and the dependent variable (y-axis) in column 1. Use xCol:0, yCol:1 on both the table and the linked graph. Never swap column order between table and graph — the linked graph inherits column definitions from the table.`
+8. Column indices for graphs and bar charts: xCol and yCol are zero-based indices into the columns array. The linked graph or bar chart's columns array MUST be an exact full copy of the table's columns array — never abbreviate it to just the two plotted columns. Set xCol and yCol to the indices of the variables named in the graph/chart heading — e.g. for a 4-column table [Object, Mass, Volume, Density] and a bar chart heading "Density of objects", use xCol:0 (Object) and yCol:3 (Density), NOT yCol:1 (Mass). Always read the heading to pick the correct indices.`
 
 // ── System prompts ────────────────────────────────────────────────────────
 
@@ -382,6 +382,27 @@ function fixDataBlocks(blocks: Block[]): Block[] {
         if (c.type === 'data' && c.display === 'table') { q.attachedDataId = c.id; break }
       }
     }
+
+    // Fix stale attachedDataId/attachedDataIds on individual parts too
+    for (const part of q.parts ?? []) {
+      const p = part as Part & { attachedDataIds?: string[] | null }
+      if (p.attachedDataId && !blockIds.has(p.attachedDataId)) {
+        const precedingData: DataBlock[] = []
+        for (let k = qi - 1; k >= 0 && precedingData.length < 8; k--) {
+          const c = blocks[k] as DataBlock
+          if (c.type === 'data') precedingData.push(c)
+        }
+        const precTables = precedingData.filter(d => d.display === 'table')
+        const precGraphsOrBars = precedingData.filter(d => d.display === 'graph' || d.display === 'bar')
+        if (/tbl|table/i.test(p.attachedDataId) && precTables.length) p.attachedDataId = precTables[0].id
+        else if (/gph|graph|bar/i.test(p.attachedDataId) && precGraphsOrBars.length) p.attachedDataId = precGraphsOrBars[0].id
+        else if (precTables.length) p.attachedDataId = precTables[0].id
+      }
+      if (p.attachedDataIds?.length && p.attachedDataIds.some(id => !blockIds.has(id))) {
+        p.attachedDataIds = p.attachedDataIds.map(id => blockIds.has(id) ? id : id).filter(id => blockIds.has(id))
+        if (!p.attachedDataIds.length) p.attachedDataIds = null
+      }
+    }
   }
 
   // Step 1. Deduplicate table+graph pairs: if a graph block has its own rows AND
@@ -402,7 +423,10 @@ function fixDataBlocks(blocks: Block[]): Block[] {
     }
   }
 
-  // Step 2. Attach any still-unattached data blocks to the nearest preceding question.
+  // Step 2. Attach any still-unattached data blocks to the nearest preceding question,
+  // but only if that question doesn't already have a full table+graph attachment.
+  // This prevents spurious AI-generated extra data blocks from polluting a question
+  // that is already correctly wired.
   const referenced = referencedDataIds(blocks)
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i]
@@ -424,6 +448,8 @@ function fixDataBlocks(blocks: Block[]): Block[] {
       }
     }
     if (!target) continue
+    // Skip if the question already has two or more data attachments — it's fully wired
+    if ((target.attachedDataIds?.length ?? 0) >= 2) continue
     if (target.attachedDataId) {
       target.attachedDataIds = [target.attachedDataId, b.id]
       target.attachedDataId = null

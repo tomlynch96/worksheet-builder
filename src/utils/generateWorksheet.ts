@@ -108,17 +108,58 @@ export async function generateBlock(params: {
   const raw = await callAPI({ mode: 'block', ...params })
   const parsed = JSON.parse(raw)
 
-  // The AI may return an array [dataBlock, questionBlock] when a data block is needed
+  // The AI may return an array [table, graph, question] when a data block is needed
   if (Array.isArray(parsed)) {
     if (parsed.length < 2) throw new Error('Invalid block array returned by AI.')
-    const attachedBlocks = parsed.slice(0, -1).map(b => sanitiseBlock({ ...b, id: crypto.randomUUID() }))
-    const primaryId = crypto.randomUUID()
-    const primary = parsed[parsed.length - 1] as Block
-    // Wire up attachedDataId using the new sanitised data block id
-    if (attachedBlocks[0]?.type === 'data' && primary.type === 'question') {
-      (primary as unknown as Record<string, unknown>).attachedDataId = attachedBlocks[0].id
+    const blocks = parsed as Block[]
+
+    // Build old-id → new-id map. Keep valid UUIDs as-is; replace short placeholder IDs.
+    // This preserves cross-references fixed by the server (linkedDataId, attachedDataIds).
+    const idMap = new Map<string, string>()
+    blocks.forEach(b => { idMap.set(b.id, UUID_RE.test(b.id) ? b.id : crypto.randomUUID()) })
+
+    // Sanitise all blocks using mapped IDs
+    const sanitisedAll = blocks.map(b => sanitiseBlock({ ...b, id: idMap.get(b.id)! }))
+
+    // Remap all cross-references so they point to the (possibly new) block IDs
+    for (const b of sanitisedAll) {
+      if (b.type === 'data') {
+        const d = b as Block & { graph?: { linkedDataId?: string | null } }
+        if (d.graph?.linkedDataId) {
+          d.graph = { ...d.graph, linkedDataId: idMap.get(d.graph.linkedDataId) ?? d.graph.linkedDataId }
+        }
+      }
+      if (b.type === 'question' || b.type === 'multiple_choice') {
+        const q = b as QuestionBlock & { attachedDataIds?: string[] }
+        if (q.attachedDataId) q.attachedDataId = idMap.get(q.attachedDataId) ?? q.attachedDataId
+        if (q.attachedDataIds?.length) {
+          q.attachedDataIds = q.attachedDataIds.map(id => idMap.get(id) ?? id)
+        }
+        for (const part of q.parts ?? []) {
+          const p = part as typeof part & { attachedDataIds?: string[] }
+          if (p.attachedDataId) p.attachedDataId = idMap.get(p.attachedDataId) ?? p.attachedDataId
+          if (p.attachedDataIds?.length) {
+            p.attachedDataIds = p.attachedDataIds.map(id => idMap.get(id) ?? id)
+          }
+        }
+      }
     }
-    const block = sanitiseBlock({ ...primary, id: primaryId })
+
+    const attachedBlocks = sanitisedAll.slice(0, -1)
+    const block = sanitisedAll[sanitisedAll.length - 1]
+
+    // Fallback: if question still has no data attachment, wire up the data blocks directly
+    if (block.type === 'question') {
+      const q = block as QuestionBlock & { attachedDataIds?: string[] }
+      const dataBlocks = attachedBlocks.filter(b => b.type === 'data')
+      if (dataBlocks.length >= 2 && !q.attachedDataIds?.length) {
+        q.attachedDataIds = dataBlocks.map(b => b.id)
+        q.attachedDataId = undefined
+      } else if (dataBlocks.length === 1 && !q.attachedDataId && !q.attachedDataIds?.length) {
+        q.attachedDataId = dataBlocks[0].id
+      }
+    }
+
     return { block, attachedBlocks }
   }
 
