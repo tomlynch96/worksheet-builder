@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useReactToPrint } from 'react-to-print'
+import { useLocation } from 'react-router-dom'
 import { Topbar } from '../components/layout/Topbar'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
@@ -116,11 +117,30 @@ function BookletItem({ item, index, onRemove, onDragStart, onDragOver, onDrop }:
 export function BookletPage() {
   const { profile } = useProfileContext()
   const { entries, loading } = useSupabaseWorksheets(profile?.id ?? null)
+  const location = useLocation()
+  const preload = (location.state as { preloadIds?: string[]; title?: string } | null)
 
   // Booklet state
-  const [bookletTitle, setBookletTitle] = useState('Revision Booklet')
+  const [bookletTitle, setBookletTitle] = useState(preload?.title ?? 'Revision Booklet')
   const [bookletSubtitle, setBookletSubtitle] = useState('')
   const [bookletEntries, setBookletEntries] = useState<BookletEntry[]>([])
+  const preloaded = useRef(false)
+
+  // Pre-populate booklet when navigated from scheme with worksheet IDs
+  useEffect(() => {
+    if (preloaded.current || !preload?.preloadIds?.length || entries.length === 0) return
+    preloaded.current = true
+    const toAdd = preload.preloadIds
+      .map(id => entries.find(e => e.id === id))
+      .filter((e): e is WorksheetEntry => !!e)
+    setBookletEntries(toAdd.map(e => ({
+      id: e.id,
+      title: e.title,
+      topic: e.topic,
+      qualLabel: offeringLabel(e.qualification_id, e.exam_board) ?? '',
+      worksheet: e.worksheet,
+    })))
+  }, [entries, preload])
 
   // Browser filter state
   const [search, setSearch] = useState('')

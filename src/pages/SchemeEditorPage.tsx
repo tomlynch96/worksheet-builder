@@ -13,7 +13,7 @@ import './SchemeEditorPage.css'
 const TOTAL_WEEKS = 39
 const WEEK_HEIGHT = 52      // px per week row
 const LABEL_WIDTH = 56      // px for the week-number column
-const TOPIC_WIDTH = 340     // px per topic column
+const TOPIC_WIDTH = 500     // px per topic column
 const TOPIC_GAP = 10        // px between topic columns
 const RECALL_COL_WIDTH = 56 // px for the recall timeline column
 
@@ -533,7 +533,20 @@ export function SchemeEditorPage() {
                         <button className="scheme-week-ws-remove" onClick={() => removeWorksheet(topic.id, stw.id)}>✕</button>
                       </div>
                     ))}
-                    <button className="scheme-add-ws-btn" onClick={() => setWsPickerTopicId(topic.id)}>+ Add worksheet</button>
+                    <div className="scheme-topic-actions">
+                      <button className="scheme-add-ws-btn" onClick={() => setWsPickerTopicId(topic.id)}>+ Add worksheet</button>
+                      {(topic.worksheets ?? []).length > 0 && (
+                        <button
+                          className="scheme-booklet-btn"
+                          onClick={() => navigate('/booklet', {
+                            state: {
+                              preloadIds: (topic.worksheets ?? []).map(w => w.worksheet_id),
+                              title: topic.topic_label ?? topic.topic_ref ?? 'Topic Booklet',
+                            }
+                          })}
+                        >📄 Make Booklet</button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
