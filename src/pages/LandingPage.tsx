@@ -248,12 +248,25 @@ function DemoCarousel() {
 // ── Landing page ───────────────────────────────────────────────────────────
 
 export function LandingPage() {
+  const [hazeOpacity, setHazeOpacity] = useState(1)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const ratio = Math.min(1, window.scrollY / (window.innerHeight * 0.6))
+      setHazeOpacity(1 - ratio)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <div className="landing">
 
       {/* ── Hero: full-viewport video only ── */}
       <section className="landing-hero">
         <video className="landing-video" autoPlay muted loop playsInline src="/intro.mp4" />
+        {/* Purple-blue tint that fades as the user scrolls */}
+        <div className="landing-hero-haze" style={{ opacity: hazeOpacity }} />
         {/* Gradient blends video into white below */}
         <div className="landing-hero-fade" />
         {/* Scroll hint sits in the fade zone — dark text against the whitening gradient */}
