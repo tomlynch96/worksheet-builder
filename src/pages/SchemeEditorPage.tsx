@@ -164,20 +164,35 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
     .filter(w => w.entry)
     .sort((a, b) => a.lastRecalledWeek - b.lastRecalledWeek)
 
+  function recallCount(wsId: string) {
+    return previousCheckins.filter(c => c.at_week < atWeek && c.source_worksheet_ids.includes(wsId)).length
+  }
+
   async function buildRecall() {
     setBuilding(true)
     const selected: ExtractedItem[] = []
     const usedDataIds = new Set<string>()
     let total = 0
 
-    for (const ws of scored) {
-      if (total >= marksTarget) break
+    // Pre-extract questions for each worksheet with a rotating start offset
+    const pools = scored.map(ws => {
       const items = extractItems(ws.wsId, ws.entry!.worksheet)
-      for (const item of items) {
-        if (total + item.marks > marksTarget + 2) continue
+      const offset = recallCount(ws.wsId) % Math.max(items.length, 1)
+      // Rotate: start from offset so each recall session picks the next question
+      const rotated = [...items.slice(offset), ...items.slice(0, offset)]
+      return { wsId: ws.wsId, items: rotated, picked: 0 }
+    }).filter(p => p.items.length > 0)
+
+    // Round-robin: one question per worksheet per pass, priority to unrecalled
+    const maxPasses = Math.max(...pools.map(p => p.items.length), 1)
+    outer: for (let pass = 0; pass < maxPasses; pass++) {
+      for (const pool of pools) {
+        if (total >= marksTarget) break outer
+        if (pass >= pool.items.length) continue   // this pool exhausted
+        const item = pool.items[pass]
+        if (total + item.marks > marksTarget + 3) continue
         selected.push(item)
         total += item.marks
-        if (total >= marksTarget) break
       }
     }
 
