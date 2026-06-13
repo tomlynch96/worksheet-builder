@@ -11,10 +11,11 @@ import type { Worksheet, Block, QuestionBlock } from '../types/worksheet'
 import './SchemeEditorPage.css'
 
 const TOTAL_WEEKS = 39
-const WEEK_HEIGHT = 44      // px per week row
+const WEEK_HEIGHT = 52      // px per week row
 const LABEL_WIDTH = 56      // px for the week-number column
-const TOPIC_WIDTH = 210     // px per topic column
+const TOPIC_WIDTH = 220     // px per topic column
 const TOPIC_GAP = 8         // px between topic columns
+const RECALL_COL_WIDTH = 48 // px for the recall timeline column
 
 const TOPIC_COLORS = [
   '#4f46e5', '#059669', '#d97706', '#dc2626',
@@ -172,8 +173,18 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
   const [marksTarget, setMarksTarget] = useState(20)
   const [building, setBuilding] = useState(false)
 
-  const priorTopics = topics.filter(t => t.week_start < atWeek)
-  const wsIds = [...new Set(priorTopics.flatMap(t => (t.worksheets ?? []).map(w => w.worksheet_id)))]
+  // Current topic = topic that spans atWeek (being taught now)
+  const currentTopic = topics.find(t => t.week_start <= atWeek && t.week_end >= atWeek)
+  const currentSheets = currentTopic?.worksheets ?? []
+  // Default: include all worksheets from current topic
+  const [cutoffIdx, setCutoffIdx] = useState(currentSheets.length - 1)
+
+  // Past topics = fully finished before atWeek
+  const pastTopics = topics.filter(t => t.week_end < atWeek)
+  // Include current topic's worksheets up to cutoff
+  const currentIncludedIds = currentSheets.slice(0, cutoffIdx + 1).map(w => w.worksheet_id)
+  const pastWsIds = [...new Set(pastTopics.flatMap(t => (t.worksheets ?? []).map(w => w.worksheet_id)))]
+  const wsIds = [...new Set([...pastWsIds, ...currentIncludedIds])]
 
   function lastRecalledWeek(wsId: string) {
     return previousCheckins
@@ -196,7 +207,6 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
     const usedDataIds = new Set<string>()
     let total = 0
 
-    // If a checkin already exists for this week, delete it and its worksheet first
     const existingCheckin = previousCheckins.find(c => c.at_week === atWeek)
     if (existingCheckin) {
       if (existingCheckin.worksheet_id) {
@@ -205,7 +215,6 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
       await supabase.from('recall_checkins').delete().eq('id', existingCheckin.id)
     }
 
-    // Pre-extract questions for each worksheet with a rotating start offset
     const pools = scored.map(ws => {
       const items = extractItems(ws.wsId, ws.entry!.worksheet)
       const offset = recallCount(ws.wsId) % Math.max(items.length, 1)
@@ -213,7 +222,6 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
       return { wsId: ws.wsId, items: rotated }
     }).filter(p => p.items.length > 0)
 
-    // Round-robin: one question per worksheet per pass, priority to unrecalled
     const maxPasses = Math.max(...pools.map(p => p.items.length), 1)
     outer: for (let pass = 0; pass < maxPasses; pass++) {
       for (const pool of pools) {
@@ -285,22 +293,42 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
     <div className="recall-backdrop" onClick={onClose}>
       <div className="recall-modal" onClick={e => e.stopPropagation()}>
         <div className="recall-head">
-          <h3 className="recall-title">Generate recall check-in</h3>
+          <h3 className="recall-title">Generate recall check-in — Week {atWeek}</h3>
           <button className="recall-close" onClick={onClose}>✕</button>
         </div>
-        <p className="recall-desc">Pulls questions from worksheets in weeks before week {atWeek}, prioritising topics not recently recalled.</p>
+        <p className="recall-desc">Pulls questions from worksheets taught before this week, prioritising lessons not recently recalled.</p>
+
+        {currentTopic && currentSheets.length > 0 && (
+          <div className="recall-cutoff">
+            <p className="recall-cutoff-label">Include from <strong>{currentTopic.topic_label ?? currentTopic.topic_ref}</strong> up to:</p>
+            <div className="recall-cutoff-list">
+              {currentSheets.map((stw, i) => (
+                <button
+                  key={stw.id}
+                  className={`recall-cutoff-item${i <= cutoffIdx ? ' recall-cutoff-item--on' : ''}`}
+                  onClick={() => setCutoffIdx(i === cutoffIdx ? i - 1 : i)}
+                >
+                  <span className="recall-cutoff-num">{i + 1}</span>
+                  <span className="recall-cutoff-title">{stw.title || 'Untitled'}</span>
+                  {i <= cutoffIdx ? <span className="recall-cutoff-check">✓</span> : <span className="recall-cutoff-check recall-cutoff-check--off">–</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="recall-stat-row">
           <span className="recall-stat-label">Worksheets available</span>
           <span className="recall-stat-val">{wsIds.length}</span>
         </div>
         <div className="recall-sources">
-          {scored.slice(0, 8).map(ws => (
+          {scored.slice(0, 6).map(ws => (
             <div key={ws.wsId} className="recall-source">
               <span className="recall-source-title">{ws.entry!.title}</span>
-              <span className="recall-source-meta">{ws.lastRecalledWeek === 0 ? 'Never recalled' : `Last recalled wk ${ws.lastRecalledWeek}`}</span>
+              <span className="recall-source-meta">{ws.lastRecalledWeek === 0 ? 'Never recalled' : `Last wk ${ws.lastRecalledWeek}`}</span>
             </div>
           ))}
-          {scored.length > 8 && <p className="recall-more">+ {scored.length - 8} more</p>}
+          {scored.length > 6 && <p className="recall-more">+ {scored.length - 6} more</p>}
         </div>
         <div className="recall-marks-row">
           <label className="recall-marks-label">Target marks: <strong>{marksTarget}</strong></label>
@@ -395,7 +423,6 @@ export function SchemeEditorPage() {
     resizeRef.current = { id: topic.id, origStart: topic.week_start, origEnd: topic.week_end, startY: e.clientY }
   }
 
-  // Merge topic overrides for live drag preview
   const displayTopics = useMemo(() =>
     topics.map(t => {
       const ov = topicOverrides.get(t.id)
@@ -414,8 +441,13 @@ export function SchemeEditorPage() {
   async function openRecall(worksheetId: string) {
     const { data } = await supabase.from('worksheets').select('*').eq('id', worksheetId).single()
     if (!data) return
-    const ws: Worksheet = { id: data.id as string, blocks: data.blocks as Worksheet['blocks'] }
-    navigate('/editor', { state: { worksheet: ws } })
+    navigate('/editor', { state: { worksheet: { id: data.id, blocks: data.blocks } } })
+  }
+
+  async function openWorksheet(worksheetId: string) {
+    const { data } = await supabase.from('worksheets').select('*').eq('id', worksheetId).single()
+    if (!data) return
+    navigate('/editor', { state: { worksheet: { id: data.id as string, blocks: data.blocks as Worksheet['blocks'] } } })
   }
 
   const topicsForWeek = (week: number) =>
@@ -499,9 +531,6 @@ export function SchemeEditorPage() {
 
               <div className="scheme-week-actions">
                 <button className="scheme-add-topic-btn" onClick={() => setPickerWeek(selectedWeek)}>+ Add topic</button>
-                <button className="scheme-recall-btn" onClick={() => setRecallWeek(selectedWeek)} disabled={selectedWeek <= 1}>
-                  ⚡ Generate recall check-in
-                </button>
               </div>
               {(() => { const ci = checkinForWeek(selectedWeek!); return ci?.worksheet_id ? (
                 <button className="scheme-checkin-badge" onClick={() => openRecall(ci.worksheet_id!)}>
@@ -510,7 +539,7 @@ export function SchemeEditorPage() {
               ) : null })()}
             </div>
           ) : (
-            <p className="scheme-sidebar-hint">Click any week to manage topics and worksheets, or drag a topic to move it.</p>
+            <p className="scheme-sidebar-hint">Click any week to manage topics and worksheets. Use the ⚡ column on the right to generate recall check-ins.</p>
           )}
         </aside>
 
@@ -520,23 +549,15 @@ export function SchemeEditorPage() {
 
             {/* Week row backgrounds (wireframe) */}
             {Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1).map(week => {
-              const ci = checkinForWeek(week)
               const isSelected = selectedWeek === week
               return (
                 <div
                   key={week}
-                  className={['scheme-vweek-row', isSelected ? 'scheme-vweek-row--selected' : '', ci ? 'scheme-vweek-row--checkin' : ''].filter(Boolean).join(' ')}
+                  className={['scheme-vweek-row', isSelected ? 'scheme-vweek-row--selected' : ''].filter(Boolean).join(' ')}
                   style={{ height: WEEK_HEIGHT }}
                   onClick={() => setSelectedWeek(week === selectedWeek ? null : week)}
                 >
                   <span className="scheme-vweek-num">Wk {week}</span>
-                  {ci && (
-                    <span
-                      className="scheme-vcheckin-dot"
-                      title="View recall check-in"
-                      onClick={e => { e.stopPropagation(); if (ci.worksheet_id) openRecall(ci.worksheet_id) }}
-                    >⚡</span>
-                  )}
                   <button
                     className="scheme-vweek-add"
                     onClick={e => { e.stopPropagation(); setPickerWeek(week); setSelectedWeek(week) }}
@@ -546,11 +567,11 @@ export function SchemeEditorPage() {
               )
             })}
 
-            {/* Topic tiles — absolutely positioned over the week rows */}
+            {/* Topic tiles — absolutely positioned */}
             {displayTopics.map((topic, idx) => {
               const col = topicColumns.get(topic.id) ?? 0
               const top = (topic.week_start - 1) * WEEK_HEIGHT + 2
-              const height = Math.max((topic.week_end - topic.week_start + 1) * WEEK_HEIGHT - 4, 28)
+              const height = Math.max((topic.week_end - topic.week_start + 1) * WEEK_HEIGHT - 4, 32)
               const color = TOPIC_COLORS[idx % TOPIC_COLORS.length]
               return (
                 <div
@@ -566,10 +587,25 @@ export function SchemeEditorPage() {
                   onMouseDown={e => startTopicDrag(e, topic)}
                   onClick={e => { e.stopPropagation(); setSelectedWeek(topic.week_start) }}
                 >
-                  {topic.topic_ref && <span className="scheme-vtopic-ref">{topic.topic_ref}</span>}
-                  <span className="scheme-vtopic-label">{topic.topic_label ?? topic.topic_ref}</span>
-                  {(topic.worksheets?.length ?? 0) > 0 && (
-                    <span className="scheme-vtopic-ws">{topic.worksheets!.length} sheet{topic.worksheets!.length !== 1 ? 's' : ''}</span>
+                  <div className="scheme-vtopic-header">
+                    {topic.topic_ref && <span className="scheme-vtopic-ref">{topic.topic_ref}</span>}
+                    <span className="scheme-vtopic-label">{topic.topic_label ?? topic.topic_ref}</span>
+                  </div>
+                  {(topic.worksheets ?? []).length > 0 && (
+                    <div className="scheme-vtopic-sheets">
+                      {(topic.worksheets ?? []).map((stw, i) => (
+                        <button
+                          key={stw.id}
+                          className="scheme-vtopic-sheet"
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={e => { e.stopPropagation(); openWorksheet(stw.worksheet_id) }}
+                          title={stw.title || 'Untitled'}
+                        >
+                          <span className="scheme-vtopic-sheet-num">{i + 1}</span>
+                          <span className="scheme-vtopic-sheet-title">{stw.title || 'Untitled'}</span>
+                        </button>
+                      ))}
+                    </div>
                   )}
                   <div
                     className="scheme-vtopic-resize"
@@ -579,6 +615,30 @@ export function SchemeEditorPage() {
                 </div>
               )
             })}
+
+            {/* ── Recall timeline column ── */}
+            <div className="scheme-recall-col" style={{ width: RECALL_COL_WIDTH }}>
+              <div className="scheme-recall-track" />
+              {Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1).map(week => {
+                const ci = checkinForWeek(week)
+                return (
+                  <div
+                    key={week}
+                    className={['scheme-recall-cell', ci ? 'scheme-recall-cell--done' : ''].filter(Boolean).join(' ')}
+                    style={{ height: WEEK_HEIGHT }}
+                    title={ci ? `Recall check-in — week ${week}` : `Generate recall — week ${week}`}
+                    onClick={() => ci?.worksheet_id ? openRecall(ci.worksheet_id) : setRecallWeek(week)}
+                  >
+                    {ci ? (
+                      <div className="scheme-recall-dot" />
+                    ) : (
+                      <span className="scheme-recall-add">⚡</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
           </div>
         </div>
       </div>

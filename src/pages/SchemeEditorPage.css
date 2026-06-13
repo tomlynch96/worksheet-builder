@@ -321,10 +321,17 @@
 .scheme-vtopic:active { cursor: grabbing; box-shadow: 0 4px 16px rgba(0,0,0,0.22); }
 .scheme-vtopic:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 
+.scheme-vtopic-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
 .scheme-vtopic-ref {
   font-size: 9px;
   font-weight: 800;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.65);
   letter-spacing: 0.04em;
   line-height: 1;
 }
@@ -339,10 +346,48 @@
   line-height: 1.3;
 }
 
-.scheme-vtopic-ws {
+/* Worksheet list inside tile */
+.scheme-vtopic-sheets {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 4px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.scheme-vtopic-sheet {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,0.15);
+  border: none;
+  border-radius: 3px;
+  padding: 2px 5px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s;
+  min-height: 0;
+  flex-shrink: 0;
+}
+.scheme-vtopic-sheet:hover { background: rgba(0,0,0,0.28); }
+
+.scheme-vtopic-sheet-num {
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.6);
+  min-width: 12px;
+  flex-shrink: 0;
+}
+
+.scheme-vtopic-sheet-title {
   font-size: 10px;
-  color: rgba(255,255,255,0.65);
-  margin-top: auto;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 /* Resize handle at bottom of topic tile */
@@ -355,6 +400,7 @@
   cursor: ns-resize;
   background: rgba(0,0,0,0.15);
   border-radius: 0 0 6px 6px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,9 +409,69 @@
   content: '';
   width: 24px;
   height: 2px;
-  background: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.45);
   border-radius: 1px;
 }
+
+/* ── Recall timeline column ── */
+.scheme-recall-col {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.scheme-recall-track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: #f0f0f0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.scheme-recall-cell {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.1s;
+}
+.scheme-recall-cell:hover { background: #f0f0ff; }
+
+.scheme-recall-dot {
+  width: 14px;
+  height: 14px;
+  background: #f59e0b;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(245,158,11,0.5);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.scheme-recall-cell--done:hover .scheme-recall-dot {
+  background: #d97706;
+}
+
+.scheme-recall-add {
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.1s;
+  position: relative;
+  z-index: 1;
+}
+.scheme-recall-cell:not(.scheme-recall-cell--done):hover .scheme-recall-add { opacity: 1; }
+
 
 /* ── Overlays ── */
 .picker-backdrop {
@@ -618,6 +724,67 @@
 .recall-title { font-size: 16px; font-weight: 800; color: #111827; margin: 0; }
 .recall-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; }
 .recall-desc { font-size: 13px; color: #6b7280; margin: 0; line-height: 1.55; }
+
+.recall-cutoff {
+  background: #f8f7ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recall-cutoff-label {
+  font-size: 12px;
+  color: #374151;
+  margin: 0;
+}
+
+.recall-cutoff-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.recall-cutoff-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 4px 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.recall-cutoff-item:hover { background: #ede9fe; }
+.recall-cutoff-item--on { background: #ede9fe; border-color: #c4b5fd; }
+
+.recall-cutoff-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: #818cf8;
+  min-width: 14px;
+}
+
+.recall-cutoff-title {
+  font-size: 12px;
+  color: #374151;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recall-cutoff-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+.recall-cutoff-check--off { color: #d1d5db; }
 
 .recall-stat-row {
   display: flex;
