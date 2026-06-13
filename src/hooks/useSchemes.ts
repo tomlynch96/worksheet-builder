@@ -186,7 +186,7 @@ export function useSchemeDetail(schemeId: string | null) {
       .single()
     if (error || !data) return null
     const c = data as RecallCheckin
-    setCheckins(prev => [...prev, c])
+    setCheckins(prev => [...prev.filter(x => !(x.scheme_id === c.scheme_id && x.at_week === c.at_week)), c])
     return c
   }
 

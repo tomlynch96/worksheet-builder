@@ -174,6 +174,15 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
     const usedDataIds = new Set<string>()
     let total = 0
 
+    // If a checkin already exists for this week, delete it and its worksheet first
+    const existingCheckin = previousCheckins.find(c => c.at_week === atWeek)
+    if (existingCheckin) {
+      if (existingCheckin.worksheet_id) {
+        await supabase.from('worksheets').delete().eq('id', existingCheckin.worksheet_id)
+      }
+      await supabase.from('recall_checkins').delete().eq('id', existingCheckin.id)
+    }
+
     // Pre-extract questions for each worksheet with a rotating start offset
     const pools = scored.map(ws => {
       const items = extractItems(ws.wsId, ws.entry!.worksheet)
