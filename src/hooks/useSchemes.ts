@@ -167,6 +167,18 @@ export function useSchemeDetail(schemeId: string | null) {
     return stw
   }
 
+  async function reorderWorksheets(topicId: string, orderedIds: string[]) {
+    if (!isConfigured) return
+    await Promise.all(orderedIds.map((id, position) =>
+      supabase.from('scheme_topic_worksheets').update({ position }).eq('id', id)
+    ))
+    setTopics(prev => prev.map(t => {
+      if (t.id !== topicId) return t
+      const byId = new Map((t.worksheets ?? []).map(w => [w.id, w]))
+      return { ...t, worksheets: orderedIds.map((id, i) => ({ ...byId.get(id)!, position: i })) }
+    }))
+  }
+
   async function removeWorksheet(topicId: string, stwId: string) {
     if (!isConfigured) return
     await supabase.from('scheme_topic_worksheets').delete().eq('id', stwId)
@@ -193,7 +205,7 @@ export function useSchemeDetail(schemeId: string | null) {
   return {
     topics, checkins, loading,
     addTopic, moveTopic, resizeTopic, removeTopic,
-    addWorksheet, removeWorksheet,
+    addWorksheet, removeWorksheet, reorderWorksheets,
     saveCheckin,
     reload: load,
   }

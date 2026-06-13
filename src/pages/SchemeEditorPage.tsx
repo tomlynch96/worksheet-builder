@@ -359,7 +359,7 @@ export function SchemeEditorPage() {
   const { id: schemeId } = useParams<{ id: string }>()
   const { profile } = useProfileContext()
   const { schemes } = useSchemes(profile?.id ?? null)
-  const { topics, checkins, loading, addTopic, moveTopic, resizeTopic, removeTopic, addWorksheet, removeWorksheet, saveCheckin, reload } = useSchemeDetail(schemeId ?? null)
+  const { topics, checkins, loading, addTopic, moveTopic, resizeTopic, removeTopic, addWorksheet, removeWorksheet, reorderWorksheets, saveCheckin, reload } = useSchemeDetail(schemeId ?? null)
   const { entries: allEntries } = useSupabaseWorksheets(profile?.id ?? null)
   const navigate = useNavigate()
 
@@ -375,6 +375,8 @@ export function SchemeEditorPage() {
   const [recallWeek, setRecallWeek] = useState<number | null>(null)
   const [wsPickerTopicId, setWsPickerTopicId] = useState<string | null>(null)
   const [wsPickerQuery, setWsPickerQuery] = useState('')
+  const [wsPickerSelected, setWsPickerSelected] = useState<Set<string>>(new Set())
+  const [dragWs, setDragWs] = useState<{ topicId: string; fromIdx: number; overIdx: number } | null>(null)
 
   // Local topic position overrides while drag is in progress (for live preview)
   const [topicOverrides, setTopicOverrides] = useState<Map<string, { week_start: number; week_end: number }>>(new Map())
@@ -473,6 +475,8 @@ export function SchemeEditorPage() {
     setPickerWeek(null)
   }
 
+  function closeWsPicker() { setWsPickerTopicId(null); setWsPickerQuery(''); setWsPickerSelected(new Set()) }
+
   const wsPickerTopic = wsPickerTopicId ? topics.find(t => t.id === wsPickerTopicId) : null
   const wsPickerAllowedRefs = (() => {
     if (!wsPickerTopic?.topic_ref) return null
@@ -484,6 +488,13 @@ export function SchemeEditorPage() {
     }
     return refs
   })()
+
+  async function addSelectedWorksheets() {
+    if (!wsPickerTopicId) return
+    const toAdd = wsForPicker.filter(e => wsPickerSelected.has(e.id))
+    for (const e of toAdd) await addWorksheet(wsPickerTopicId, e.id, e.title, e.topic)
+    closeWsPicker()
+  }
 
   const wsForPicker = allEntries.filter(e => {
     const matchesAnyQual = browsableQuals.some(q =>
@@ -528,13 +539,33 @@ export function SchemeEditorPage() {
                     <button className="scheme-week-topic-remove" onClick={() => removeTopic(topic.id)}>✕</button>
                   </div>
                   <div className="scheme-week-wss">
-                    {(topic.worksheets ?? []).map((stw, idx) => (
-                      <div key={stw.id} className="scheme-week-ws">
-                        <span className="scheme-week-ws-num">{idx + 1}</span>
-                        <span className="scheme-week-ws-title">{stw.title || 'Untitled'}</span>
-                        <button className="scheme-week-ws-remove" onClick={() => removeWorksheet(topic.id, stw.id)}>✕</button>
-                      </div>
-                    ))}
+                    {(topic.worksheets ?? []).map((stw, idx) => {
+                      const isOver = dragWs?.topicId === topic.id && dragWs.overIdx === idx && dragWs.fromIdx !== idx
+                      return (
+                        <div
+                          key={stw.id}
+                          className={['scheme-week-ws', isOver ? 'scheme-week-ws--over' : ''].filter(Boolean).join(' ')}
+                          draggable
+                          onDragStart={() => setDragWs({ topicId: topic.id, fromIdx: idx, overIdx: idx })}
+                          onDragEnter={() => { if (dragWs?.topicId === topic.id) setDragWs(d => d ? { ...d, overIdx: idx } : null) }}
+                          onDragOver={e => e.preventDefault()}
+                          onDrop={() => {
+                            if (!dragWs || dragWs.topicId !== topic.id || dragWs.fromIdx === dragWs.overIdx) { setDragWs(null); return }
+                            const sheets = [...(topic.worksheets ?? [])]
+                            const [moved] = sheets.splice(dragWs.fromIdx, 1)
+                            sheets.splice(dragWs.overIdx, 0, moved)
+                            reorderWorksheets(topic.id, sheets.map(w => w.id))
+                            setDragWs(null)
+                          }}
+                          onDragEnd={() => setDragWs(null)}
+                        >
+                          <span className="scheme-week-ws-drag">⠿</span>
+                          <span className="scheme-week-ws-num">{idx + 1}</span>
+                          <span className="scheme-week-ws-title">{stw.title || 'Untitled'}</span>
+                          <button className="scheme-week-ws-remove" onClick={() => removeWorksheet(topic.id, stw.id)}>✕</button>
+                        </div>
+                      )
+                    })}
                     <div className="scheme-topic-actions">
                       <button className="scheme-add-ws-btn" onClick={() => setWsPickerTopicId(topic.id)}>+ Add worksheet</button>
                       {(topic.worksheets ?? []).length > 0 && (
@@ -689,11 +720,11 @@ export function SchemeEditorPage() {
 
       {/* ── Worksheet picker ── */}
       {wsPickerTopicId && (
-        <div className="picker-backdrop" onClick={() => { setWsPickerTopicId(null); setWsPickerQuery('') }}>
+        <div className="picker-backdrop" onClick={closeWsPicker}>
           <div className="ws-picker" onClick={e => e.stopPropagation()}>
             <div className="ws-picker-head">
-              <span className="ws-picker-title">Add worksheet</span>
-              <button className="ws-picker-close" onClick={() => { setWsPickerTopicId(null); setWsPickerQuery('') }}>✕</button>
+              <span className="ws-picker-title">Add worksheets</span>
+              <button className="ws-picker-close" onClick={closeWsPicker}>✕</button>
             </div>
             <input className="ws-picker-search" placeholder="Search by title or topic…" value={wsPickerQuery} onChange={e => setWsPickerQuery(e.target.value)} autoFocus />
             <div className="ws-picker-list">
@@ -702,15 +733,39 @@ export function SchemeEditorPage() {
               ) : wsForPicker.map(e => {
                 const topicObj = topics.find(t => t.id === wsPickerTopicId)
                 const alreadyAdded = (topicObj?.worksheets ?? []).some(w => w.worksheet_id === e.id)
+                const isSelected = wsPickerSelected.has(e.id)
                 return (
-                  <button key={e.id} className={`ws-picker-item${alreadyAdded ? ' ws-picker-item--added' : ''}`} disabled={alreadyAdded}
-                    onClick={async () => { await addWorksheet(wsPickerTopicId, e.id, e.title, e.topic); setWsPickerTopicId(null); setWsPickerQuery('') }}>
-                    <span className="ws-picker-item-title">{e.title}</span>
-                    <span className="ws-picker-item-meta">{e.topic}</span>
+                  <button
+                    key={e.id}
+                    className={['ws-picker-item', alreadyAdded ? 'ws-picker-item--added' : '', isSelected ? 'ws-picker-item--selected' : ''].filter(Boolean).join(' ')}
+                    disabled={alreadyAdded}
+                    onClick={() => {
+                      if (alreadyAdded) return
+                      setWsPickerSelected(prev => {
+                        const next = new Set(prev)
+                        next.has(e.id) ? next.delete(e.id) : next.add(e.id)
+                        return next
+                      })
+                    }}
+                  >
+                    <input type="checkbox" className="ws-picker-checkbox" checked={alreadyAdded || isSelected} readOnly tabIndex={-1} />
+                    <span className="ws-picker-item-body">
+                      <span className="ws-picker-item-title">{e.title}</span>
+                      <span className="ws-picker-item-meta">{e.topic}</span>
+                    </span>
                     {alreadyAdded && <span className="ws-picker-added-badge">Added</span>}
                   </button>
                 )
               })}
+            </div>
+            <div className="ws-picker-footer">
+              <button
+                className="ws-picker-confirm-btn"
+                disabled={wsPickerSelected.size === 0}
+                onClick={addSelectedWorksheets}
+              >
+                {wsPickerSelected.size === 0 ? 'Select worksheets above' : `Add ${wsPickerSelected.size} worksheet${wsPickerSelected.size !== 1 ? 's' : ''}`}
+              </button>
             </div>
           </div>
         </div>

@@ -183,6 +183,23 @@
 }
 .scheme-week-ws-remove:hover { color: #dc2626; }
 
+.scheme-week-ws-drag {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #d1d5db;
+  cursor: grab;
+  padding: 0 4px 0 0;
+  line-height: 1;
+  user-select: none;
+}
+.scheme-week-ws-drag:active { cursor: grabbing; }
+
+.scheme-week-ws--over {
+  background: #ede9fe;
+  border-radius: 4px;
+  outline: 1px dashed #4f46e5;
+}
+
 .scheme-add-ws-btn {
   background: none;
   border: 1px dashed #c7d2fe;
@@ -733,8 +750,9 @@
 
 .ws-picker-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   background: none;
   border: none;
@@ -743,18 +761,34 @@
   text-align: left;
   transition: background 0.1s;
   position: relative;
+  width: 100%;
 }
 .ws-picker-item:hover:not(:disabled) { background: #f5f3ff; }
 .ws-picker-item--added { opacity: 0.5; cursor: not-allowed; }
+.ws-picker-item--selected { background: #ede9fe; }
+.ws-picker-item--selected:hover:not(:disabled) { background: #ddd6fe; }
+
+.ws-picker-checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: #4f46e5;
+  pointer-events: none;
+}
+
+.ws-picker-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
 
 .ws-picker-item-title { font-size: 13px; font-weight: 600; color: #111827; }
 .ws-picker-item-meta { font-size: 11px; color: #9ca3af; }
 
 .ws-picker-added-badge {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   font-size: 10px;
   font-weight: 700;
   color: #16a34a;
@@ -762,6 +796,27 @@
   border-radius: 4px;
   padding: 2px 6px;
 }
+
+.ws-picker-footer {
+  padding: 10px 12px;
+  border-top: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.ws-picker-confirm-btn {
+  width: 100%;
+  padding: 9px 12px;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ws-picker-confirm-btn:hover:not(:disabled) { background: #4338ca; }
+.ws-picker-confirm-btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
 .ws-picker-empty { font-size: 13px; color: #9ca3af; padding: 20px; text-align: center; margin: 0; }
 
