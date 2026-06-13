@@ -13,14 +13,23 @@ import './SchemeEditorPage.css'
 const TOTAL_WEEKS = 39
 const WEEK_HEIGHT = 52      // px per week row
 const LABEL_WIDTH = 56      // px for the week-number column
-const TOPIC_WIDTH = 220     // px per topic column
-const TOPIC_GAP = 8         // px between topic columns
-const RECALL_COL_WIDTH = 48 // px for the recall timeline column
+const TOPIC_WIDTH = 340     // px per topic column
+const TOPIC_GAP = 10        // px between topic columns
+const RECALL_COL_WIDTH = 56 // px for the recall timeline column
 
 const TOPIC_COLORS = [
-  '#4f46e5', '#059669', '#d97706', '#dc2626',
-  '#7c3aed', '#0891b2', '#be185d', '#65a30d',
-  '#ea580c', '#0284c7', '#a21caf', '#16a34a',
+  '#4338ca', // indigo
+  '#047857', // emerald
+  '#b45309', // amber
+  '#b91c1c', // red
+  '#6d28d9', // violet
+  '#0e7490', // cyan
+  '#9d174d', // pink
+  '#4d7c0f', // lime
+  '#c2410c', // orange
+  '#1d4ed8', // blue
+  '#7e22ce', // purple
+  '#15803d', // green
 ]
 
 function computeTopicColumns(topics: SchemeTopic[]): Map<string, number> {
@@ -545,6 +554,12 @@ export function SchemeEditorPage() {
 
         {/* ── Vertical calendar ── */}
         <div className="scheme-calendar-v">
+          {/* Sticky column header */}
+          <div className="scheme-cal-head">
+            <span className="scheme-cal-head-label" style={{ width: LABEL_WIDTH }} />
+            <span className="scheme-cal-head-topics">Topics</span>
+            <span className="scheme-cal-head-recall" style={{ width: RECALL_COL_WIDTH }}>⚡ Recall</span>
+          </div>
           <div className="scheme-v-inner" style={{ minHeight: TOTAL_WEEKS * WEEK_HEIGHT }}>
 
             {/* Week row backgrounds (wireframe) */}
