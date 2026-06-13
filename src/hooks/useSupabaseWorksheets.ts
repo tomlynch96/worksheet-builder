@@ -66,6 +66,7 @@ export function useSupabaseWorksheets(profileId: string | null) {
       .from('worksheets')
       .select('*')
       .eq('profile_id', profileId)
+      .neq('is_recall', true)
       .order('updated_at', { ascending: false })
 
     if (data) setEntries(data.map(r => rowToEntry(r as Record<string, unknown>)))

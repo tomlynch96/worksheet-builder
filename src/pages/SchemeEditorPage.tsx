@@ -15,22 +15,43 @@ const WEEKS_PER_ROW = 6
 
 // ── Question extraction for recall ───────────────────────────────────────────
 
-interface ExtractedQuestion { worksheetId: string; worksheetTitle: string; block: Block; marks: number }
+// Block types that count as "questions" for recall purposes
+const RECALL_TYPES = new Set(['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'])
 
-function extractQuestions(wsId: string, title: string, ws: Worksheet): ExtractedQuestion[] {
-  const out: ExtractedQuestion[] = []
+interface ExtractedItem { worksheetId: string; block: Block; marks: number; attachedBlocks: Block[] }
+
+function extractItems(wsId: string, ws: Worksheet): ExtractedItem[] {
+  const blockById = new Map(ws.blocks.map(b => [b.id, b]))
+  const out: ExtractedItem[] = []
+
   for (const block of ws.blocks) {
-    if (block.type === 'question') {
-      const q = block as QuestionBlock
-      if (q.parts.length > 0) {
-        for (const part of q.parts)
-          out.push({ worksheetId: wsId, worksheetTitle: title, block: { ...q, parts: [part] } as unknown as Block, marks: part.marks ?? 1 })
-      } else {
-        out.push({ worksheetId: wsId, worksheetTitle: title, block, marks: q.marks ?? 1 })
-      }
-    } else if (block.type === 'multiple_choice') {
-      out.push({ worksheetId: wsId, worksheetTitle: title, block, marks: (block as { marks?: number }).marks ?? 1 })
+    if (!RECALL_TYPES.has(block.type)) continue
+
+    // Collect any data blocks attached to this question so they render inline
+    const attached: Block[] = []
+    const q = block as QuestionBlock & { attachedDataId?: string; attachedDataIds?: string[] }
+    const dataIds: string[] = q.attachedDataIds?.length
+      ? q.attachedDataIds
+      : q.attachedDataId ? [q.attachedDataId] : []
+    for (const id of dataIds) {
+      const found = blockById.get(id)
+      if (found) attached.push(found)
     }
+    // Also check part-level attachments
+    for (const part of (q as QuestionBlock).parts ?? []) {
+      const pq = part as typeof part & { attachedDataId?: string; attachedDataIds?: string[] }
+      const partIds = pq.attachedDataIds?.length ? pq.attachedDataIds : pq.attachedDataId ? [pq.attachedDataId] : []
+      for (const id of partIds) {
+        const found = blockById.get(id)
+        if (found && !attached.find(a => a.id === id)) attached.push(found)
+      }
+    }
+
+    const marks = block.type === 'question'
+      ? ((block as QuestionBlock).marks || (block as QuestionBlock).parts.reduce((s, p) => s + (p.marks ?? 1), 0) || 1)
+      : (block as { marks?: number }).marks ?? 1
+
+    out.push({ worksheetId: wsId, block, marks, attachedBlocks: attached })
   }
   return out
 }
@@ -120,7 +141,7 @@ interface RecallModalProps {
   topics: SchemeTopic[]
   allEntries: import('../hooks/useSupabaseWorksheets').WorksheetEntry[]
   previousCheckins: import('../types/scheme').RecallCheckin[]
-  onSaved: (wsId: string) => void
+  onSaved: (wsId: string, worksheet: Worksheet) => void
   onClose: () => void
   onCheckinSaved: (c: Omit<import('../types/scheme').RecallCheckin, 'id' | 'created_at'>) => Promise<import('../types/scheme').RecallCheckin | null>
 }
@@ -145,29 +166,79 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
 
   async function buildRecall() {
     setBuilding(true)
-    const selected: ExtractedQuestion[] = []
+    const selected: ExtractedItem[] = []
+    const usedDataIds = new Set<string>()
     let total = 0
+
     for (const ws of scored) {
       if (total >= marksTarget) break
-      const qs = extractQuestions(ws.wsId, ws.entry!.title, ws.entry!.worksheet)
-      for (const q of qs) {
-        if (total + q.marks > marksTarget + 2) continue
-        selected.push(q); total += q.marks
+      const items = extractItems(ws.wsId, ws.entry!.worksheet)
+      for (const item of items) {
+        if (total + item.marks > marksTarget + 2) continue
+        selected.push(item)
+        total += item.marks
         if (total >= marksTarget) break
       }
     }
+
     const wsId = crypto.randomUUID()
-    const blocks = [
-      { id: crypto.randomUUID(), type: 'header', title: `Recall Check-In — Week ${atWeek}`, topic: 'Mixed topics', examBoard: 'AQA', tier: 'mixed', showName: true, showDate: true, showClass: true },
-      { id: crypto.randomUUID(), type: 'instructions', items: ['Answer all questions.', 'Show your working.', 'Marks are shown in brackets.'] },
-      ...selected.map(q => ({ ...q.block, id: crypto.randomUUID() })),
-    ]
-    const { data } = await supabase.from('worksheets').insert({ id: wsId, profile_id: profileId, title: `Recall Check-In — Week ${atWeek}`, topic: 'Recall check-in', exam_board: 'Mixed', tier: 'mixed', blocks }).select().single()
-    if (data) {
-      await onCheckinSaved({ scheme_id: schemeId, profile_id: profileId, at_week: atWeek, marks_target: marksTarget, worksheet_id: wsId, source_worksheet_ids: [...new Set(selected.map(q => q.worksheetId))] })
+    const header = { id: crypto.randomUUID(), type: 'header', title: `Recall Check-In — Week ${atWeek}`, topic: 'Mixed topics', examBoard: 'AQA', tier: 'mixed', showName: true, showDate: true, showClass: true }
+    const instructions = { id: crypto.randomUUID(), type: 'instructions', items: ['Answer all questions.', 'Show your working.', 'Marks are shown in brackets.'] }
+
+    const contentBlocks: Block[] = []
+    for (const item of selected) {
+      // Re-ID the question block
+      const newQId = crypto.randomUUID()
+      const idRemap = new Map<string, string>([[item.block.id, newQId]])
+
+      // Re-ID and include attached data blocks (once each)
+      const newAttached: Block[] = []
+      for (const ab of item.attachedBlocks) {
+        if (usedDataIds.has(ab.id)) {
+          // Already included — point to existing new ID
+          idRemap.set(ab.id, idRemap.get(ab.id) ?? ab.id)
+          continue
+        }
+        const newId = crypto.randomUUID()
+        idRemap.set(ab.id, newId)
+        usedDataIds.add(ab.id)
+        newAttached.push({ ...ab, id: newId })
+      }
+
+      // Fix cross-references in the question block
+      const rawQ = item.block as QuestionBlock & { attachedDataId?: string; attachedDataIds?: string[] }
+      const fixedQ = {
+        ...rawQ,
+        id: newQId,
+        attachedDataId: rawQ.attachedDataId ? (idRemap.get(rawQ.attachedDataId) ?? rawQ.attachedDataId) : rawQ.attachedDataId,
+        attachedDataIds: rawQ.attachedDataIds?.map(id => idRemap.get(id) ?? id),
+      }
+
+      contentBlocks.push(...newAttached, fixedQ as unknown as Block)
+    }
+
+    const blocks = [header, instructions, ...contentBlocks]
+    const { data, error } = await supabase
+      .from('worksheets')
+      .insert({ id: wsId, profile_id: profileId, title: `Recall Check-In — Week ${atWeek}`, topic: 'Recall check-in', exam_board: 'Mixed', tier: 'mixed', is_recall: true, blocks })
+      .select()
+      .single()
+
+    if (data && !error) {
+      await onCheckinSaved({
+        scheme_id: schemeId,
+        profile_id: profileId,
+        at_week: atWeek,
+        marks_target: marksTarget,
+        worksheet_id: wsId,
+        source_worksheet_ids: [...new Set(selected.map(item => item.worksheetId))],
+      })
       setBuilding(false)
-      onSaved(wsId)
-    } else setBuilding(false)
+      // Pass the full worksheet object so EditorPage opens it directly
+      onSaved(wsId, { id: wsId, blocks: blocks as unknown as Worksheet['blocks'] })
+    } else {
+      setBuilding(false)
+    }
   }
 
   return (
@@ -272,14 +343,29 @@ export function SchemeEditorPage() {
     setDragTopicId(null)
   }
 
+  // Build the set of valid spec_point refs for the currently-picked topic
+  const wsPickerTopic = wsPickerTopicId ? topics.find(t => t.id === wsPickerTopicId) : null
+  const wsPickerAllowedRefs = (() => {
+    if (!wsPickerTopic?.topic_ref) return null  // no filter if topic has no ref
+    const refs = new Set<string>([wsPickerTopic.topic_ref])
+    for (const q of browsableQuals) {
+      const specTopics = getSpecTopics(q.qualification_id, q.exam_board)
+      const parent = specTopics?.find(t => t.ref === wsPickerTopic.topic_ref)
+      if (parent) parent.points.forEach(p => refs.add(p.ref))
+    }
+    return refs
+  })()
+
   const wsForPicker = allEntries.filter(e => {
     const matchesAnyQual = browsableQuals.some(q =>
       e.qualification_id === q.qualification_id && e.exam_board === q.exam_board
     )
     if (!matchesAnyQual) return false
+    // Filter to worksheets tagged within this topic's spec points (if topic has a ref)
+    if (wsPickerAllowedRefs && e.spec_point && !wsPickerAllowedRefs.has(e.spec_point)) return false
     if (wsPickerQuery) {
       const q = wsPickerQuery.toLowerCase()
-      return (e.title + ' ' + e.topic).toLowerCase().includes(q)
+      return (e.title + ' ' + e.topic + ' ' + (e.spec_point ?? '')).toLowerCase().includes(q)
     }
     return true
   })
@@ -484,7 +570,7 @@ export function SchemeEditorPage() {
           allEntries={allEntries}
           previousCheckins={checkins}
           onCheckinSaved={saveCheckin}
-          onSaved={wsId => { reload(); setRecallWeek(null); navigate('/editor', { state: { worksheetId: wsId } }) }}
+          onSaved={(_, worksheet) => { reload(); setRecallWeek(null); navigate('/editor', { state: { worksheet } }) }}
           onClose={() => setRecallWeek(null)}
         />
       )}
