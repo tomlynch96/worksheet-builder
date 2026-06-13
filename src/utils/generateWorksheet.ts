@@ -63,7 +63,43 @@ function sanitiseBlock(block: Block): Block {
 }
 
 function sanitiseWorksheet(ws: Worksheet): Worksheet {
-  return { ...ws, id: toUUID(ws.id), blocks: ws.blocks.map(sanitiseBlock) }
+  // Build old→new ID map before sanitising so we can remap cross-references.
+  // toUUID keeps valid UUIDs as-is and replaces short placeholder IDs with new UUIDs.
+  const idMap = new Map<string, string>()
+  ws.blocks.forEach(b => { idMap.set(b.id, toUUID(b.id)) })
+
+  const blocks = ws.blocks.map(b => {
+    const sanitised = sanitiseBlock(b)
+
+    // Remap cross-references on data blocks (linkedDataId)
+    if (sanitised.type === 'data') {
+      const d = sanitised as Block & { graph?: { linkedDataId?: string | null } }
+      if (d.graph?.linkedDataId) {
+        const mapped = idMap.get(d.graph.linkedDataId)
+        if (mapped) d.graph = { ...d.graph, linkedDataId: mapped }
+      }
+    }
+
+    // Remap cross-references on question/multiple_choice blocks
+    if (sanitised.type === 'question' || sanitised.type === 'multiple_choice') {
+      const q = sanitised as QuestionBlock & { attachedDataIds?: string[] }
+      if (q.attachedDataId) q.attachedDataId = idMap.get(q.attachedDataId) ?? q.attachedDataId
+      if (q.attachedDataIds?.length) {
+        q.attachedDataIds = q.attachedDataIds.map(id => idMap.get(id) ?? id)
+      }
+      for (const part of q.parts ?? []) {
+        const p = part as typeof part & { attachedDataIds?: string[] }
+        if (p.attachedDataId) p.attachedDataId = idMap.get(p.attachedDataId) ?? p.attachedDataId
+        if (p.attachedDataIds?.length) {
+          p.attachedDataIds = p.attachedDataIds.map(id => idMap.get(id) ?? id)
+        }
+      }
+    }
+
+    return sanitised
+  })
+
+  return { ...ws, id: toUUID(ws.id), blocks }
 }
 
 export type { OakContext }
