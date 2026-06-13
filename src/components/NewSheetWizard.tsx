@@ -128,8 +128,13 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
 
 export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
   const { profile } = useProfileContext()
-  // Include all courses the teacher has added, including custom boards (where specDataId returns null)
-  const courses = (profile?.user_courses ?? []).filter(c => getOffering(c.qualification_id) !== undefined)
+  // Only show courses where the exam board is valid for the qualification (filters out legacy
+  // Edexcel/Hodder Exploring Science entries that should now be Pearson)
+  const courses = (profile?.user_courses ?? []).filter(c => {
+    const offering = getOffering(c.qualification_id)
+    if (!offering) return false
+    return offering.examBoards.includes(c.exam_board) || offering.examBoards.length === 0
+  })
 
   const [step, setStep] = useState<'course' | 'oak-prompt' | 'oak-dir' | 'spec' | 'mode'>('course')
   const [selectedCourse, setSelectedCourse] = useState<UserCourse | null>(null)
