@@ -372,7 +372,6 @@ export function SchemeEditorPage() {
                     <div className="scheme-week-chips">
                       {weekTopics.map(topic => {
                         const isStart = topic.week_start === week
-                        const isEnd = topic.week_end === week
                         const isResizingThis = resizing?.id === topic.id
                         const displayEnd = isResizingThis ? resizing!.currentEnd : topic.week_end
                         const effectiveEnd = Math.max(displayEnd, topic.week_start)
