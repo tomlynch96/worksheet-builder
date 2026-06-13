@@ -7,7 +7,7 @@ import { useSchemes } from '../hooks/useSchemes'
 import { useSchemeDetail } from '../hooks/useSchemes'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { getSpecTopics } from '../data/qualifications'
-import type { SchemeTopic, SchemeTopicWorksheet } from '../types/scheme'
+import type { SchemeTopic } from '../types/scheme'
 import type { Worksheet, Block, QuestionBlock } from '../types/worksheet'
 import './SchemeEditorPage.css'
 
