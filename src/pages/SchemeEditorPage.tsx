@@ -318,6 +318,13 @@ export function SchemeEditorPage() {
     return () => document.removeEventListener('mouseup', commitResize)
   }, [commitResize])
 
+  async function openRecall(worksheetId: string) {
+    const { data } = await supabase.from('worksheets').select('*').eq('id', worksheetId).single()
+    if (!data) return
+    const ws: Worksheet = { id: data.id as string, blocks: data.blocks as Worksheet['blocks'] }
+    navigate('/editor', { state: { worksheet: ws } })
+  }
+
   if (!scheme && !loading) return (
     <div className="scheme-editor-shell">
       <Topbar />
@@ -423,7 +430,11 @@ export function SchemeEditorPage() {
                   ⚡ Generate recall check-in
                 </button>
               </div>
-              {checkinForWeek(selectedWeek) && <div className="scheme-checkin-badge">✅ Recall check-in generated</div>}
+              {(() => { const ci = checkinForWeek(selectedWeek!); return ci?.worksheet_id ? (
+                <button className="scheme-checkin-badge" onClick={() => openRecall(ci.worksheet_id!)}>
+                  ✅ Recall check-in generated — view →
+                </button>
+              ) : null })()}
             </div>
           ) : (
             <p className="scheme-sidebar-hint">Click any week to manage topics and worksheets, or drag a topic chip to move it.</p>
@@ -452,7 +463,13 @@ export function SchemeEditorPage() {
                   >
                     <div className="scheme-week-header">
                       <span className="scheme-week-num">Wk {week}</span>
-                      {hasCheckin && <span className="scheme-checkin-dot" title="Recall check-in">⚡</span>}
+                      {hasCheckin && (
+                        <span
+                          className="scheme-checkin-dot"
+                          title="View recall check-in"
+                          onClick={e => { e.stopPropagation(); const ci = checkinForWeek(week); if (ci?.worksheet_id) openRecall(ci.worksheet_id) }}
+                        >⚡</span>
+                      )}
                     </div>
 
                     <div className="scheme-week-chips">

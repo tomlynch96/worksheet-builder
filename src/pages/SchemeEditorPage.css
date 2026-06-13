@@ -237,7 +237,12 @@
   background: #dcfce7;
   border-radius: 6px;
   padding: 6px 10px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
 }
+.scheme-checkin-badge:hover { background: #bbf7d0; }
 
 /* ── Calendar ── */
 .scheme-calendar {
@@ -289,6 +294,7 @@
 
 .scheme-checkin-dot {
   font-size: 11px;
+  cursor: pointer;
 }
 
 .scheme-week-chips {
