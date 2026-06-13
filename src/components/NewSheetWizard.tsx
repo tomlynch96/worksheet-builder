@@ -115,11 +115,13 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
   return (
     <div className="gen-screen">
       <img src="/paper_blowaway_large.svg" className="gen-logo" alt="" />
-      <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
-      <div className="gen-bar-track">
-        <div className="gen-bar-fill" style={{ width: `${progress}%` }} />
+      <div className="gen-content">
+        <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
+        <div className="gen-bar-track">
+          <div className="gen-bar-fill" style={{ width: `${progress}%` }} />
+        </div>
+        <p className="gen-subtext">Usually takes 15–30 seconds</p>
       </div>
-      <p className="gen-subtext">Usually takes 15–30 seconds</p>
     </div>
   )
 }

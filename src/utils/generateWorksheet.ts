@@ -64,12 +64,16 @@ function sanitiseBlock(block: Block): Block {
 
 function sanitiseWorksheet(ws: Worksheet): Worksheet {
   // Build old→new ID map before sanitising so we can remap cross-references.
-  // toUUID keeps valid UUIDs as-is and replaces short placeholder IDs with new UUIDs.
+  // For valid UUIDs keep as-is; for short placeholder IDs (e.g. "data-001") generate
+  // exactly one new UUID here so that sanitiseBlock and the cross-reference remapping
+  // both see the same UUID. (sanitiseBlock calls toUUID internally which would produce
+  // a second, different random UUID if we passed the short id directly.)
   const idMap = new Map<string, string>()
-  ws.blocks.forEach(b => { idMap.set(b.id, toUUID(b.id)) })
+  ws.blocks.forEach(b => { idMap.set(b.id, UUID_RE.test(b.id) ? b.id : crypto.randomUUID()) })
 
   const blocks = ws.blocks.map(b => {
-    const sanitised = sanitiseBlock(b)
+    // Pre-replace block id with the mapped UUID so sanitiseBlock preserves it
+    const sanitised = sanitiseBlock({ ...b, id: idMap.get(b.id)! })
 
     // Remap cross-references on data blocks (linkedDataId)
     if (sanitised.type === 'data') {
