@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Topbar } from '../components/layout/Topbar'
@@ -11,11 +11,35 @@ import type { Worksheet, Block, QuestionBlock } from '../types/worksheet'
 import './SchemeEditorPage.css'
 
 const TOTAL_WEEKS = 39
-const WEEKS_PER_ROW = 6
+const WEEK_HEIGHT = 44      // px per week row
+const LABEL_WIDTH = 56      // px for the week-number column
+const TOPIC_WIDTH = 210     // px per topic column
+const TOPIC_GAP = 8         // px between topic columns
+
+const TOPIC_COLORS = [
+  '#4f46e5', '#059669', '#d97706', '#dc2626',
+  '#7c3aed', '#0891b2', '#be185d', '#65a30d',
+  '#ea580c', '#0284c7', '#a21caf', '#16a34a',
+]
+
+function computeTopicColumns(topics: SchemeTopic[]): Map<string, number> {
+  const cols = new Map<string, number>()
+  const sorted = [...topics].sort((a, b) => a.week_start - b.week_start || a.id.localeCompare(b.id))
+  for (const topic of sorted) {
+    const used = new Set<number>()
+    for (const [otherId, col] of cols) {
+      const other = sorted.find(t => t.id === otherId)!
+      if (other.week_start <= topic.week_end && other.week_end >= topic.week_start) used.add(col)
+    }
+    let col = 0
+    while (used.has(col)) col++
+    cols.set(topic.id, col)
+  }
+  return cols
+}
 
 // ── Question extraction for recall ───────────────────────────────────────────
 
-// Block types that count as "questions" for recall purposes
 const RECALL_TYPES = new Set(['question', 'multiple_choice', 'cloze', 'match_them_up', 'order_steps'])
 
 interface ExtractedItem { worksheetId: string; block: Block; marks: number; attachedBlocks: Block[] }
@@ -27,7 +51,6 @@ function extractItems(wsId: string, ws: Worksheet): ExtractedItem[] {
   for (const block of ws.blocks) {
     if (!RECALL_TYPES.has(block.type)) continue
 
-    // Collect any data blocks attached to this question so they render inline
     const attached: Block[] = []
     const q = block as QuestionBlock & { attachedDataId?: string; attachedDataIds?: string[] }
     const dataIds: string[] = q.attachedDataIds?.length
@@ -37,7 +60,6 @@ function extractItems(wsId: string, ws: Worksheet): ExtractedItem[] {
       const found = blockById.get(id)
       if (found) attached.push(found)
     }
-    // Also check part-level attachments
     for (const part of (q as QuestionBlock).parts ?? []) {
       const pq = part as typeof part & { attachedDataId?: string; attachedDataIds?: string[] }
       const partIds = pq.attachedDataIds?.length ? pq.attachedDataIds : pq.attachedDataId ? [pq.attachedDataId] : []
@@ -56,7 +78,7 @@ function extractItems(wsId: string, ws: Worksheet): ExtractedItem[] {
   return out
 }
 
-// ── Topic picker (parent topic level, not individual points) ─────────────────
+// ── Topic picker ─────────────────────────────────────────────────────────────
 
 interface TopicPickerProps {
   browsableQuals: { qualification_id: string; exam_board: string }[]
@@ -159,14 +181,14 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
       .reduce((max, c) => Math.max(max, c.at_week), 0)
   }
 
+  function recallCount(wsId: string) {
+    return previousCheckins.filter(c => c.at_week < atWeek && c.source_worksheet_ids.includes(wsId)).length
+  }
+
   const scored = wsIds
     .map(wsId => ({ wsId, entry: allEntries.find(e => e.id === wsId), lastRecalledWeek: lastRecalledWeek(wsId) }))
     .filter(w => w.entry)
     .sort((a, b) => a.lastRecalledWeek - b.lastRecalledWeek)
-
-  function recallCount(wsId: string) {
-    return previousCheckins.filter(c => c.at_week < atWeek && c.source_worksheet_ids.includes(wsId)).length
-  }
 
   async function buildRecall() {
     setBuilding(true)
@@ -187,9 +209,8 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
     const pools = scored.map(ws => {
       const items = extractItems(ws.wsId, ws.entry!.worksheet)
       const offset = recallCount(ws.wsId) % Math.max(items.length, 1)
-      // Rotate: start from offset so each recall session picks the next question
       const rotated = [...items.slice(offset), ...items.slice(0, offset)]
-      return { wsId: ws.wsId, items: rotated, picked: 0 }
+      return { wsId: ws.wsId, items: rotated }
     }).filter(p => p.items.length > 0)
 
     // Round-robin: one question per worksheet per pass, priority to unrecalled
@@ -197,7 +218,7 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
     outer: for (let pass = 0; pass < maxPasses; pass++) {
       for (const pool of pools) {
         if (total >= marksTarget) break outer
-        if (pass >= pool.items.length) continue   // this pool exhausted
+        if (pass >= pool.items.length) continue
         const item = pool.items[pass]
         if (total + item.marks > marksTarget + 3) continue
         selected.push(item)
@@ -211,15 +232,12 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
 
     const contentBlocks: Block[] = []
     for (const item of selected) {
-      // Re-ID the question block
       const newQId = crypto.randomUUID()
       const idRemap = new Map<string, string>([[item.block.id, newQId]])
 
-      // Re-ID and include attached data blocks (once each)
       const newAttached: Block[] = []
       for (const ab of item.attachedBlocks) {
         if (usedDataIds.has(ab.id)) {
-          // Already included — point to existing new ID
           idRemap.set(ab.id, idRemap.get(ab.id) ?? ab.id)
           continue
         }
@@ -229,7 +247,6 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
         newAttached.push({ ...ab, id: newId })
       }
 
-      // Fix cross-references in the question block
       const rawQ = item.block as QuestionBlock & { attachedDataId?: string; attachedDataIds?: string[] }
       const fixedQ = {
         ...rawQ,
@@ -258,7 +275,6 @@ function RecallModal({ schemeId, profileId, atWeek, topics, allEntries, previous
         source_worksheet_ids: [...new Set(selected.map(item => item.worksheetId))],
       })
       setBuilding(false)
-      // Pass the full worksheet object so EditorPage opens it directly
       onSaved(wsId, { id: wsId, blocks: blocks as unknown as Worksheet['blocks'] })
     } else {
       setBuilding(false)
@@ -321,33 +337,72 @@ export function SchemeEditorPage() {
   const [wsPickerTopicId, setWsPickerTopicId] = useState<string | null>(null)
   const [wsPickerQuery, setWsPickerQuery] = useState('')
 
-  // Drag-to-move
-  const [dragTopicId, setDragTopicId] = useState<string | null>(null)
-
-  // Drag-to-resize: track which topic is being resized, and what week the cursor is over
-  const [resizing, setResizing] = useState<{ id: string; currentEnd: number } | null>(null)
-  const resizingRef = useRef(resizing)
-  useEffect(() => { resizingRef.current = resizing }, [resizing])
-
-  const commitResize = useCallback(async () => {
-    const r = resizingRef.current
-    if (r) {
-      await resizeTopic(r.id, r.currentEnd)
-      setResizing(null)
-    }
-  }, [resizeTopic])
+  // Local topic position overrides while drag is in progress (for live preview)
+  const [topicOverrides, setTopicOverrides] = useState<Map<string, { week_start: number; week_end: number }>>(new Map())
+  const dragRef = useRef<{ id: string; origStart: number; origEnd: number; startY: number } | null>(null)
+  const resizeRef = useRef<{ id: string; origStart: number; origEnd: number; startY: number } | null>(null)
 
   useEffect(() => {
-    document.addEventListener('mouseup', commitResize)
-    return () => document.removeEventListener('mouseup', commitResize)
-  }, [commitResize])
+    function onMouseMove(e: MouseEvent) {
+      if (dragRef.current) {
+        const { id, origStart, origEnd, startY } = dragRef.current
+        const delta = Math.round((e.clientY - startY) / WEEK_HEIGHT)
+        const newStart = Math.max(1, origStart + delta)
+        const newEnd = Math.min(TOTAL_WEEKS, newStart + (origEnd - origStart))
+        setTopicOverrides(prev => new Map(prev).set(id, { week_start: newStart, week_end: newEnd }))
+      }
+      if (resizeRef.current) {
+        const { id, origStart, origEnd, startY } = resizeRef.current
+        const delta = Math.round((e.clientY - startY) / WEEK_HEIGHT)
+        const newEnd = Math.max(origStart, Math.min(TOTAL_WEEKS, origEnd + delta))
+        setTopicOverrides(prev => new Map(prev).set(id, { week_start: origStart, week_end: newEnd }))
+      }
+    }
+    async function onMouseUp(e: MouseEvent) {
+      if (dragRef.current) {
+        const { id, origStart, startY } = dragRef.current
+        dragRef.current = null
+        setTopicOverrides(prev => { const m = new Map(prev); m.delete(id); return m })
+        const delta = Math.round((e.clientY - startY) / WEEK_HEIGHT)
+        const newStart = Math.max(1, origStart + delta)
+        if (newStart !== origStart) await moveTopic(id, newStart)
+      }
+      if (resizeRef.current) {
+        const { id, origStart, origEnd, startY } = resizeRef.current
+        resizeRef.current = null
+        setTopicOverrides(prev => { const m = new Map(prev); m.delete(id); return m })
+        const delta = Math.round((e.clientY - startY) / WEEK_HEIGHT)
+        const newEnd = Math.max(origStart, Math.min(TOTAL_WEEKS, origEnd + delta))
+        if (newEnd !== origEnd) await resizeTopic(id, newEnd)
+      }
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [moveTopic, resizeTopic])
 
-  async function openRecall(worksheetId: string) {
-    const { data } = await supabase.from('worksheets').select('*').eq('id', worksheetId).single()
-    if (!data) return
-    const ws: Worksheet = { id: data.id as string, blocks: data.blocks as Worksheet['blocks'] }
-    navigate('/editor', { state: { worksheet: ws } })
+  function startTopicDrag(e: React.MouseEvent, topic: SchemeTopic) {
+    e.preventDefault()
+    dragRef.current = { id: topic.id, origStart: topic.week_start, origEnd: topic.week_end, startY: e.clientY }
   }
+
+  function startTopicResize(e: React.MouseEvent, topic: SchemeTopic) {
+    e.preventDefault()
+    e.stopPropagation()
+    resizeRef.current = { id: topic.id, origStart: topic.week_start, origEnd: topic.week_end, startY: e.clientY }
+  }
+
+  // Merge topic overrides for live drag preview
+  const displayTopics = useMemo(() =>
+    topics.map(t => {
+      const ov = topicOverrides.get(t.id)
+      return ov ? { ...t, ...ov } : t
+    }), [topics, topicOverrides])
+
+  const topicColumns = useMemo(() => computeTopicColumns(displayTopics), [displayTopics])
 
   if (!scheme && !loading) return (
     <div className="scheme-editor-shell">
@@ -356,8 +411,15 @@ export function SchemeEditorPage() {
     </div>
   )
 
+  async function openRecall(worksheetId: string) {
+    const { data } = await supabase.from('worksheets').select('*').eq('id', worksheetId).single()
+    if (!data) return
+    const ws: Worksheet = { id: data.id as string, blocks: data.blocks as Worksheet['blocks'] }
+    navigate('/editor', { state: { worksheet: ws } })
+  }
+
   const topicsForWeek = (week: number) =>
-    topics.filter(t => t.week_start <= week && week <= t.week_end).sort((a, b) => a.position - b.position)
+    displayTopics.filter(t => t.week_start <= week && week <= t.week_end).sort((a, b) => a.position - b.position)
 
   const checkinForWeek = (week: number) => checkins.find(c => c.at_week === week)
 
@@ -368,16 +430,9 @@ export function SchemeEditorPage() {
     setPickerWeek(null)
   }
 
-  async function handleDrop(toWeek: number) {
-    if (!dragTopicId) return
-    await moveTopic(dragTopicId, toWeek)
-    setDragTopicId(null)
-  }
-
-  // Build the set of valid spec_point refs for the currently-picked topic
   const wsPickerTopic = wsPickerTopicId ? topics.find(t => t.id === wsPickerTopicId) : null
   const wsPickerAllowedRefs = (() => {
-    if (!wsPickerTopic?.topic_ref) return null  // no filter if topic has no ref
+    if (!wsPickerTopic?.topic_ref) return null
     const refs = new Set<string>([wsPickerTopic.topic_ref])
     for (const q of browsableQuals) {
       const specTopics = getSpecTopics(q.qualification_id, q.exam_board)
@@ -392,7 +447,6 @@ export function SchemeEditorPage() {
       e.qualification_id === q.qualification_id && e.exam_board === q.exam_board
     )
     if (!matchesAnyQual) return false
-    // Filter to worksheets tagged within this topic's spec points (if topic has a ref)
     if (wsPickerAllowedRefs && e.spec_point && !wsPickerAllowedRefs.has(e.spec_point)) return false
     if (wsPickerQuery) {
       const q = wsPickerQuery.toLowerCase()
@@ -400,11 +454,6 @@ export function SchemeEditorPage() {
     }
     return true
   })
-
-  // Build rows of weeks
-  const rows: number[][] = []
-  for (let w = 1; w <= TOTAL_WEEKS; w += WEEKS_PER_ROW)
-    rows.push(Array.from({ length: Math.min(WEEKS_PER_ROW, TOTAL_WEEKS - w + 1) }, (_, i) => w + i))
 
   return (
     <div className="scheme-editor-shell">
@@ -461,100 +510,76 @@ export function SchemeEditorPage() {
               ) : null })()}
             </div>
           ) : (
-            <p className="scheme-sidebar-hint">Click any week to manage topics and worksheets, or drag a topic chip to move it.</p>
+            <p className="scheme-sidebar-hint">Click any week to manage topics and worksheets, or drag a topic to move it.</p>
           )}
         </aside>
 
-        {/* ── Calendar ── */}
-        <div className={`scheme-calendar${resizing ? ' scheme-calendar--resizing' : ''}`}>
-          {rows.map((rowWeeks, rowIdx) => (
-            <div key={rowIdx} className="scheme-week-row">
-              {rowWeeks.map(week => {
-                const weekTopics = topicsForWeek(week)
-                const hasCheckin = !!checkinForWeek(week)
-                const isSelected = selectedWeek === week
+        {/* ── Vertical calendar ── */}
+        <div className="scheme-calendar-v">
+          <div className="scheme-v-inner" style={{ minHeight: TOTAL_WEEKS * WEEK_HEIGHT }}>
 
-                return (
+            {/* Week row backgrounds (wireframe) */}
+            {Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1).map(week => {
+              const ci = checkinForWeek(week)
+              const isSelected = selectedWeek === week
+              return (
+                <div
+                  key={week}
+                  className={['scheme-vweek-row', isSelected ? 'scheme-vweek-row--selected' : '', ci ? 'scheme-vweek-row--checkin' : ''].filter(Boolean).join(' ')}
+                  style={{ height: WEEK_HEIGHT }}
+                  onClick={() => setSelectedWeek(week === selectedWeek ? null : week)}
+                >
+                  <span className="scheme-vweek-num">Wk {week}</span>
+                  {ci && (
+                    <span
+                      className="scheme-vcheckin-dot"
+                      title="View recall check-in"
+                      onClick={e => { e.stopPropagation(); if (ci.worksheet_id) openRecall(ci.worksheet_id) }}
+                    >⚡</span>
+                  )}
+                  <button
+                    className="scheme-vweek-add"
+                    onClick={e => { e.stopPropagation(); setPickerWeek(week); setSelectedWeek(week) }}
+                    title="Add topic"
+                  >+</button>
+                </div>
+              )
+            })}
+
+            {/* Topic tiles — absolutely positioned over the week rows */}
+            {displayTopics.map((topic, idx) => {
+              const col = topicColumns.get(topic.id) ?? 0
+              const top = (topic.week_start - 1) * WEEK_HEIGHT + 2
+              const height = Math.max((topic.week_end - topic.week_start + 1) * WEEK_HEIGHT - 4, 28)
+              const color = TOPIC_COLORS[idx % TOPIC_COLORS.length]
+              return (
+                <div
+                  key={topic.id}
+                  className="scheme-vtopic"
+                  style={{
+                    top,
+                    left: LABEL_WIDTH + col * (TOPIC_WIDTH + TOPIC_GAP),
+                    width: TOPIC_WIDTH,
+                    height,
+                    background: color,
+                  }}
+                  onMouseDown={e => startTopicDrag(e, topic)}
+                  onClick={e => { e.stopPropagation(); setSelectedWeek(topic.week_start) }}
+                >
+                  {topic.topic_ref && <span className="scheme-vtopic-ref">{topic.topic_ref}</span>}
+                  <span className="scheme-vtopic-label">{topic.topic_label ?? topic.topic_ref}</span>
+                  {(topic.worksheets?.length ?? 0) > 0 && (
+                    <span className="scheme-vtopic-ws">{topic.worksheets!.length} sheet{topic.worksheets!.length !== 1 ? 's' : ''}</span>
+                  )}
                   <div
-                    key={week}
-                    className={`scheme-week-cell${isSelected ? ' scheme-week-cell--selected' : ''}${hasCheckin ? ' scheme-week-cell--checkin' : ''}`}
-                    onClick={() => setSelectedWeek(week === selectedWeek ? null : week)}
-                    onDragOver={e => e.preventDefault()}
-                    onDrop={() => handleDrop(week)}
-                    onMouseEnter={() => {
-                      if (resizing) setResizing(prev => prev ? { ...prev, currentEnd: Math.max(prev.currentEnd, week) } : null)
-                    }}
-                  >
-                    <div className="scheme-week-header">
-                      <span className="scheme-week-num">Wk {week}</span>
-                      {hasCheckin && (
-                        <span
-                          className="scheme-checkin-dot"
-                          title="View recall check-in"
-                          onClick={e => { e.stopPropagation(); const ci = checkinForWeek(week); if (ci?.worksheet_id) openRecall(ci.worksheet_id) }}
-                        >⚡</span>
-                      )}
-                    </div>
-
-                    <div className="scheme-week-chips">
-                      {weekTopics.map(topic => {
-                        const isStart = topic.week_start === week
-                        const isResizingThis = resizing?.id === topic.id
-                        const displayEnd = isResizingThis ? resizing!.currentEnd : topic.week_end
-                        const effectiveEnd = Math.max(displayEnd, topic.week_start)
-                        const chipIsEnd = effectiveEnd === week
-
-                        return (
-                          <div
-                            key={topic.id}
-                            className={[
-                              'scheme-topic-chip',
-                              isStart ? 'chip--start' : '',
-                              chipIsEnd ? 'chip--end' : '',
-                              !isStart && !chipIsEnd ? 'chip--middle' : '',
-                              isResizingThis ? 'chip--resizing' : '',
-                            ].filter(Boolean).join(' ')}
-                            draggable={isStart}
-                            onDragStart={e => { if (isStart) { e.stopPropagation(); setDragTopicId(topic.id) } else e.preventDefault() }}
-                            onClick={e => e.stopPropagation()}
-                            title={topic.topic_label ?? topic.topic_ref ?? ''}
-                          >
-                            {isStart && (
-                              <>
-                                {topic.topic_ref && <span className="chip-ref">{topic.topic_ref}</span>}
-                                <span className="chip-label">{topic.topic_label ?? topic.topic_ref}</span>
-                                {(topic.worksheets?.length ?? 0) > 0 && (
-                                  <span className="chip-ws-count">{topic.worksheets!.length}</span>
-                                )}
-                              </>
-                            )}
-                            {!isStart && <span className="chip-continuation" />}
-                            {chipIsEnd && (
-                              <span
-                                className="chip-resize-handle"
-                                title="Drag to extend"
-                                onMouseDown={e => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  setResizing({ id: topic.id, currentEnd: topic.week_end })
-                                }}
-                              />
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    <button
-                      className="scheme-week-add-btn"
-                      onClick={e => { e.stopPropagation(); setPickerWeek(week); setSelectedWeek(week) }}
-                      title="Add topic to this week"
-                    >+</button>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
+                    className="scheme-vtopic-resize"
+                    title="Drag to extend"
+                    onMouseDown={e => startTopicResize(e, topic)}
+                  />
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
