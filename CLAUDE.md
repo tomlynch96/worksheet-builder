@@ -1,4 +1,4 @@
-# Worksheet Builder — Project Context
+# The Worksheet Project — Project Context
 
 ## The Problem
 
@@ -6,17 +6,43 @@ Teachers use AI daily to generate worksheets, but every session starts from zero
 
 Existing platforms don't close the loop: TES is a static library, MagicSchool generates but doesn't learn, ChatGPT generates but forgets.
 
-## The Product
+## The Core Philosophy
 
-A **free AI worksheet generation platform for secondary science teachers**, built around a native editing workspace. Teachers generate resources, refine them within the platform, and download print-ready PDFs. Output quality — spec-aligned, correctly formatted for paper, with mark schemes — must be demonstrably better than any existing tool from day one.
+**This platform backs paper.** Students should work on paper, not screens. One-to-one devices in schools are not the right model; students being online at home creates cheating shortcuts (AI homework, copy-paste) that undermine genuine learning. The platform's job is to make systematic, paper-based teaching so low-friction that it becomes the path of least resistance.
 
-The critical difference is what happens inside the platform:
-- Every **edit** a teacher makes is captured
-- Every **comparison judgement** (which version would you actually print?) is recorded
-- Every **post-use reflection** (how did it land with your class?) is stored
-- Every **rationale** a teacher volunteers for a decision becomes part of a growing body of annotated professional knowledge
+Good teaching is systematic, not spontaneous:
+- **Curriculum sequenced ahead of time** — what gets taught when is planned, not improvised
+- **Retrieval built in at planned intervals** — spaced repetition is structural, not left to chance
+- **Comprehension verified at regular checkpoints** — students are motivated to engage because they know checks are coming
 
-Teachers **tag resources against exam board specifications** as the price of free access. Tagging is low-friction: the system pre-populates from the prompt and asks for confirmation, not navigation.
+AI is the cold-start mechanism. The destination is a corpus so good that AI generation becomes unnecessary — teachers just retrieve the best version of what they need, already validated by colleagues.
+
+## The Three Pillars
+
+### 1. Schemes of Work
+Teachers plan their curriculum sequence ahead of time — which topics are taught in which weeks across the academic year. The scheme is the spine of the system. Everything else (recall timing, test generation, corpus quality) hangs off knowing what a class studied in week N.
+
+### 2. Spaced Retrieval (Recall Check-ins)
+The scheme drives automatic recall timing. When generating a recall check-in for week 18, the system knows exactly which worksheets were taught in prior weeks and applies spaced repetition logic — worksheets not recently recalled get priority, questions rotate so students don't see the same opener every time. Teachers don't have to remember to space things; the calendar makes it automatic.
+
+### 3. Personalised MC Tests (future)
+The verification layer. A test generated from the last N weeks of the scheme, with:
+- Questions drawn from spec-aligned worksheet content
+- Shuffled question order and shuffled options per student → different answer keys per student → structural cheating prevention
+- Auto-markable because the system holds each student's key
+This creates a low-effort checkpoint that motivates students to engage with paper work, because they know they'll be tested on it.
+
+## The Confidence Scoring Model
+
+Not all content in the corpus is equal. A confidence score per worksheet (and ultimately per question) is built from:
+
+**Edit signal** — did the teacher edit the AI output before using it? Zero edits is a *negative* signal. A good teacher won't accept AI output uncritically. Edited worksheets score higher than untouched ones.
+
+**Classroom verification** — when a teacher downloads or prints a worksheet, a prompt asks "when are you planning to use this?" with a 7-day date picker (or "not sure"). After that date, a deferred prompt fires: "how did this go with your class?" A positive response strengthens the score; a negative one (wrong content, errors found) dampens it. This is the strongest signal in the system because it's post-use, real-world feedback.
+
+**Corpus visibility** — confidence scores must be visible to other teachers browsing the library. "Classroom verified by 4 teachers" vs "AI-generated, unedited, never used" is the difference between a confident choice and a gamble. The score has to drive browsing behaviour, not just sit in a database.
+
+**Question-level confidence (long term)** — the same question appearing across multiple worksheets, consistently receiving positive classroom signals, rises independently of the worksheet it started in. The real corpus is a library of *questions* with confidence scores, not just documents.
 
 ## The Destination
 
@@ -28,15 +54,24 @@ Over time, generation becomes less important than retrieval. When a teacher requ
 
 Underneath the product sits something no publisher, exam board, or research institution currently has: a large-scale, naturalistic dataset of teacher pedagogical preferences, mapped to UK curriculum content, annotated with rationale, and validated through actual classroom efficacy signals.
 
+The spec-alignment tagging is the interoperability layer. Every piece of content is tagged to the same curriculum taxonomy (e.g. AQA-P4.3.2). This makes the corpus queryable, rankable, and — critically — mergeable with external content.
+
+## Partnership Vision (Long Term)
+
+**Inbound — seeding the corpus**
+Publishers (Kerboodle, Seneca, Tassomai, Isaac Physics, etc.) have years of high-quality, spec-aligned questions with worked examples. Data-sharing agreements or API integrations can ingest this content directly. Imported content from proven sources should initialise with a higher confidence baseline than freshly AI-generated content. The taxonomy alignment (both sides tagged to the same spec references) is what makes this tractable — it's just a JOIN.
+
+**Outbound — paper-ifying online platforms**
+Online learning platforms have content trapped on screens. "Export to The Worksheet Project" becomes a feature they can offer their paying customers — teachers who want to take Seneca content into a paper-based lesson. The platform provides formatting, print layout, and mark scheme structure. In the embedded form, our tools sit inside their platform as a service — making their product more appealing without them having to build any of it. This is the infrastructure play: become the paper layer that EdTech companies depend on rather than competing with them.
+
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript (Vite)
 - **Styling**: CSS with custom properties (no CSS-in-JS)
-- **State**: Start with React context/hooks; add Zustand if complexity warrants
+- **State**: React context/hooks; add Zustand if complexity warrants
 - **Routing**: React Router
-- **Backend**: To be determined — likely a Node/Express or serverless API
-- **Database**: To be determined — PostgreSQL likely given relational data needs (resources, users, edits, tags, judgements)
-- **PDF generation**: To be determined (Puppeteer, react-pdf, or similar)
+- **Backend**: Supabase (Postgres + Auth + RLS + Edge Functions)
+- **PDF generation**: Browser print via CSS (print stylesheets)
 - **AI**: Anthropic Claude API for worksheet generation
 
 ## Core Data Models
@@ -78,21 +113,6 @@ interface Edit {
 }
 ```
 
-### ComparisonJudgement
-Pairwise comparisons between resource versions — the core signal for quality ranking.
-
-```typescript
-interface ComparisonJudgement {
-  id: string
-  userId: string
-  resourceAId: string
-  resourceBId: string
-  winnerId: string           // which they would actually print
-  context?: string           // teacher's class context
-  createdAt: Date
-}
-```
-
 ### PostUseReflection
 Classroom efficacy signal — the most valuable data point.
 
@@ -109,7 +129,7 @@ interface PostUseReflection {
 ```
 
 ### CurriculumNode
-The taxonomy that organises everything.
+The taxonomy that organises everything — the interoperability layer for both internal ranking and external partnerships.
 
 ```typescript
 interface CurriculumNode {
@@ -125,25 +145,30 @@ interface CurriculumNode {
 
 ## Key Product Principles
 
-1. **Quality over quantity** — one excellent output beats ten mediocre ones. Every design decision should serve output quality first.
-2. **Capture signal passively where possible** — don't ask teachers for data they wouldn't naturally provide. Edits are captured automatically; rationale is invited, never required.
-3. **Low-friction tagging** — pre-populate from context, ask for confirmation. Never make teachers navigate a taxonomy.
-4. **Print-first formatting** — all generated content must be designed for A4 paper, not a screen. Line lengths, font sizes, and question spacing must work when printed.
+1. **Paper first** — every design decision should serve print. Line lengths, font sizes, question spacing must work on A4. Screen layout is secondary.
+2. **Edit signal matters** — unedited AI output is lower quality than teacher-touched output. Build systems that reward refinement.
+3. **Capture signal passively** — edits captured automatically; classroom verification invited at the natural moment (download/print), not randomly.
+4. **Low-friction tagging** — pre-populate from context, ask for confirmation. Never make teachers navigate a taxonomy.
 5. **Spec fidelity** — command words, assessment objectives, and mark scheme formats must match the target exam board exactly.
+6. **Systematic over spontaneous** — features should reinforce planned, sequenced teaching rather than one-off generation.
 
 ## Development Priorities
 
-1. **Core generation flow** — prompt → AI output → display in editor → PDF download
-2. **Native editor** — in-platform editing with change capture (not export-then-edit)
-3. **Spec tagging** — exam board / topic / tier confirmation after generation
-4. **Comparison UI** — side-by-side version comparison with preference capture
-5. **Search/retrieval** — before generation, check the corpus for existing validated resources
-6. **Post-use reflection** — lightweight prompt after a teacher has used a resource
+1. ~~Core generation flow~~ ✓
+2. ~~Native editor with change capture~~ ✓
+3. ~~Spec tagging~~ ✓
+4. ~~Public library / corpus browsing~~ ✓
+5. ~~Schemes of work with calendar~~ ✓ (in progress)
+6. ~~Spaced recall check-ins~~ ✓ (in progress)
+7. **Confidence scoring** — edit signal + classroom verification prompt + deferred post-use reflection
+8. **Personalised MC test generator** — from scheme weeks, shuffled per student, auto-markable key
+9. **Comparison UI** — side-by-side version comparison with preference capture
+10. **Partnership API** — inbound content ingestion and outbound export/embed
 
 ## What We Are Not Building (Yet)
 
 - Multi-subject support (science only to start)
 - Student-facing features
-- Collaboration/sharing between teachers beyond the corpus
 - Mobile-first layout (teachers print at a desk)
 - Gamification or engagement mechanics
+- Personalised MC tests (designed, not yet built)
