@@ -14,6 +14,8 @@ export function SchemesPage() {
   const { schemes, loading, create, rename, remove } = useSchemes(profile?.id ?? null)
   const navigate = useNavigate()
 
+  if (profile && !profile.is_admin) { navigate('/', { replace: true }); return null }
+
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [newYear, setNewYear] = useState('2025-26')

@@ -363,6 +363,8 @@ export function SchemeEditorPage() {
   const { entries: allEntries } = useSupabaseWorksheets(profile?.id ?? null)
   const navigate = useNavigate()
 
+  if (profile && !profile.is_admin) { navigate('/', { replace: true }); return null }
+
   const scheme = schemes.find(s => s.id === schemeId)
   const browsableQuals = scheme?.browsable_qualifications?.length
     ? scheme.browsable_qualifications
