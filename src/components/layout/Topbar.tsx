@@ -21,6 +21,9 @@ export function Topbar({ actions }: TopbarProps) {
 
       {pathname !== '/editor' && (
         <nav className="topbar-nav">
+          <Link className={`topbar-nav-link${pathname.startsWith('/schemes') ? ' topbar-nav-link--active' : ''}`} to="/schemes">
+            Schemes
+          </Link>
           <Link className={`topbar-nav-link${pathname === '/gallery' ? ' topbar-nav-link--active' : ''}`} to="/gallery">
             My Worksheets
           </Link>

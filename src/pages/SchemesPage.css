@@ -1,0 +1,227 @@
+.schemes-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.schemes-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  width: 100%;
+}
+
+.schemes-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.schemes-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.schemes-sub {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  max-width: 520px;
+}
+
+.schemes-new-btn {
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.schemes-new-btn:hover { background: #4338ca; }
+
+/* ── Create card ── */
+.schemes-create-card {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.schemes-create-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.schemes-create-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.schemes-create-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.schemes-optional {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.schemes-create-select,
+.schemes-create-input {
+  padding: 8px 10px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f2937;
+  background: #fff;
+  outline: none;
+}
+.schemes-create-select:focus,
+.schemes-create-input:focus { border-color: #4f46e5; }
+
+.schemes-create-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.schemes-cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.schemes-cancel-btn:hover { background: #e5e7eb; }
+
+.schemes-confirm-btn {
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.schemes-confirm-btn:hover:not(:disabled) { background: #4338ca; }
+.schemes-confirm-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+/* ── List ── */
+.schemes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schemes-card {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.schemes-card:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+}
+
+.schemes-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.schemes-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schemes-card-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.schemes-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.schemes-card-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  transition: background 0.1s;
+}
+.schemes-card-btn:hover { background: #f3f4f6; }
+.schemes-card-btn--danger:hover { background: #fee2e2; }
+
+.schemes-rename-input {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  border: 1.5px solid #4f46e5;
+  border-radius: 5px;
+  padding: 2px 8px;
+  outline: none;
+  width: 100%;
+}
+
+/* ── Empty state ── */
+.schemes-empty-state {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.schemes-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.schemes-empty-text {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.schemes-empty {
+  color: #9ca3af;
+  padding: 40px 0;
+  text-align: center;
+}
