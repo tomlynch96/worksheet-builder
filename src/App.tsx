@@ -11,6 +11,8 @@ import { BookletPage } from './pages/BookletPage'
 import { OakExplorerPage } from './pages/OakExplorerPage'
 import { PublicLibraryPage } from './pages/PublicLibraryPage'
 import { AdminPage } from './pages/AdminPage'
+import { SchemesPage } from './pages/SchemesPage'
+import { SchemeEditorPage } from './pages/SchemeEditorPage'
 import './App.css'
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -48,6 +50,8 @@ export default function App() {
           <Route path="/oak" element={<AuthGate><OakExplorerPage /></AuthGate>} />
           <Route path="/library" element={<AuthGate><PublicLibraryPage /></AuthGate>} />
           <Route path="/admin" element={<AuthGate><AdminPage /></AuthGate>} />
+          <Route path="/schemes" element={<AuthGate><SchemesPage /></AuthGate>} />
+          <Route path="/schemes/:id" element={<AuthGate><SchemeEditorPage /></AuthGate>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
