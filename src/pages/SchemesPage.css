@@ -203,7 +203,46 @@
   width: 100%;
 }
 
-/* ── Empty state ── */
+/* ── Qualification ticklist ── */
+.schemes-qual-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schemes-qual-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  user-select: none;
+}
+.schemes-qual-item:hover { background: #f9fafb; border-color: #c7d2fe; }
+.schemes-qual-item--checked { border-color: #4f46e5; background: #eef2ff; }
+
+.schemes-qual-check {
+  accent-color: #4f46e5;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.schemes-qual-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.schemes-no-courses {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
 .schemes-empty-state {
   text-align: center;
   padding: 80px 0;

@@ -1,3 +1,8 @@
+export interface BrowsableQual {
+  qualification_id: string
+  exam_board: string
+}
+
 export interface Scheme {
   id: string
   profile_id: string
@@ -5,6 +10,7 @@ export interface Scheme {
   exam_board: string
   name: string
   academic_year: string
+  browsable_qualifications: BrowsableQual[]
   created_at: string
   updated_at: string
 }
@@ -12,11 +18,11 @@ export interface Scheme {
 export interface SchemeTopic {
   id: string
   scheme_id: string
-  week_number: number
+  week_start: number
+  week_end: number
   topic_ref: string | null
   topic_label: string | null
   position: number
-  // joined
   worksheets?: SchemeTopicWorksheet[]
 }
 
@@ -25,7 +31,6 @@ export interface SchemeTopicWorksheet {
   scheme_topic_id: string
   worksheet_id: string
   position: number
-  // denormalised from worksheets table for display
   title?: string
   topic?: string
 }

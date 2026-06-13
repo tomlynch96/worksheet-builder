@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
-import type { Scheme, SchemeTopic, SchemeTopicWorksheet, RecallCheckin } from '../types/scheme'
+import type { Scheme, SchemeTopic, SchemeTopicWorksheet, RecallCheckin, BrowsableQual } from '../types/scheme'
 
 export function useSchemes(profileId: string | null) {
   const [schemes, setSchemes] = useState<Scheme[]>([])
@@ -14,13 +14,22 @@ export function useSchemes(profileId: string | null) {
       .select('*')
       .eq('profile_id', profileId)
       .order('updated_at', { ascending: false })
-    if (data) setSchemes(data as Scheme[])
+    if (data) setSchemes((data as unknown[]).map(r => ({
+      ...(r as Scheme),
+      browsable_qualifications: (r as Record<string, unknown>).browsable_qualifications as BrowsableQual[] ?? [],
+    })))
     setLoading(false)
   }, [profileId])
 
   useEffect(() => { load() }, [load])
 
-  async function create(scheme: Omit<Scheme, 'id' | 'profile_id' | 'created_at' | 'updated_at'>): Promise<Scheme | null> {
+  async function create(scheme: {
+    name: string
+    academic_year: string
+    browsable_qualifications: BrowsableQual[]
+    qualification_id: string
+    exam_board: string
+  }): Promise<Scheme | null> {
     if (!profileId || !isConfigured) return null
     const { data, error } = await supabase
       .from('schemes')
@@ -28,7 +37,7 @@ export function useSchemes(profileId: string | null) {
       .select()
       .single()
     if (error || !data) return null
-    const s = data as Scheme
+    const s = { ...(data as Scheme), browsable_qualifications: scheme.browsable_qualifications }
     setSchemes(prev => [s, ...prev])
     return s
   }
@@ -61,7 +70,7 @@ export function useSchemeDetail(schemeId: string | null) {
         .from('scheme_topics')
         .select('*, scheme_topic_worksheets(*, worksheets(id, title, topic))')
         .eq('scheme_id', schemeId)
-        .order('week_number')
+        .order('week_start')
         .order('position'),
       supabase
         .from('recall_checkins')
@@ -78,7 +87,8 @@ export function useSchemeDetail(schemeId: string | null) {
         return {
           id: raw.id as string,
           scheme_id: raw.scheme_id as string,
-          week_number: raw.week_number as number,
+          week_start: (raw.week_start ?? raw.week_number) as number,
+          week_end: (raw.week_end ?? raw.week_start ?? raw.week_number) as number,
           topic_ref: raw.topic_ref as string | null,
           topic_label: raw.topic_label as string | null,
           position: raw.position as number,
@@ -102,30 +112,36 @@ export function useSchemeDetail(schemeId: string | null) {
 
   useEffect(() => { load() }, [load])
 
-  async function upsertTopic(weekNumber: number, topicRef: string | null, topicLabel: string | null, position = 0): Promise<SchemeTopic | null> {
+  async function addTopic(weekStart: number, weekEnd: number, topicRef: string | null, topicLabel: string | null, position = 0): Promise<SchemeTopic | null> {
     if (!schemeId || !isConfigured) return null
     const { data, error } = await supabase
       .from('scheme_topics')
-      .upsert(
-        { scheme_id: schemeId, week_number: weekNumber, topic_ref: topicRef, topic_label: topicLabel, position },
-        { onConflict: 'id' }
-      )
+      .insert({ scheme_id: schemeId, week_start: weekStart, week_end: weekEnd, topic_ref: topicRef, topic_label: topicLabel, position })
       .select()
       .single()
     if (error || !data) return null
-    const topic = { ...(data as SchemeTopic), worksheets: [] }
-    setTopics(prev => {
-      const existing = prev.find(t => t.id === topic.id)
-      if (existing) return prev.map(t => t.id === topic.id ? { ...t, ...topic } : t)
-      return [...prev, topic].sort((a, b) => a.week_number - b.week_number || a.position - b.position)
-    })
+    const topic: SchemeTopic = { ...(data as SchemeTopic), week_start: weekStart, week_end: weekEnd, worksheets: [] }
+    setTopics(prev => [...prev, topic].sort((a, b) => a.week_start - b.week_start || a.position - b.position))
     return topic
   }
 
-  async function moveTopic(topicId: string, toWeek: number) {
+  async function moveTopic(topicId: string, weekStart: number) {
     if (!isConfigured) return
-    await supabase.from('scheme_topics').update({ week_number: toWeek }).eq('id', topicId)
-    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, week_number: toWeek } : t))
+    const topic = topics.find(t => t.id === topicId)
+    if (!topic) return
+    const span = topic.week_end - topic.week_start
+    const weekEnd = weekStart + span
+    await supabase.from('scheme_topics').update({ week_start: weekStart, week_end: weekEnd }).eq('id', topicId)
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, week_start: weekStart, week_end: weekEnd } : t))
+  }
+
+  async function resizeTopic(topicId: string, weekEnd: number) {
+    if (!isConfigured) return
+    const topic = topics.find(t => t.id === topicId)
+    if (!topic) return
+    const clampedEnd = Math.max(weekEnd, topic.week_start)
+    await supabase.from('scheme_topics').update({ week_end: clampedEnd }).eq('id', topicId)
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, week_end: clampedEnd } : t))
   }
 
   async function removeTopic(topicId: string) {
@@ -136,8 +152,8 @@ export function useSchemeDetail(schemeId: string | null) {
 
   async function addWorksheet(topicId: string, worksheetId: string, title?: string, topic?: string): Promise<SchemeTopicWorksheet | null> {
     if (!isConfigured) return null
-    const existingTopic = topics.find(t => t.id === topicId)
-    const position = (existingTopic?.worksheets?.length ?? 0)
+    const existing = topics.find(t => t.id === topicId)
+    const position = existing?.worksheets?.length ?? 0
     const { data, error } = await supabase
       .from('scheme_topic_worksheets')
       .insert({ scheme_topic_id: topicId, worksheet_id: worksheetId, position })
@@ -161,14 +177,6 @@ export function useSchemeDetail(schemeId: string | null) {
     ))
   }
 
-  async function reorderWorksheets(topicId: string, worksheets: SchemeTopicWorksheet[]) {
-    if (!isConfigured) return
-    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, worksheets } : t))
-    await Promise.all(
-      worksheets.map((w, i) => supabase.from('scheme_topic_worksheets').update({ position: i }).eq('id', w.id))
-    )
-  }
-
   async function saveCheckin(checkin: Omit<RecallCheckin, 'id' | 'created_at'>): Promise<RecallCheckin | null> {
     if (!isConfigured) return null
     const { data, error } = await supabase
@@ -184,8 +192,8 @@ export function useSchemeDetail(schemeId: string | null) {
 
   return {
     topics, checkins, loading,
-    upsertTopic, moveTopic, removeTopic,
-    addWorksheet, removeWorksheet, reorderWorksheets,
+    addTopic, moveTopic, resizeTopic, removeTopic,
+    addWorksheet, removeWorksheet,
     saveCheckin,
     reload: load,
   }
