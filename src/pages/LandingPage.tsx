@@ -3,9 +3,9 @@ import '../components/preview/WorksheetPreview.css'
 import './LandingPage.css'
 
 // ── Timing constants ───────────────────────────────────────────────────────
-const TYPING_SPEED = 26  // ms per character
-const RESULT_DELAY = 450 // ms after typing before result appears
-const RESULT_HOLD  = 4500 // ms to show result before advancing
+const TYPING_SPEED = 26
+const RESULT_DELAY = 450
+const RESULT_HOLD  = 4500
 
 // ── Demo definitions ───────────────────────────────────────────────────────
 const DEMOS = [
@@ -14,7 +14,7 @@ const DEMOS = [
   { prompt: 'Cloze passage: the effect of temperature on gas pressure — 6 key words',          label: 'Cloze passage',      color: '#b45309' },
 ]
 
-// ── Block previews (use exact pr- classes from WorksheetPreview.css) ───────
+// ── Block previews — exact pr- classes, matching actual worksheet preview ──
 
 function DensityDemo() {
   const rows: [string, string, string][] = [
@@ -23,12 +23,16 @@ function DensityDemo() {
     ['Aluminium', '54', '20'],
     ['Lead', '226', '20'],
   ]
-  const ML = 44, MR = 12, MT = 10, MB = 38
-  const W = 340, H = 150
-  const plotW = W - ML - MR
-  const plotH = H - MT - MB
-  const barW = Math.min(38, (plotW / rows.length) * 0.58)
-  const yMax = 13
+  // Match PreviewDataBar constants exactly
+  const BAR_W = 440, BAR_H = 280
+  const BAR_ML = 48, BAR_MR = 16, BAR_MT = 16, BAR_MB = 48
+  const BAR_PW = BAR_W - BAR_ML - BAR_MR
+  const BAR_PH = BAR_H - BAR_MT - BAR_MB
+  const yMax = 12
+  const yTicks = [0, 2, 4, 6, 8, 10, 12]
+  const total = rows.length
+  const gap = BAR_PW / total
+  function barY(v: number) { return BAR_MT + BAR_PH - (v / yMax) * BAR_PH }
 
   return (
     <div className="demo-preview-content">
@@ -67,43 +71,33 @@ function DensityDemo() {
         </table>
       </div>
 
+      {/* Bar chart — matches PreviewDataBar with no bars (student plots these) */}
       <div className="pr-data-graph">
-        <svg width={W} height={H} style={{ display: 'block', maxWidth: '100%' }}>
-          {/* gridlines + y-labels */}
-          {[0, 2, 4, 6, 8, 10, 12].map(v => {
-            const y = MT + plotH - (v / yMax) * plotH
-            return (
-              <g key={v}>
-                <line x1={ML} y1={y} x2={ML + plotW} y2={y} stroke="#e5e7eb" strokeWidth="0.8" />
-                <text x={ML - 4} y={y + 3} textAnchor="end" fontSize="8" fill="#9ca3af">{v}</text>
-              </g>
-            )
-          })}
-          {/* axes */}
-          <line x1={ML} y1={MT} x2={ML} y2={MT + plotH} stroke="#374151" strokeWidth="1.5" />
-          <line x1={ML} y1={MT + plotH} x2={ML + plotW} y2={MT + plotH} stroke="#374151" strokeWidth="1.5" />
-          {/* blank bar areas */}
+        <svg width={BAR_W} height={BAR_H} className="pr-graph-svg" style={{ maxWidth: '100%' }}>
+          {/* Minor gridlines */}
+          {[1,3,5,7,9,11].map(v => (
+            <line key={v} x1={BAR_ML} y1={barY(v)} x2={BAR_ML + BAR_PW} y2={barY(v)} stroke="#e5e7eb" strokeWidth="0.5" />
+          ))}
+          {/* Major gridlines + y labels */}
+          {yTicks.map(v => (
+            <g key={v}>
+              <line x1={BAR_ML} y1={barY(v)} x2={BAR_ML + BAR_PW} y2={barY(v)} stroke="#d1d5db" strokeWidth="1" />
+              <text x={BAR_ML - 4} y={barY(v) + 3} textAnchor="end" fontSize="9" fill="#374151">{v}</text>
+            </g>
+          ))}
+          {/* Axes */}
+          <line x1={BAR_ML} y1={BAR_MT} x2={BAR_ML} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
+          <line x1={BAR_ML} y1={BAR_MT + BAR_PH} x2={BAR_ML + BAR_PW} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
+          {/* X labels only — no bars */}
           {rows.map(([metal], i) => {
-            const cx = ML + (i + 0.5) * (plotW / rows.length)
-            const x = cx - barW / 2
+            const cx = BAR_ML + gap * i + gap / 2
             return (
-              <g key={metal}>
-                <rect
-                  x={x} y={MT} width={barW} height={plotH}
-                  fill="none" stroke="#d1d5db" strokeWidth="1"
-                  strokeDasharray="4 3"
-                />
-                <text x={cx} y={MT + plotH + 14} textAnchor="middle" fontSize="8" fill="#9ca3af">{metal}</text>
-              </g>
+              <text key={metal} x={cx} y={BAR_MT + BAR_PH + 14} textAnchor="middle" fontSize="9" fill="#374151">{metal}</text>
             )
           })}
-          {/* axis labels */}
-          <text x={ML + plotW / 2} y={H - 1} textAnchor="middle" fontSize="8" fill="#374151">Metal</text>
-          <text
-            x={9} y={MT + plotH / 2}
-            textAnchor="middle" fontSize="8" fill="#374151"
-            transform={`rotate(-90,9,${MT + plotH / 2})`}
-          >Density (g/cm³)</text>
+          {/* Axis labels */}
+          <text x={BAR_ML + BAR_PW / 2} y={BAR_H - 3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937">Metal</text>
+          <text x={10} y={BAR_MT + BAR_PH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937" transform={`rotate(-90, 10, ${BAR_MT + BAR_PH / 2})`}>Density (g/cm³)</text>
         </svg>
       </div>
     </div>
@@ -177,50 +171,42 @@ function ClozeDemo() {
 const DEMO_CONTENT = [<DensityDemo />, <MatchDemo />, <ClozeDemo />]
 
 // ── Typewriter ─────────────────────────────────────────────────────────────
-// No active flag — reset is handled by key-based remount of parent
 
 function useTypewriter(text: string, speed: number) {
   const [count, setCount] = useState(0)
-
   useEffect(() => {
     if (count >= text.length) return
     const id = setInterval(() => setCount(c => Math.min(c + 1, text.length)), speed)
     return () => clearInterval(id)
   }, [text, speed, count])
-
   return { typed: text.slice(0, count), done: count >= text.length }
 }
 
-// ── DemoTile — remounts on key change so state always starts fresh ──────────
+// ── DemoTile — key-based remount keeps state clean per slide ──────────────
 
-function DemoTile({ demo, onComplete }: { demo: typeof DEMOS[number]; content: React.ReactNode; onComplete: () => void }) {
+function DemoTile({ demo, onComplete }: { demo: typeof DEMOS[number]; onComplete: () => void }) {
   const [phase, setPhase] = useState<'typing' | 'result'>('typing')
   const { typed, done } = useTypewriter(demo.prompt, TYPING_SPEED)
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
 
-  // Typing done → wait briefly → show result
   useEffect(() => {
     if (!done || phase !== 'typing') return
     const t = setTimeout(() => setPhase('result'), RESULT_DELAY)
     return () => clearTimeout(t)
   }, [done, phase])
 
-  // Result showing → auto-advance after hold time
   useEffect(() => {
     if (phase !== 'result') return
     const t = setTimeout(() => onCompleteRef.current(), RESULT_HOLD)
     return () => clearTimeout(t)
   }, [phase])
 
-  const demoIdx = DEMOS.indexOf(demo)
+  const idx = DEMOS.indexOf(demo)
 
   return (
     <div className="demo-tile">
-      <div
-        className="demo-prompt-area"
-        style={{ '--demo-color': demo.color } as React.CSSProperties}
-      >
+      <div className="demo-prompt-area" style={{ '--demo-color': demo.color } as React.CSSProperties}>
         <div className="demo-prompt-header">
           <span className="demo-prompt-icon">✦</span>
           <span className="demo-prompt-label">{demo.label}</span>
@@ -231,7 +217,7 @@ function DemoTile({ demo, onComplete }: { demo: typeof DEMOS[number]; content: R
         </p>
       </div>
       <div className={`demo-result-area${phase === 'result' ? ' demo-result-area--visible' : ''}`}>
-        {DEMO_CONTENT[demoIdx]}
+        {DEMO_CONTENT[idx]}
       </div>
     </div>
   )
@@ -242,16 +228,9 @@ function DemoTile({ demo, onComplete }: { demo: typeof DEMOS[number]; content: R
 function DemoCarousel() {
   const [slide, setSlide] = useState(0)
   const advance = useCallback(() => setSlide(s => (s + 1) % DEMOS.length), [])
-
   return (
     <div className="demo-carousel">
-      {/* key forces clean remount on slide change — no stale animation state */}
-      <DemoTile
-        key={slide}
-        demo={DEMOS[slide]}
-        content={DEMO_CONTENT[slide]}
-        onComplete={advance}
-      />
+      <DemoTile key={slide} demo={DEMOS[slide]} onComplete={advance} />
       <div className="demo-dots">
         {DEMOS.map((_, i) => (
           <button
@@ -269,55 +248,36 @@ function DemoCarousel() {
 // ── Landing page ───────────────────────────────────────────────────────────
 
 export function LandingPage() {
-  const [textVisible, setTextVisible] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (window.scrollY > 20) {
-        setTextVisible(true)
-        window.removeEventListener('scroll', onScroll)
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    // Fallback: reveal text after 2.8s if no scroll detected
-    const fallback = setTimeout(() => setTextVisible(true), 2800)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      clearTimeout(fallback)
-    }
-  }, [])
-
   return (
     <div className="landing">
-      {/* ── Hero ── */}
+
+      {/* ── Hero: full-viewport video only ── */}
       <section className="landing-hero">
         <video className="landing-video" autoPlay muted loop playsInline src="/intro.mp4" />
-        <div className="landing-hero-overlay">
-          <div className="landing-hero-content">
-            <img src="/logo.svg" className="landing-hero-logo" alt="The Worksheet Project" />
-            <div className={`landing-hero-text${textVisible ? ' landing-hero-text--visible' : ''}`}>
-              <h1 className="landing-hero-title">
-                Paper-based teaching,<br />powered by AI.
-              </h1>
-              <p className="landing-hero-sub">
-                The AI worksheet platform that improves with every teacher who uses it.
-              </p>
-            </div>
-          </div>
-          <a className="landing-scroll-hint" href="#demo" aria-label="Scroll to demo">
-            <span className="landing-scroll-label">See it in action</span>
-            <div className="landing-scroll-arrow">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </a>
-        </div>
-        {/* Gradient blending video into demo section */}
+        {/* Gradient blends video into white below */}
         <div className="landing-hero-fade" />
+        {/* Scroll hint sits in the fade zone — dark text against the whitening gradient */}
+        <a className="landing-scroll-hint" href="#tagline" aria-label="Scroll down">
+          <span className="landing-scroll-label">See it in action</span>
+          <div className="landing-scroll-arrow">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </a>
       </section>
 
-      {/* ── Demo ── */}
+      {/* ── Tagline: headline + sub on white ── */}
+      <section className="landing-tagline-section" id="tagline">
+        <h1 className="landing-tagline-title">
+          Paper-based teaching,<br />powered by AI.
+        </h1>
+        <p className="landing-tagline-sub">
+          The AI worksheet platform that improves with every teacher who uses it.
+        </p>
+      </section>
+
+      {/* ── Demo carousel ── */}
       <section className="landing-demo" id="demo">
         <div className="landing-demo-head">
           <h2 className="landing-demo-title">From prompt to print in seconds</h2>
@@ -335,6 +295,7 @@ export function LandingPage() {
           <p className="landing-cta-note">No credit card required · Science teachers only for now</p>
         </div>
       </section>
+
     </div>
   )
 }

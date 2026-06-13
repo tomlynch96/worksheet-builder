@@ -3,13 +3,17 @@
 }
 
 /* ════════════════════════════════════════════
-   Hero
+   Hero — full viewport, video only
 ════════════════════════════════════════════ */
 .landing-hero {
   position: relative;
   height: 100vh;
   min-height: 540px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .landing-video {
@@ -20,101 +24,37 @@
   object-fit: cover;
 }
 
-/* Gradient fade from video into demo section background */
+/* Gradient fades video into the white tagline section below */
 .landing-hero-fade {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 240px;
-  background: linear-gradient(to bottom, transparent 0%, #f8fafc 100%);
-  z-index: 2;
+  height: 280px;
+  background: linear-gradient(to bottom, transparent 0%, #fff 100%);
   pointer-events: none;
 }
 
-.landing-hero-overlay {
+/* Scroll hint: sits at the bottom of the hero, inside the fade zone.
+   Dark text/icon since the gradient is approaching white here. */
+.landing-scroll-hint {
   position: relative;
   z-index: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 72px 40px 64px;
-  /* Darken top; lighten to transparent at bottom so fade works */
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.55) 0%,
-    rgba(0, 0, 0, 0.25) 55%,
-    transparent 100%
-  );
-}
-
-.landing-hero-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px;
-  text-align: center;
-  flex: 1;
-  justify-content: center;
-}
-
-.landing-hero-logo {
-  height: 50px;
-  filter: brightness(0) invert(1);
-  opacity: 0.95;
-}
-
-/* Scroll-reveal headline */
-.landing-hero-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.85s ease, transform 0.85s ease;
-}
-.landing-hero-text--visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.landing-hero-title {
-  font-size: clamp(34px, 5.5vw, 66px);
-  font-weight: 800;
-  color: #fff;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  margin: 0;
-}
-
-.landing-hero-sub {
-  font-size: clamp(15px, 1.8vw, 19px);
-  color: rgba(255, 255, 255, 0.78);
-  max-width: 440px;
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* Scroll hint */
-.landing-scroll-hint {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  color: rgba(255, 255, 255, 0.55);
+  color: #374151;
   text-decoration: none;
+  padding-bottom: 40px;
   transition: color 0.2s;
-  z-index: 3; /* above landing-hero-fade */
 }
-.landing-scroll-hint:hover { color: rgba(255, 255, 255, 0.9); }
+.landing-scroll-hint:hover { color: #111827; }
 
 .landing-scroll-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -126,6 +66,36 @@
 @keyframes landing-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(8px); }
+}
+
+/* ════════════════════════════════════════════
+   Tagline section — white, between hero and demo
+════════════════════════════════════════════ */
+.landing-tagline-section {
+  background: #fff;
+  padding: 72px 24px 80px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.landing-tagline-title {
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.landing-tagline-sub {
+  font-size: clamp(16px, 1.8vw, 20px);
+  color: #6b7280;
+  max-width: 460px;
+  line-height: 1.6;
+  margin: 0;
 }
 
 /* ════════════════════════════════════════════
@@ -146,11 +116,11 @@
 }
 
 .landing-demo-title {
-  font-size: clamp(24px, 3.5vw, 38px);
+  font-size: clamp(22px, 3vw, 34px);
   font-weight: 800;
   color: #111827;
   letter-spacing: -0.02em;
-  margin: 0 0 14px;
+  margin: 0 0 12px;
 }
 
 .landing-demo-sub {
@@ -165,7 +135,7 @@
 ════════════════════════════════════════════ */
 .demo-carousel {
   width: 100%;
-  max-width: 660px;
+  max-width: 680px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,12 +146,12 @@
   width: 100%;
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 28px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 28px rgba(0, 0, 0, 0.09);
   overflow: hidden;
   border: 1px solid #e5e7eb;
 }
 
-/* ── Prompt area ── */
+/* Prompt area */
 .demo-prompt-area {
   padding: 16px 20px 14px;
   border-bottom: 1px solid #f0f0f0;
@@ -233,10 +203,9 @@
   50%       { opacity: 0; }
 }
 
-/* ── Result area ──
-   Hidden by default. On show: max-height jumps instantly (no layout jank),
-   opacity fades in. On hide: component remounts via key so no lingering animation.
-── */
+/* Result area: hidden until phase = 'result'.
+   max-height jumps instantly on show; component remounts on slide change
+   so there is no hide transition needed. */
 .demo-result-area {
   max-height: 0;
   overflow: hidden;
@@ -248,11 +217,11 @@
 }
 
 @keyframes demo-result-in {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Nav dots ── */
+/* Nav dots */
 .demo-dots {
   display: flex;
   gap: 9px;
@@ -272,10 +241,7 @@
   transform: scale(1.3);
 }
 
-/* ── Preview content wrapper ──
-   Scopes the pr- classes at screen-appropriate size.
-   pr- classes use pt units (print), which render at ~1.33px/pt on screen.
-── */
+/* Wrapper for pr- block previews */
 .demo-preview-content {
   padding: 16px 20px 20px;
 }
