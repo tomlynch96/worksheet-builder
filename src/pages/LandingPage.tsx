@@ -308,9 +308,9 @@ export function LandingPage() {
 
         <div className="landing-cta-wrap">
           <a className="landing-cta" href="/onboarding">
-            Get started — free preview trial
+            Join the initial trial
           </a>
-          <p className="landing-cta-note">No credit card required · Science teachers only for now</p>
+          <p className="landing-cta-note">Help shape what this project becomes</p>
         </div>
       </section>
 
