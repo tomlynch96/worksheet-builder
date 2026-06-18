@@ -298,7 +298,7 @@ export function LandingPage() {
       {/* ── Demo carousel ── */}
       <section className="landing-demo" id="demo">
         <div className="landing-demo-head">
-          <h2 className="landing-demo-title">From prompt to print in seconds</h2>
+          <h2 className="landing-demo-title">You do the thinking, AI does the leg-work</h2>
           <p className="landing-demo-sub">
             Describe what you need. Get exam-aligned questions, data tables, graphs, cloze passages, and mark schemes — ready to print.
           </p>
@@ -308,9 +308,9 @@ export function LandingPage() {
 
         <div className="landing-cta-wrap">
           <a className="landing-cta" href="/onboarding">
-            Get started — free preview trial
+            Join the initial trial
           </a>
-          <p className="landing-cta-note">No credit card required · Science teachers only for now</p>
+          <p className="landing-cta-note">Help shape what this project becomes</p>
         </div>
       </section>
 
