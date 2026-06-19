@@ -45,13 +45,17 @@ function attachedDataHeight(ids: string[], allBlocks: Block[]): number {
 }
 
 // Estimate the rendered height of a mark scheme answer box.
-// 30px base (padding + borders) + ~20px per wrapped line of text.
+// 28px base (margins + padding) + ~20px per line of content.
+// Uses the larger of paragraph count or wrapped-line count, not both summed,
+// to avoid double-counting short paragraphs that also contribute to char length.
 function estimateMSAnswerHeight(html?: string): number {
-  if (!html) return 30
+  if (!html) return 28
   const text = html.replace(/<[^>]+>/g, '').trim()
-  const explicitBreaks = (html.match(/<\/p>|<br\s*\/?>/gi) ?? []).length
-  const wrappedLines = Math.ceil(text.length / 75)
-  return 30 + Math.max(1, wrappedLines + explicitBreaks) * 20
+  if (!text) return 28
+  const paraCount = (html.match(/<\/p>/gi) ?? []).length
+  const wrappedLines = Math.ceil(text.length / 90) // ~90 chars fit per line at 10.5pt
+  const lines = Math.max(1, paraCount, wrappedLines)
+  return 28 + lines * 20
 }
 
 function estimatePartHeight(
