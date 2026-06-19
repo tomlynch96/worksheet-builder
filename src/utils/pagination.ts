@@ -1,4 +1,4 @@
-import type { Block, FigureBlock, QuestionBlock, SpacerBlock } from '../types/worksheet'
+import type { Block, FigureBlock, QuestionBlock, QuestionPart, SpacerBlock } from '../types/worksheet'
 
 // A4 at 96dpi = 1123px. Margins 68px top/bottom = 987px content area.
 export const PAGE_CONTENT_HEIGHT = 987
@@ -44,12 +44,25 @@ function attachedDataHeight(ids: string[], allBlocks: Block[]): number {
   }, 0)
 }
 
+// Estimate the rendered height of a mark scheme answer box.
+// 30px base (padding + borders) + ~20px per wrapped line of text.
+function estimateMSAnswerHeight(html?: string): number {
+  if (!html) return 30
+  const text = html.replace(/<[^>]+>/g, '').trim()
+  const explicitBreaks = (html.match(/<\/p>|<br\s*\/?>/gi) ?? []).length
+  const wrappedLines = Math.ceil(text.length / 75)
+  return 30 + Math.max(1, wrappedLines + explicitBreaks) * 20
+}
+
 function estimatePartHeight(
-  part: { lines: number; attachedDataId?: string | null; attachedDataIds?: string[] | null },
+  part: QuestionPart,
   showLines: boolean,
-  allBlocks?: Block[]
+  allBlocks?: Block[],
+  markScheme = false,
 ): number {
-  let h = 40 + (showLines ? part.lines * 28 : 0)
+  let h = 40
+  if (showLines) h += part.lines * 28
+  if (markScheme) h += estimateMSAnswerHeight(part.markScheme)
   if (allBlocks) h += attachedDataHeight(resolveAttachedDataIds(part), allBlocks)
   return h
 }
@@ -61,7 +74,7 @@ export function splitIntoPages(
   blocks: Block[],
   heightOf?: (block: Block) => number,
   showLines = true,
-  noSplitParts = false,
+  markScheme = false,
   allBlocks?: Block[]
 ): PageBlock[][] {
   const h = heightOf ?? estimateBlockHeight
@@ -72,12 +85,12 @@ export function splitIntoPages(
   const newPage = () => { pages.push([]); used = 0 }
 
   for (const block of blocks) {
-    if (!noSplitParts && block.type === 'question' && (block as QuestionBlock).parts.length > 0) {
+    if (block.type === 'question' && (block as QuestionBlock).parts.length > 0) {
       const q = block as QuestionBlock
 
       // Estimate part heights including any attached data blocks
       const partsEstimate = q.parts.reduce(
-        (acc, p) => acc + estimatePartHeight(p, showLines, allBlocks),
+        (acc, p) => acc + estimatePartHeight(p, showLines, allBlocks, markScheme),
         0
       )
 
@@ -106,7 +119,7 @@ export function splitIntoPages(
         let batchEnd = partIdx
 
         while (batchEnd < q.parts.length) {
-          const ph = estimatePartHeight(q.parts[batchEnd], showLines, allBlocks)
+          const ph = estimatePartHeight(q.parts[batchEnd], showLines, allBlocks, markScheme)
           if (pageUsed + ph > PAGE_CONTENT_HEIGHT && batchEnd > partIdx) break
           pageUsed += ph
           batchEnd++
@@ -141,4 +154,5 @@ export function splitIntoPages(
 
   return pages
 }
+
 
