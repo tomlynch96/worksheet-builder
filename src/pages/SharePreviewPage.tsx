@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Topbar } from '../components/layout/Topbar'
 import { WorksheetPreview } from '../components/preview/WorksheetPreview'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
@@ -63,11 +64,7 @@ export function SharePreviewPage() {
   if (loadError) {
     return (
       <div className="sp-layout">
-        <header className="sp-topbar">
-          <a href="/" className="sp-brand">
-            <img src="/logo.svg" className="sp-logo" alt="The Worksheet Project" />
-          </a>
-        </header>
+        <Topbar />
         <main className="sp-main sp-main--center">
           <p className="sp-error">This share link is no longer active.</p>
           <a className="sp-cta-btn" href="/">Go to home</a>
@@ -79,11 +76,7 @@ export function SharePreviewPage() {
   if (!entry || authLoading) {
     return (
       <div className="sp-layout">
-        <header className="sp-topbar">
-          <a href="/" className="sp-brand">
-            <img src="/logo.svg" className="sp-logo" alt="The Worksheet Project" />
-          </a>
-        </header>
+        <Topbar />
         <main className="sp-main sp-main--center">
           <div className="sp-spinner" />
         </main>
@@ -126,23 +119,15 @@ export function SharePreviewPage() {
   const reallocTopics = reallocQual && reallocBoard ? (getSpecTopics(reallocQual, reallocBoard) ?? []) : []
   const copyReady = teachesThisCourse || (reallocQual && reallocBoard)
 
+  const authAction = !profile ? (
+    <a className="sp-auth-btn" href={`/onboarding?return=/share/${id}`}>
+      Sign up / Log in to save, edit and print →
+    </a>
+  ) : undefined
+
   return (
     <div className="sp-layout">
-      <header className="sp-topbar">
-        <a href="/" className="sp-brand">
-          <img src="/logo.svg" className="sp-logo" alt="The Worksheet Project" />
-        </a>
-        <div className="sp-topbar-right">
-          {!profile && (
-            <a
-              className="sp-auth-btn"
-              href={`/onboarding?return=/share/${id}`}
-            >
-              Sign up / Log in to save, edit and print →
-            </a>
-          )}
-        </div>
-      </header>
+      <Topbar actions={authAction} />
 
       <div className="sp-body">
         {/* Sidebar */}

@@ -19,7 +19,7 @@ export function Topbar({ actions }: TopbarProps) {
         </span>
       </Link>
 
-      {pathname !== '/editor' && (
+      {profile && pathname !== '/editor' && (
         <nav className="topbar-nav">
           {profile?.is_admin && (
             <Link className={`topbar-nav-link${pathname.startsWith('/schemes') ? ' topbar-nav-link--active' : ''}`} to="/schemes">
@@ -53,13 +53,15 @@ export function Topbar({ actions }: TopbarProps) {
 
       <div className="topbar-right">
         {actions && <div className="topbar-actions">{actions}</div>}
-        <Link
-          to="/profile"
-          className={`topbar-avatar${pathname === '/profile' ? ' topbar-avatar--active' : ''}`}
-          title="Your profile"
-        >
-          {initial}
-        </Link>
+        {profile && (
+          <Link
+            to="/profile"
+            className={`topbar-avatar${pathname === '/profile' ? ' topbar-avatar--active' : ''}`}
+            title="Your profile"
+          >
+            {initial}
+          </Link>
+        )}
       </div>
     </header>
   )
