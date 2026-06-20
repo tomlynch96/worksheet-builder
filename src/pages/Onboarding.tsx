@@ -14,11 +14,14 @@ export function Onboarding() {
   const { authUserId, profile, loading, sendMagicLink, signInWithProvider, createProfile } = useProfileContext()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const returnTo = searchParams.get('return') || '/'
+  const returnTo = searchParams.get('return') || localStorage.getItem('auth_return') || '/'
 
   // If the user already has a profile, redirect to returnTo (or home)
   useEffect(() => {
-    if (profile) navigate(returnTo, { replace: true })
+    if (profile) {
+      localStorage.removeItem('auth_return')
+      navigate(returnTo, { replace: true })
+    }
   }, [profile, navigate, returnTo])
 
   // Magic-link form
@@ -123,6 +126,7 @@ export function Onboarding() {
 
     const ok = await createProfile(name.trim() || 'Teacher', courses)
     if (ok) {
+      localStorage.removeItem('auth_return')
       navigate(returnTo, { replace: true })
     } else {
       setProfileError('Could not save profile — please try again.')
