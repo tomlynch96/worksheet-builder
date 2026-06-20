@@ -16,13 +16,15 @@ export function Onboarding() {
   const [searchParams] = useSearchParams()
   const returnTo = searchParams.get('return') || localStorage.getItem('auth_return') || '/'
 
-  // If the user already has a profile, redirect to returnTo (or home)
+  // If the user already has a profile, redirect to the intended destination.
+  // Read localStorage fresh here — handleCreateProfile must NOT clear it first,
+  // otherwise returnTo recalculates to '/' before this effect fires.
   useEffect(() => {
-    if (profile) {
-      localStorage.removeItem('auth_return')
-      navigate(returnTo, { replace: true })
-    }
-  }, [profile, navigate, returnTo])
+    if (!profile) return
+    const destination = searchParams.get('return') || localStorage.getItem('auth_return') || '/'
+    localStorage.removeItem('auth_return')
+    navigate(destination, { replace: true })
+  }, [profile, navigate, searchParams])
 
   // Magic-link form
   const [email, setEmail] = useState('')
@@ -125,10 +127,7 @@ export function Onboarding() {
     })
 
     const ok = await createProfile(name.trim() || 'Teacher', courses)
-    if (ok) {
-      localStorage.removeItem('auth_return')
-      navigate(returnTo, { replace: true })
-    } else {
+    if (!ok) {
       setProfileError('Could not save profile — please try again.')
       setSaving(false)
     }
