@@ -10,12 +10,11 @@ import './PublicLibraryPage.css'
 
 export function PublicLibraryPage() {
   const { profile } = useProfileContext()
-  const { fetchPublic, copyToMyLibrary } = useSupabaseWorksheets(profile?.id ?? null)
+  const { fetchPublic } = useSupabaseWorksheets(profile?.id ?? null)
   const navigate = useNavigate()
 
   const [results, setResults] = useState<WorksheetEntry[]>([])
   const [loading, setLoading] = useState(false)
-  const [copying, setCopying] = useState<string | null>(null)
 
   const [query, setQuery] = useState('')
   const [selectedQual, setSelectedQual] = useState('')
@@ -38,13 +37,6 @@ export function PublicLibraryPage() {
   }, [fetchPublic, selectedQual, selectedBoard, selectedSpec, query])
 
   useEffect(() => { search() }, [search])
-
-  async function handleCopy(entry: WorksheetEntry) {
-    setCopying(entry.id)
-    const copied = await copyToMyLibrary(entry.id)
-    setCopying(null)
-    if (copied) navigate('/editor', { state: { worksheet: copied.worksheet, aiGenerated: false } })
-  }
 
   const boards = selectedOffering?.examBoards ?? []
 
@@ -120,7 +112,6 @@ export function PublicLibraryPage() {
                 key={entry.id}
                 className="lib-card"
                 onClick={() => navigate(`/library/${entry.id}`, { state: { entry } })}
-                style={{ cursor: 'pointer' }}
               >
                 <div className="lib-card-meta">
                   {entry.spec_point && <span className="lib-card-spec">{entry.spec_point}</span>}
@@ -134,13 +125,6 @@ export function PublicLibraryPage() {
                     {entry.author_name ? `By ${entry.author_name}` : 'Anonymous teacher'}
                   </span>
                   <span className="lib-card-count">{entry.question_count} question{entry.question_count !== 1 ? 's' : ''}</span>
-                  <button
-                    className="lib-card-copy-btn"
-                    onClick={e => { e.stopPropagation(); handleCopy(entry) }}
-                    disabled={copying === entry.id}
-                  >
-                    {copying === entry.id ? 'Copying…' : 'Copy to my library →'}
-                  </button>
                 </div>
               </div>
             ))}

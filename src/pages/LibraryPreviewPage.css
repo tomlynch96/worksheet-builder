@@ -145,7 +145,6 @@
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
-  margin-top: auto;
 }
 .lp-copy-btn:hover:not(:disabled) { background: #4338ca; }
 .lp-copy-btn:disabled { opacity: 0.6; cursor: not-allowed; }
