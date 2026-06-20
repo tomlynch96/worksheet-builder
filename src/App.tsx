@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { ProfileProvider, useProfileContext } from './context/ProfileContext'
 import { Onboarding } from './pages/Onboarding'
 import { RootPage } from './pages/RootPage'
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      <Analytics />
     </ProfileProvider>
   )
 }
