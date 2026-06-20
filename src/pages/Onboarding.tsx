@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import { isConfigured, supabase } from '../lib/supabase'
@@ -13,11 +13,13 @@ const ibQuals  = QUALIFICATION_OFFERINGS.filter(q => q.examBoards[0] === 'IB')
 export function Onboarding() {
   const { authUserId, profile, loading, sendMagicLink, signInWithProvider, createProfile } = useProfileContext()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnTo = searchParams.get('return') || '/'
 
-  // If the user already has a profile, skip the setup form and go home
+  // If the user already has a profile, redirect to returnTo (or home)
   useEffect(() => {
-    if (profile) navigate('/', { replace: true })
-  }, [profile, navigate])
+    if (profile) navigate(returnTo, { replace: true })
+  }, [profile, navigate, returnTo])
 
   // Magic-link form
   const [email, setEmail] = useState('')
@@ -30,9 +32,14 @@ export function Onboarding() {
   const [showPassword, setShowPassword] = useState(false)
   const [signingIn, setSigningIn] = useState(false)
 
+  function persistReturnTo() {
+    if (returnTo !== '/') localStorage.setItem('auth_return', returnTo)
+  }
+
   async function handlePasswordSignIn(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim() || !password) return
+    persistReturnTo()
     setSigningIn(true)
     setEmailError('')
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
@@ -91,6 +98,7 @@ export function Onboarding() {
   async function handleSendLink(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim()) { setEmailError('Please enter your email address.'); return }
+    persistReturnTo()
     setSending(true)
     setEmailError('')
     const { error } = await sendMagicLink(email.trim())
@@ -115,7 +123,7 @@ export function Onboarding() {
 
     const ok = await createProfile(name.trim() || 'Teacher', courses)
     if (ok) {
-      navigate('/', { replace: true })
+      navigate(returnTo, { replace: true })
     } else {
       setProfileError('Could not save profile — please try again.')
       setSaving(false)
@@ -323,7 +331,7 @@ export function Onboarding() {
           <div className="onboarding-sso-group">
             <div className="onboarding-sso-recommended-wrap">
               <span className="onboarding-sso-badge">Recommended</span>
-              <button type="button" className="onboarding-sso-btn" onClick={() => signInWithProvider('google')}>
+              <button type="button" className="onboarding-sso-btn" onClick={() => { persistReturnTo(); signInWithProvider('google') }}>
                 <svg className="onboarding-sso-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
