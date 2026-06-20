@@ -116,7 +116,12 @@ export function PublicLibraryPage() {
         ) : (
           <div className="lib-results">
             {results.map(entry => (
-              <div key={entry.id} className="lib-card">
+              <div
+                key={entry.id}
+                className="lib-card"
+                onClick={() => navigate(`/library/${entry.id}`, { state: { entry } })}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="lib-card-meta">
                   {entry.spec_point && <span className="lib-card-spec">{entry.spec_point}</span>}
                   <span className="lib-card-board">{entry.exam_board}</span>
@@ -131,7 +136,7 @@ export function PublicLibraryPage() {
                   <span className="lib-card-count">{entry.question_count} question{entry.question_count !== 1 ? 's' : ''}</span>
                   <button
                     className="lib-card-copy-btn"
-                    onClick={() => handleCopy(entry)}
+                    onClick={e => { e.stopPropagation(); handleCopy(entry) }}
                     disabled={copying === entry.id}
                   >
                     {copying === entry.id ? 'Copying…' : 'Copy to my library →'}
