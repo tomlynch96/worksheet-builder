@@ -188,7 +188,23 @@ export function useSupabaseWorksheets(profileId: string | null) {
     })
   }, [])
 
-  async function copyToMyLibrary(publicWorksheetId: string): Promise<WorksheetEntry | null> {
+  async function fetchPublicById(id: string): Promise<WorksheetEntry | null> {
+    const { data } = await supabase
+      .from('worksheets')
+      .select('*, profiles(name)')
+      .eq('id', id)
+      .eq('is_public', true)
+      .single()
+    if (!data) return null
+    const row = data as Record<string, unknown>
+    const profileData = row.profiles as { name: string } | null
+    return { ...rowToEntry(row), author_name: row.attribution === 'named' ? (profileData?.name ?? 'Teacher') : undefined }
+  }
+
+  async function copyToMyLibrary(
+    publicWorksheetId: string,
+    overrides?: { qualification_id?: string; exam_board?: string; spec_point?: string | null },
+  ): Promise<WorksheetEntry | null> {
     if (!profileId || !isConfigured) return null
     const { data: src } = await supabase
       .from('worksheets')
@@ -199,6 +215,7 @@ export function useSupabaseWorksheets(profileId: string | null) {
     const newId = crypto.randomUUID()
     const copy = {
       ...(src as Record<string, unknown>),
+      ...overrides,
       id: newId,
       profile_id: profileId,
       is_public: false,
@@ -223,5 +240,5 @@ export function useSupabaseWorksheets(profileId: string | null) {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  return { entries, loading, save, annotate, publish, unpublish, fetchPublic, copyToMyLibrary, remove, reload: load }
+  return { entries, loading, save, annotate, publish, unpublish, fetchPublic, fetchPublicById, copyToMyLibrary, remove, reload: load }
 }
