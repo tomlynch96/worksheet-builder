@@ -188,6 +188,26 @@ export function useSupabaseWorksheets(profileId: string | null) {
     })
   }, [])
 
+  async function enableShare(id: string): Promise<void> {
+    if (!isConfigured) return
+    await supabase.from('worksheets').update({ share_enabled: true }).eq('id', id)
+    setEntries(prev => prev.map(e => e.id === id ? { ...e } : e))
+  }
+
+  async function fetchByShareId(id: string): Promise<WorksheetEntry | null> {
+    if (!isConfigured) return null
+    const { data } = await supabase
+      .from('worksheets')
+      .select('*, profiles(name)')
+      .eq('id', id)
+      .eq('share_enabled', true)
+      .single()
+    if (!data) return null
+    const row = data as Record<string, unknown>
+    const profileData = row.profiles as { name: string } | null
+    return { ...rowToEntry(row), author_name: row.attribution === 'named' ? (profileData?.name ?? 'Teacher') : undefined }
+  }
+
   async function fetchPublicById(id: string): Promise<WorksheetEntry | null> {
     const { data } = await supabase
       .from('worksheets')
@@ -240,5 +260,5 @@ export function useSupabaseWorksheets(profileId: string | null) {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  return { entries, loading, save, annotate, publish, unpublish, fetchPublic, fetchPublicById, copyToMyLibrary, remove, reload: load }
+  return { entries, loading, save, annotate, publish, unpublish, enableShare, fetchPublic, fetchPublicById, fetchByShareId, copyToMyLibrary, remove, reload: load }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import { isConfigured, supabase } from '../lib/supabase'
@@ -13,11 +13,13 @@ const ibQuals  = QUALIFICATION_OFFERINGS.filter(q => q.examBoards[0] === 'IB')
 export function Onboarding() {
   const { authUserId, profile, loading, sendMagicLink, signInWithProvider, createProfile } = useProfileContext()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnTo = searchParams.get('return') || '/'
 
-  // If the user already has a profile, skip the setup form and go home
+  // If the user already has a profile, redirect to returnTo (or home)
   useEffect(() => {
-    if (profile) navigate('/', { replace: true })
-  }, [profile, navigate])
+    if (profile) navigate(returnTo, { replace: true })
+  }, [profile, navigate, returnTo])
 
   // Magic-link form
   const [email, setEmail] = useState('')
@@ -115,7 +117,7 @@ export function Onboarding() {
 
     const ok = await createProfile(name.trim() || 'Teacher', courses)
     if (ok) {
-      navigate('/', { replace: true })
+      navigate(returnTo, { replace: true })
     } else {
       setProfileError('Could not save profile — please try again.')
       setSaving(false)

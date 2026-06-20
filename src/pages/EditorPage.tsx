@@ -37,7 +37,7 @@ const printPageStyle = `
 export function EditorPage() {
   const { profile } = useProfileContext()
   const { worksheet, dispatch } = useWorksheet()
-  const { save, publish, entries } = useSupabaseWorksheets(profile?.id ?? null)
+  const { save, publish, enableShare, entries } = useSupabaseWorksheets(profile?.id ?? null)
   const { trackEdit } = useEditTracking(profile?.id ?? null)
   const nudge = useAnnotateNudge(worksheet.id ?? null)
   const location = useLocation()
@@ -51,6 +51,7 @@ export function EditorPage() {
   const [sheetAnnotation, setSheetAnnotation] = useState('')
   const [showNudge, setShowNudge] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [shareToast, setShareToast] = useState<'idle' | 'copied'>('idle')
   const [tutorialOpen, setTutorialOpen] = useState(() =>
     !!(location.state as { tutorialMode?: boolean } | null)?.tutorialMode
     || !localStorage.getItem(TUTORIAL_KEY)
@@ -252,6 +253,15 @@ export function EditorPage() {
     URL.revokeObjectURL(url)
   }
 
+  async function handleShare() {
+    if (!worksheet.id) return
+    await enableShare(worksheet.id)
+    const url = `${window.location.origin}/share/${worksheet.id}`
+    await navigator.clipboard.writeText(url)
+    setShareToast('copied')
+    setTimeout(() => setShareToast('idle'), 2500)
+  }
+
   const saveLabel =
     saveStatus === 'saving' ? '● Saving…' :
     saveStatus === 'error'  ? '⚠ Failed' :
@@ -273,6 +283,14 @@ export function EditorPage() {
       <span className={`editor-save-status editor-save-status--${saveStatus}`}>
         {saveLabel}
       </span>
+
+      <button
+        className="btn-topbar btn-topbar--share"
+        onClick={handleShare}
+        title="Copy a shareable link to this worksheet"
+      >
+        {shareToast === 'copied' ? '✓ Link copied!' : '↗ Share'}
+      </button>
 
       <button
         className="btn-topbar"

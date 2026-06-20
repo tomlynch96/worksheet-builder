@@ -105,6 +105,14 @@
   background: #2d1d4e;
   color: #ddd6fe;
 }
+.btn-topbar--share {
+  border-color: #4f46e5;
+  color: #a5b4fc;
+}
+.btn-topbar--share:hover {
+  background: #1e1b4b;
+  color: #c7d2fe;
+}
 
 .mode-toggle {
   display: flex;
