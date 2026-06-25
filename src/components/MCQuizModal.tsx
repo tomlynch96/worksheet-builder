@@ -1,6 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Worksheet } from '../types/worksheet'
 import './MCQuizModal.css'
+
+const QUIZ_PHRASES = [
+  'Analysing worksheet content…',
+  'Identifying key concepts…',
+  'Crafting plausible distractors…',
+  'Varying question difficulty…',
+  'Checking scientific accuracy…',
+  'Shuffling answer orders…',
+  'Building version answer keys…',
+  'Reviewing question stems…',
+  'Applying exam board style…',
+  'Finalising question set…',
+]
+
+function GeneratingScreen() {
+  const [progress, setProgress] = useState(0)
+  const [phraseIdx, setPhraseIdx] = useState(0)
+  const shuffledRef = useRef<string[]>([...QUIZ_PHRASES].sort(() => Math.random() - 0.5))
+
+  useEffect(() => {
+    const progressTimer = setInterval(() => {
+      setProgress(p => Math.min(p + 100 / 56, 95))
+    }, 500)
+    const phraseTimer = setInterval(() => {
+      setPhraseIdx(i => (i + 1) % shuffledRef.current.length)
+    }, 3000)
+    return () => { clearInterval(progressTimer); clearInterval(phraseTimer) }
+  }, [])
+
+  return (
+    <div className="gen-screen">
+      <img src="/paper_blowaway_large.svg" className="gen-logo" alt="" />
+      <div className="gen-content">
+        <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
+        <div className="gen-bar-track">
+          <div className="gen-bar-fill" style={{ width: `${progress}%` }} />
+        </div>
+        <p className="gen-subtext">Usually takes 15–30 seconds</p>
+      </div>
+    </div>
+  )
+}
 
 function extractWorksheetContent(worksheet: Worksheet): string {
   const lines: string[] = []
@@ -100,12 +142,22 @@ export function MCQuizModal({ worksheet, onGenerate, onClose, generating }: Prop
     await onGenerate(questionCount, versionCount, content)
   }
 
+  if (generating) {
+    return (
+      <div className="mcq-modal-overlay">
+        <div className="mcq-modal mcq-modal--generating">
+          <GeneratingScreen />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mcq-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="mcq-modal">
         <div className="mcq-modal-header">
           <h2 className="mcq-modal-title">Generate Follow-up Quiz</h2>
-          <button className="mcq-modal-close" onClick={onClose} disabled={generating}>✕</button>
+          <button className="mcq-modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="mcq-modal-body">
@@ -117,18 +169,18 @@ export function MCQuizModal({ worksheet, onGenerate, onClose, generating }: Prop
             <div className="mcq-field">
               <label className="mcq-label">Number of questions</label>
               <div className="mcq-stepper">
-                <button onClick={() => setQuestionCount(n => Math.max(4, n - 1))} disabled={generating}>−</button>
+                <button onClick={() => setQuestionCount(n => Math.max(4, n - 1))}>−</button>
                 <span className="mcq-stepper-val">{questionCount}</span>
-                <button onClick={() => setQuestionCount(n => Math.min(30, n + 1))} disabled={generating}>+</button>
+                <button onClick={() => setQuestionCount(n => Math.min(30, n + 1))}>+</button>
               </div>
             </div>
 
             <div className="mcq-field">
               <label className="mcq-label">Number of versions</label>
               <div className="mcq-stepper">
-                <button onClick={() => setVersionCount(n => Math.max(1, n - 1))} disabled={generating}>−</button>
+                <button onClick={() => setVersionCount(n => Math.max(1, n - 1))}>−</button>
                 <span className="mcq-stepper-val">{versionCount}</span>
-                <button onClick={() => setVersionCount(n => Math.min(8, n + 1))} disabled={generating}>+</button>
+                <button onClick={() => setVersionCount(n => Math.min(8, n + 1))}>+</button>
               </div>
             </div>
           </div>
@@ -139,9 +191,9 @@ export function MCQuizModal({ worksheet, onGenerate, onClose, generating }: Prop
         </div>
 
         <div className="mcq-modal-footer">
-          <button className="mcq-btn-cancel" onClick={onClose} disabled={generating}>Cancel</button>
-          <button className="mcq-btn-generate" onClick={handleGenerate} disabled={generating}>
-            {generating ? 'Generating…' : `Generate ${versionCount} version${versionCount !== 1 ? 's' : ''}`}
+          <button className="mcq-btn-cancel" onClick={onClose}>Cancel</button>
+          <button className="mcq-btn-generate" onClick={handleGenerate}>
+            Generate {versionCount} version{versionCount !== 1 ? 's' : ''}
           </button>
         </div>
       </div>
