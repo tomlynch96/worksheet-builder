@@ -1,7 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const SYSTEM_PROMPT = `You are generating multiple choice questions for a follow-up quiz based on a science worksheet.
 
@@ -28,6 +25,9 @@ Output format:
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return res.status(503).json({ error: 'ANTHROPIC_API_KEY is not set in Vercel environment variables.' })
+
   const { worksheetContent, questionCount, title, topic, examBoard, tier } = req.body as {
     worksheetContent: string
     questionCount: number
@@ -51,14 +51,29 @@ ${worksheetContent}
 Return exactly ${questionCount} questions covering the key concepts, facts and calculations from this worksheet.`
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-opus-4-8',
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userPrompt }],
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-8',
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
     })
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text()
+      console.error('[generate-mc-quiz] Anthropic API error:', anthropicRes.status, errText)
+      return res.status(502).json({ error: `Anthropic API error ${anthropicRes.status}: ${errText.slice(0, 200)}` })
+    }
+
+    const data = await anthropicRes.json() as { content: { type: string; text: string }[] }
+    const raw = data.content[0]?.type === 'text' ? data.content[0].text : ''
 
     // Strip markdown code fences if Claude wrapped the JSON
     const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
@@ -66,7 +81,7 @@ Return exactly ${questionCount} questions covering the key concepts, facts and c
     let parsed: { questions: { id: string; text: string; options: string[] }[] }
     try {
       parsed = JSON.parse(text)
-    } catch (parseErr) {
+    } catch {
       console.error('[generate-mc-quiz] JSON parse failed. Raw response:', raw)
       return res.status(500).json({ error: 'Model returned invalid JSON', raw: raw.slice(0, 500) })
     }
@@ -75,7 +90,6 @@ Return exactly ${questionCount} questions covering the key concepts, facts and c
       return res.status(500).json({ error: 'Model response missing questions array' })
     }
 
-    // Assign clean IDs and ensure exactly 4 options
     const questions = parsed.questions.slice(0, questionCount).map((q, i) => ({
       id: `q${i + 1}`,
       text: q.text,
