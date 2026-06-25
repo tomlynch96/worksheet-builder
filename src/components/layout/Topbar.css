@@ -113,6 +113,14 @@
   background: #1e1b4b;
   color: #c7d2fe;
 }
+.btn-topbar--quiz {
+  border-color: #0891b2;
+  color: #67e8f9;
+}
+.btn-topbar--quiz:hover {
+  background: #083344;
+  color: #a5f3fc;
+}
 
 .mode-toggle {
   display: flex;

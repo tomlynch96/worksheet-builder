@@ -5,6 +5,7 @@ import { NewSheetWizard } from '../components/NewSheetWizard'
 import { WelcomeModal } from '../components/WelcomeModal'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
+import { useMCQuiz } from '../hooks/useMCQuiz'
 import { useWelcomeConfig } from '../hooks/useAppConfig'
 import { offeringLabel } from '../data/qualifications'
 import { TUTORIAL_WORKSHEET } from '../data/tutorialWorksheet'
@@ -17,33 +18,46 @@ const BOARD_COLORS: Record<string, string> = {
 
 function RecentCard({
   entry,
+  quizId,
   onClick,
 }: {
   entry: WorksheetEntry
+  quizId?: string
   onClick: (w: Worksheet) => void
 }) {
+  const navigate = useNavigate()
   const color = BOARD_COLORS[entry.exam_board] ?? '#374151'
   const tierLabel = entry.tier === 'higher' ? 'Higher' : entry.tier === 'foundation' ? 'Foundation' : ''
   const qualLabel = offeringLabel(entry.qualification_id, entry.exam_board)
 
   return (
-    <button className="recent-card" onClick={() => onClick(entry.worksheet)}>
-      <div className="recent-card-strip" style={{ background: color }} />
-      <div className="recent-card-body">
-        <div className="recent-card-meta">
-          <span className="recent-card-board" style={{ background: color }}>{entry.exam_board}</span>
-          {tierLabel && <span className="recent-card-tier">{tierLabel}</span>}
+    <div className="recent-card-wrap">
+      <button className="recent-card" onClick={() => onClick(entry.worksheet)}>
+        <div className="recent-card-strip" style={{ background: color }} />
+        <div className="recent-card-body">
+          <div className="recent-card-meta">
+            <span className="recent-card-board" style={{ background: color }}>{entry.exam_board}</span>
+            {tierLabel && <span className="recent-card-tier">{tierLabel}</span>}
+          </div>
+          <div className="recent-card-title">{entry.title || 'Untitled'}</div>
+          {entry.topic && <div className="recent-card-topic">{entry.topic}</div>}
+          {qualLabel && <div className="recent-card-qual">{qualLabel}</div>}
+          <div className="recent-card-foot">
+            {entry.question_count} question{entry.question_count !== 1 ? 's' : ''}
+            {' · '}
+            {new Date(entry.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+          </div>
         </div>
-        <div className="recent-card-title">{entry.title || 'Untitled'}</div>
-        {entry.topic && <div className="recent-card-topic">{entry.topic}</div>}
-        {qualLabel && <div className="recent-card-qual">{qualLabel}</div>}
-        <div className="recent-card-foot">
-          {entry.question_count} question{entry.question_count !== 1 ? 's' : ''}
-          {' · '}
-          {new Date(entry.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-        </div>
-      </div>
-    </button>
+      </button>
+      {quizId && (
+        <button
+          className="recent-card-quiz-link"
+          onClick={e => { e.stopPropagation(); navigate(`/quiz/${quizId}`) }}
+        >
+          ✦ 1 follow-up quiz
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -51,6 +65,7 @@ export function Home() {
   const { profile, acceptWelcome } = useProfileContext()
   const navigate = useNavigate()
   const { entries, loading } = useSupabaseWorksheets(profile?.id ?? null)
+  const { getByWorksheetId } = useMCQuiz(profile?.id ?? null)
   const { config: welcomeConfig, loading: welcomeLoading } = useWelcomeConfig()
   const [showWizard, setShowWizard] = useState(false)
 
@@ -108,7 +123,12 @@ export function Home() {
           ) : (
             <div className="home-recent-grid">
               {recent.map(entry => (
-                <RecentCard key={entry.id} entry={entry} onClick={handleOpenSheet} />
+                <RecentCard
+                  key={entry.id}
+                  entry={entry}
+                  quizId={getByWorksheetId(entry.id)?.id}
+                  onClick={handleOpenSheet}
+                />
               ))}
             </div>
           )}

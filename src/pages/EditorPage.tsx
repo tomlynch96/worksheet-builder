@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
 import { Topbar } from '../components/layout/Topbar'
 import { Editor } from '../components/editor/Editor'
@@ -8,8 +8,10 @@ import { SheetRateModal } from '../components/SheetRateModal'
 import { AnnotateNudge } from '../components/editor/AnnotateNudge'
 import { PublishExportModal } from '../components/PublishExportModal'
 import { TutorialWizard, TUTORIAL_KEY } from '../components/TutorialWizard'
+import { MCQuizModal } from '../components/MCQuizModal'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
+import { useMCQuiz } from '../hooks/useMCQuiz'
 import { useEditTracking } from '../hooks/useEditTracking'
 import { useAnnotateNudge } from '../hooks/useAnnotateNudge'
 import { useProfileContext } from '../context/ProfileContext'
@@ -38,9 +40,11 @@ export function EditorPage() {
   const { profile } = useProfileContext()
   const { worksheet, dispatch } = useWorksheet()
   const { save, publish, enableShare, entries } = useSupabaseWorksheets(profile?.id ?? null)
+  const { save: saveQuiz, getByWorksheetId } = useMCQuiz(profile?.id ?? null)
   const { trackEdit } = useEditTracking(profile?.id ?? null)
   const nudge = useAnnotateNudge(worksheet.id ?? null)
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -52,6 +56,8 @@ export function EditorPage() {
   const [showNudge, setShowNudge] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [shareToast, setShareToast] = useState<'idle' | 'copied'>('idle')
+  const [showQuizModal, setShowQuizModal] = useState(false)
+  const [generatingQuiz, setGeneratingQuiz] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(() =>
     !!(location.state as { tutorialMode?: boolean } | null)?.tutorialMode
     || !localStorage.getItem(TUTORIAL_KEY)
@@ -262,6 +268,38 @@ export function EditorPage() {
     setTimeout(() => setShareToast('idle'), 2500)
   }
 
+  async function handleGenerateQuiz(questionCount: number, versionCount: number, content: string) {
+    if (!worksheet.id) return
+    setGeneratingQuiz(true)
+    try {
+      const header = worksheet.blocks.find(b => b.type === 'header') as Record<string, string> | undefined
+      const res = await fetch('/api/generate-mc-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          worksheetContent: content,
+          questionCount,
+          title: header?.title || 'Untitled',
+          topic: header?.topic || '',
+          examBoard: header?.examBoard || 'AQA',
+          tier: header?.tier || 'higher',
+        }),
+      })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      const { questions } = await res.json() as { questions: { id: string; text: string; options: string[] }[] }
+      const quizTitle = `${header?.title || 'Untitled'} — Follow-up Quiz`
+      const quiz = await saveQuiz(worksheet.id, quizTitle, questions, questionCount, versionCount)
+      setShowQuizModal(false)
+      if (quiz) navigate(`/quiz/${quiz.id}`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to generate quiz')
+    } finally {
+      setGeneratingQuiz(false)
+    }
+  }
+
+  const existingQuiz = worksheet.id ? getByWorksheetId(worksheet.id) : undefined
+
   const saveLabel =
     saveStatus === 'saving' ? '● Saving…' :
     saveStatus === 'error'  ? '⚠ Failed' :
@@ -291,6 +329,24 @@ export function EditorPage() {
       >
         {shareToast === 'copied' ? '✓ Link copied!' : '↗ Share'}
       </button>
+
+      {existingQuiz ? (
+        <button
+          className="btn-topbar btn-topbar--quiz"
+          onClick={() => navigate(`/quiz/${existingQuiz.id}`)}
+          title="View follow-up quiz"
+        >
+          ✦ Follow-up Quiz
+        </button>
+      ) : (
+        <button
+          className="btn-topbar btn-topbar--quiz"
+          onClick={() => setShowQuizModal(true)}
+          title="Generate a multiple choice follow-up quiz"
+        >
+          + Quiz
+        </button>
+      )}
 
       <button
         className="btn-topbar"
@@ -416,6 +472,15 @@ export function EditorPage() {
           setTutorialOpen(false)
         }}
       />
+
+      {showQuizModal && (
+        <MCQuizModal
+          worksheet={worksheet}
+          generating={generatingQuiz}
+          onGenerate={handleGenerateQuiz}
+          onClose={() => setShowQuizModal(false)}
+        />
+      )}
     </div>
   )
 }

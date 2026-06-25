@@ -4,6 +4,7 @@ import { Topbar } from '../components/layout/Topbar'
 import { NewSheetWizard } from '../components/NewSheetWizard'
 import { useProfileContext } from '../context/ProfileContext'
 import { useSupabaseWorksheets, type WorksheetEntry } from '../hooks/useSupabaseWorksheets'
+import { useMCQuiz } from '../hooks/useMCQuiz'
 import { offeringLabel, getOffering, getSpecTopics } from '../data/qualifications'
 import { PRESETS } from '../data/presets'
 import { computeTotalMarks } from '../utils/marks'
@@ -55,11 +56,13 @@ function BlockChip({ type }: { type: string }) {
   )
 }
 
-function WorksheetCard({ entry, onOpen, onDelete }: {
+function WorksheetCard({ entry, quizId, onOpen, onDelete }: {
   entry: WorksheetEntry
+  quizId?: string
   onOpen: (w: Worksheet) => void
   onDelete: (id: string) => void
 }) {
+  const navigate = useNavigate()
   const color = BOARD_COLORS[entry.exam_board] ?? '#374151'
   const tierLabel = entry.tier === 'higher' ? 'Higher' : entry.tier === 'foundation' ? 'Foundation' : ''
   const blockTypes = entry.worksheet.blocks.map(b => b.type).filter(t => t !== 'header' && t !== 'instructions')
@@ -85,6 +88,13 @@ function WorksheetCard({ entry, onOpen, onDelete }: {
         <span>{totalMarks} marks · {entry.block_count} blocks</span>
         <span className="gallery-card-date">{formatDate(entry.updated_at)}</span>
       </div>
+      {quizId && (
+        <div className="gallery-card-quiz">
+          <button className="gallery-quiz-link" onClick={() => navigate(`/quiz/${quizId}`)}>
+            ✦ 1 follow-up quiz
+          </button>
+        </div>
+      )}
       <div className="gallery-card-actions">
         <button className="gallery-btn gallery-btn--open" onClick={() => onOpen(entry.worksheet)}>Open in Editor</button>
         <button className="gallery-btn gallery-btn--delete" onClick={() => onDelete(entry.id)}>Delete</button>
@@ -183,6 +193,7 @@ export function GalleryPage() {
   const { profile } = useProfileContext()
   const navigate = useNavigate()
   const { entries, loading, remove } = useSupabaseWorksheets(profile?.id ?? null)
+  const { getByWorksheetId } = useMCQuiz(profile?.id ?? null)
   const [showWizard, setShowWizard] = useState(false)
   const [courseTab, setCourseTab] = useState<string>('all')
   const [search, setSearch] = useState('')
@@ -336,7 +347,7 @@ export function GalleryPage() {
                         {!isCollapsed && (
                           <div className="gallery-grid">
                             {sg.entries.map(e => (
-                              <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                              <WorksheetCard key={e.id} entry={e} quizId={getByWorksheetId(e.id)?.id} onOpen={handleOpen} onDelete={remove} />
                             ))}
                           </div>
                         )}
@@ -362,7 +373,7 @@ export function GalleryPage() {
                             {!isCollapsed && (
                               <div className="gallery-grid">
                                 {group.ungrouped.map(e => (
-                                  <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                                  <WorksheetCard key={e.id} entry={e} quizId={getByWorksheetId(e.id)?.id} onOpen={handleOpen} onDelete={remove} />
                                 ))}
                               </div>
                             )}
@@ -372,7 +383,7 @@ export function GalleryPage() {
                       {group.subGroups.length === 0 && (
                         <div className="gallery-grid">
                           {group.ungrouped.map(e => (
-                            <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                            <WorksheetCard key={e.id} entry={e} quizId={getByWorksheetId(e.id)?.id} onOpen={handleOpen} onDelete={remove} />
                           ))}
                         </div>
                       )}
@@ -386,7 +397,7 @@ export function GalleryPage() {
                   <h3 className="gallery-group-title">Unassigned</h3>
                   <div className="gallery-grid">
                     {unassigned.map(e => (
-                      <WorksheetCard key={e.id} entry={e} onOpen={handleOpen} onDelete={remove} />
+                      <WorksheetCard key={e.id} entry={e} quizId={getByWorksheetId(e.id)?.id} onOpen={handleOpen} onDelete={remove} />
                     ))}
                   </div>
                 </div>
