@@ -57,7 +57,7 @@ export function EditorPage() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [shareToast, setShareToast] = useState<'idle' | 'copied'>('idle')
   const [showQuizModal, setShowQuizModal] = useState(false)
-  const [generatingQuiz, setGeneratingQuiz] = useState(false)
+  const [savingQuiz, setSavingQuiz] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(() =>
     !!(location.state as { tutorialMode?: boolean } | null)?.tutorialMode
     || !localStorage.getItem(TUTORIAL_KEY)
@@ -268,36 +268,23 @@ export function EditorPage() {
     setTimeout(() => setShareToast('idle'), 2500)
   }
 
-  async function handleGenerateQuiz(questionCount: number, versionCount: number, content: string) {
+  async function handleConfirmQuiz(
+    questions: { id: string; text: string; options: string[] }[],
+    questionCount: number,
+    versionCount: number,
+  ) {
     if (!worksheet.id) return
-    setGeneratingQuiz(true)
+    setSavingQuiz(true)
     try {
       const header = worksheet.blocks.find(b => b.type === 'header') as Record<string, string> | undefined
-      const res = await fetch('/api/generate-mc-quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          worksheetContent: content,
-          questionCount,
-          title: header?.title || 'Untitled',
-          topic: header?.topic || '',
-          examBoard: header?.examBoard || 'AQA',
-          tier: header?.tier || 'higher',
-        }),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { error?: string }
-        throw new Error(body.error || `API error ${res.status}`)
-      }
-      const { questions } = await res.json() as { questions: { id: string; text: string; options: string[] }[] }
       const quizTitle = `${header?.title || 'Untitled'} — Follow-up Quiz`
       const quiz = await saveQuiz(worksheet.id, quizTitle, questions, questionCount, versionCount)
       setShowQuizModal(false)
       if (quiz) navigate(`/quiz/${quiz.id}`)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to generate quiz')
+      alert(err instanceof Error ? err.message : 'Failed to save quiz')
     } finally {
-      setGeneratingQuiz(false)
+      setSavingQuiz(false)
     }
   }
 
@@ -479,8 +466,8 @@ export function EditorPage() {
       {showQuizModal && (
         <MCQuizModal
           worksheet={worksheet}
-          generating={generatingQuiz}
-          onGenerate={handleGenerateQuiz}
+          saving={savingQuiz}
+          onConfirm={handleConfirmQuiz}
           onClose={() => setShowQuizModal(false)}
         />
       )}

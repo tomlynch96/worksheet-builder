@@ -28,27 +28,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(503).json({ error: 'ANTHROPIC_API_KEY is not set in Vercel environment variables.' })
 
-  const { worksheetContent, questionCount, title, topic, examBoard, tier } = req.body as {
+  const { worksheetContent, questionCount, title, topic, examBoard, tier, replaceContext } = req.body as {
     worksheetContent: string
     questionCount: number
     title: string
     topic: string
     examBoard: string
     tier: string
+    replaceContext?: string
   }
 
   if (!worksheetContent || !questionCount) {
     return res.status(400).json({ error: 'Missing worksheetContent or questionCount' })
   }
 
-  const userPrompt = `Generate exactly ${questionCount} multiple choice questions for a follow-up quiz on this worksheet.
+  const userPrompt = `Generate exactly ${questionCount} multiple choice question${questionCount === 1 ? '' : 's'} for a follow-up quiz on this worksheet.
 
 Worksheet: "${title}" — ${topic} (${examBoard} ${tier})
 
 Worksheet content:
 ${worksheetContent}
-
-Return exactly ${questionCount} questions covering the key concepts, facts and calculations from this worksheet.`
+${replaceContext ? `\n${replaceContext}\n` : ''}
+Return exactly ${questionCount} question${questionCount === 1 ? '' : 's'} covering the key concepts, facts and calculations from this worksheet.`
 
   try {
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
