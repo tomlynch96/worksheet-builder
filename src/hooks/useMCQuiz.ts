@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
-import type { MCQuiz, MCQuestion } from '../types/mcQuiz'
+import type { MCQuiz, MCQuestion, QuizScan } from '../types/mcQuiz'
 
 export function useMCQuiz(profileId: string | null) {
   const [quizzes, setQuizzes] = useState<MCQuiz[]>([])
@@ -61,5 +61,21 @@ export function useMCQuiz(profileId: string | null) {
     return quizzes.find(q => q.worksheet_id === worksheetId)
   }
 
-  return { quizzes, loading, fetchById, save, remove, getByWorksheetId }
+  async function fetchScans(quizId: string): Promise<QuizScan[]> {
+    if (!isConfigured) return []
+    const { data } = await supabase
+      .from('quiz_scans')
+      .select('*')
+      .eq('quiz_id', quizId)
+      .order('scanned_at', { ascending: false })
+    return (data ?? []) as QuizScan[]
+  }
+
+  async function saveScan(scan: Omit<QuizScan, 'id' | 'scanned_at'>): Promise<QuizScan | null> {
+    if (!isConfigured) return null
+    const { data } = await supabase.from('quiz_scans').insert(scan).select().maybeSingle()
+    return data as QuizScan | null
+  }
+
+  return { quizzes, loading, fetchById, save, remove, getByWorksheetId, fetchScans, saveScan }
 }

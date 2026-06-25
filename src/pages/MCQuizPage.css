@@ -138,7 +138,8 @@
 .mcq-bubble-header {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid #d1d5db;
@@ -336,4 +337,208 @@
     margin-top: 40px;
     padding-top: 40px;
   }
+}
+
+/* ── QR code on bubble sheet ── */
+
+.mcq-bubble-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.mcq-bubble-qr-label {
+  font-size: 9px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* ── View toggle in topbar ── */
+.mcq-view-toggle {
+  display: flex;
+  background: #2d2d44;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.mcq-view-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mcq-view-btn:hover { color: #e5e7eb; }
+.mcq-view-btn--active { background: #4f46e5; color: #fff; }
+
+/* ── Results tab ── */
+.mcq-page-results-wrap {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.mcq-results-empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 40px 20px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.mcq-results-hint {
+  font-size: 13px;
+  color: #9ca3af;
+  max-width: 420px;
+  margin: 8px auto 0;
+}
+
+.mcq-results {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mcq-results-summary {
+  display: flex;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.mcq-results-stat {
+  flex: 1;
+  padding: 20px 16px;
+  text-align: center;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mcq-results-stat:last-child { border-right: none; }
+
+.mcq-results-stat-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.mcq-results-stat-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.mcq-results-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mcq-results-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mcq-results-q {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mcq-results-q-text {
+  font-size: 13px;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.mcq-results-q-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mcq-results-q-track {
+  flex: 1;
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.mcq-results-q-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease-out;
+}
+
+.mcq-results-q-fill--good { background: #16a34a; }
+.mcq-results-q-fill--ok   { background: #d97706; }
+.mcq-results-q-fill--low  { background: #dc2626; }
+
+.mcq-results-q-pct {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 80px;
+  text-align: right;
+}
+
+.mcq-results-q-pct--good { color: #16a34a; }
+.mcq-results-q-pct--ok   { color: #d97706; }
+.mcq-results-q-pct--low  { color: #dc2626; }
+
+.mcq-results-scans {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mcq-results-scan-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.mcq-results-scan-row:last-child { border-bottom: none; }
+
+.mcq-results-scan-version {
+  font-weight: 700;
+  color: #4f46e5;
+  font-family: monospace;
+  min-width: 24px;
+}
+
+.mcq-results-scan-score {
+  font-weight: 600;
+  color: #111827;
+}
+
+.mcq-results-scan-pct {
+  color: #6b7280;
+}
+
+.mcq-results-scan-date {
+  color: #9ca3af;
+  margin-left: auto;
 }

@@ -23,3 +23,14 @@ export interface MCQuiz {
   created_at: string
   updated_at: string
 }
+
+export interface QuizScan {
+  id: string
+  quiz_id: string
+  profile_id: string
+  version_number: number
+  score: number
+  question_count: number
+  question_results: Record<string, boolean>  // canonical question id → correct
+  scanned_at: string
+}

@@ -1,0 +1,305 @@
+/* Mobile-first marking page */
+.marking-shell {
+  min-height: 100dvh;
+  background: #f3f4f6;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+}
+
+.marking-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.marking-header {
+  background: #1a1a2e;
+  padding: 20px 20px 16px;
+  text-align: center;
+}
+
+.marking-badge {
+  display: inline-block;
+  background: rgba(79, 70, 229, 0.3);
+  color: #a5b4fc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 99px;
+  margin-bottom: 8px;
+}
+
+.marking-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.marking-version {
+  font-size: 13px;
+  color: #818cf8;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/* ── Loading / error ── */
+.marking-loading,
+.marking-error {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+.marking-error {
+  color: #dc2626;
+  background: #fef2f2;
+  border-radius: 8px;
+  margin: 16px;
+  padding: 12px 16px;
+}
+
+/* ── Capture view ── */
+.marking-capture {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.marking-instructions {
+  text-align: center;
+  color: #374151;
+}
+
+.marking-instr-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.marking-instructions p {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.marking-instructions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.marking-instructions li {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.marking-instructions li::before {
+  content: '· ';
+}
+
+.marking-preview {
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  display: block;
+}
+
+/* ── Score ── */
+.marking-results {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marking-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.marking-score--good { background: #f0fdf4; }
+.marking-score--ok   { background: #fffbeb; }
+.marking-score--low  { background: #fef2f2; }
+
+.marking-score-num {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+  color: #111827;
+}
+
+.marking-score--good .marking-score-num { color: #15803d; }
+.marking-score--ok   .marking-score-num { color: #b45309; }
+.marking-score--low  .marking-score-num { color: #dc2626; }
+
+.marking-score-sep {
+  font-size: 28px;
+  color: #9ca3af;
+}
+
+.marking-score-total {
+  font-size: 28px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.marking-score-pct {
+  font-size: 16px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+/* ── Breakdown ── */
+.marking-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50dvh;
+  overflow-y: auto;
+}
+
+.marking-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.marking-row--correct { background: #f0fdf4; }
+.marking-row--wrong   { background: #fef2f2; }
+
+.marking-row-icon {
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.marking-row--correct .marking-row-icon { color: #16a34a; }
+.marking-row--wrong   .marking-row-icon { color: #dc2626; }
+
+.marking-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.marking-row-q {
+  font-size: 13px;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.marking-row-info {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ── Actions ── */
+.marking-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.marking-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.marking-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.marking-btn--capture {
+  background: #4f46e5;
+  color: #fff;
+  width: 100%;
+  font-size: 17px;
+  padding: 16px;
+}
+
+.marking-btn--scan {
+  background: #4f46e5;
+  color: #fff;
+  width: 100%;
+}
+
+.marking-btn--retry {
+  background: #f3f4f6;
+  color: #374151;
+  width: 100%;
+}
+
+.marking-btn--save {
+  background: #0891b2;
+  color: #fff;
+  width: 100%;
+}
+
+.marking-btn--login {
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 13px;
+  padding: 12px;
+  width: 100%;
+}
+
+.marking-btn--again {
+  background: #f3f4f6;
+  color: #374151;
+  width: 100%;
+}
+
+.marking-saved {
+  text-align: center;
+  color: #16a34a;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px;
+}
+
+/* ── Spinner ── */
+.marking-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: marking-spin 0.7s linear infinite;
+}
+
+@keyframes marking-spin { to { transform: rotate(360deg); } }
