@@ -70,6 +70,7 @@ Return exactly ${questionCount} questions covering the key concepts, facts and c
 
     return res.status(200).json({ questions })
   } catch (err) {
+    console.error('[generate-mc-quiz]', err)
     const msg = err instanceof Error ? err.message : 'Unknown error'
     return res.status(500).json({ error: msg })
   }

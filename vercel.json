@@ -4,6 +4,12 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/generate-mc-quiz.ts": { "maxDuration": 60 },
+    "api/generate-worksheet.ts": { "maxDuration": 60 },
+    "api/generate-insight.ts": { "maxDuration": 60 },
+    "api/generate-profile-insights.ts": { "maxDuration": 60 }
+  }
 }
 
