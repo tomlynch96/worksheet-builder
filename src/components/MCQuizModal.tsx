@@ -17,7 +17,7 @@ function extractWorksheetContent(worksheet: Worksheet): string {
         }
         break
       case 'question': {
-        const q = block as Record<string, unknown>
+        const q = block as unknown as Record<string, unknown>
         if (q.parts && Array.isArray(q.parts)) {
           for (const p of q.parts as Record<string, unknown>[]) {
             if (p.text) lines.push(`Question: ${p.text}`)
@@ -30,7 +30,7 @@ function extractWorksheetContent(worksheet: Worksheet): string {
         break
       }
       case 'multiple_choice': {
-        const mc = block as Record<string, unknown>
+        const mc = block as unknown as Record<string, unknown>
         if (mc.question) lines.push(`MCQ: ${mc.question}`)
         if (mc.options && Array.isArray(mc.options)) {
           lines.push(`Options: ${(mc.options as string[]).join(' / ')}`)
@@ -41,7 +41,7 @@ function extractWorksheetContent(worksheet: Worksheet): string {
         break
       }
       case 'worked_example': {
-        const we = block as Record<string, unknown>
+        const we = block as unknown as Record<string, unknown>
         if (we.title) lines.push(`Worked example: ${we.title}`)
         if (we.steps && Array.isArray(we.steps)) {
           for (const s of we.steps as Record<string, unknown>[]) {
@@ -51,12 +51,12 @@ function extractWorksheetContent(worksheet: Worksheet): string {
         break
       }
       case 'cloze': {
-        const cl = block as Record<string, unknown>
+        const cl = block as unknown as Record<string, unknown>
         if (cl.text) lines.push(`Cloze: ${cl.text}`)
         break
       }
       case 'match_them_up': {
-        const mt = block as Record<string, unknown>
+        const mt = block as unknown as Record<string, unknown>
         if (mt.pairs && Array.isArray(mt.pairs)) {
           for (const p of mt.pairs as Record<string, unknown>[]) {
             if (p.term && p.definition) lines.push(`Match: ${p.term} → ${p.definition}`)
@@ -65,14 +65,14 @@ function extractWorksheetContent(worksheet: Worksheet): string {
         break
       }
       case 'order_steps': {
-        const os = block as Record<string, unknown>
+        const os = block as unknown as Record<string, unknown>
         if (os.steps && Array.isArray(os.steps)) {
           lines.push(`Steps to order: ${(os.steps as string[]).join(' | ')}`)
         }
         break
       }
       case 'data': {
-        const dt = block as Record<string, unknown>
+        const dt = block as unknown as Record<string, unknown>
         if (dt.title) lines.push(`Data table: ${dt.title}`)
         break
       }

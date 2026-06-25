@@ -19,11 +19,10 @@ const printPageStyle = `
 
 function BubbleSheet({
   version,
-  questions,
   quizTitle,
 }: {
   version: MCQuizVersion
-  questions: MCQuestion[]
+  questions?: MCQuestion[]
   quizTitle: string
 }) {
   const qCount = version.questionOrder.length
@@ -72,12 +71,10 @@ function VersionPrint({
   version,
   questions,
   quizTitle,
-  versionNumber,
 }: {
   version: MCQuizVersion
   questions: MCQuestion[]
   quizTitle: string
-  versionNumber: number
 }) {
   return (
     <>
@@ -234,7 +231,6 @@ export function MCQuizPage() {
                 version={version}
                 questions={quiz.questions}
                 quizTitle={quiz.title}
-                versionNumber={vi + 1}
               />
             </div>
           ))}
