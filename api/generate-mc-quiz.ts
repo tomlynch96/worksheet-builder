@@ -58,8 +58,22 @@ Return exactly ${questionCount} questions covering the key concepts, facts and c
       messages: [{ role: 'user', content: userPrompt }],
     })
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : ''
-    const parsed = JSON.parse(text) as { questions: { id: string; text: string; options: string[] }[] }
+    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+
+    // Strip markdown code fences if Claude wrapped the JSON
+    const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+
+    let parsed: { questions: { id: string; text: string; options: string[] }[] }
+    try {
+      parsed = JSON.parse(text)
+    } catch (parseErr) {
+      console.error('[generate-mc-quiz] JSON parse failed. Raw response:', raw)
+      return res.status(500).json({ error: 'Model returned invalid JSON', raw: raw.slice(0, 500) })
+    }
+
+    if (!parsed.questions || !Array.isArray(parsed.questions)) {
+      return res.status(500).json({ error: 'Model response missing questions array' })
+    }
 
     // Assign clean IDs and ensure exactly 4 options
     const questions = parsed.questions.slice(0, questionCount).map((q, i) => ({

@@ -285,7 +285,10 @@ export function EditorPage() {
           tier: header?.tier || 'higher',
         }),
       })
-      if (!res.ok) throw new Error(`API error ${res.status}`)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string }
+        throw new Error(body.error || `API error ${res.status}`)
+      }
       const { questions } = await res.json() as { questions: { id: string; text: string; options: string[] }[] }
       const quizTitle = `${header?.title || 'Untitled'} — Follow-up Quiz`
       const quiz = await saveQuiz(worksheet.id, quizTitle, questions, questionCount, versionCount)
