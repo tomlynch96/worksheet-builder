@@ -9,6 +9,7 @@ Rules:
 - Write concisely — stem max 2 sentences, options max ~8 words each.
 - Distractors must be plausible — wrong answers a student might actually choose.
 - Use correct scientific language and units.
+- Do NOT reference specific values from graphs, tables, or data that pupils would have plotted themselves — pupils will not have those visuals in front of them during the quiz. Ask about concepts and relationships instead (e.g. "what does a steeper gradient indicate?" not "what was the gradient of the line?").
 - Output ONLY valid JSON — no markdown, no extra text.
 
 Output format:
