@@ -56,6 +56,7 @@ export function MarkingPage() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [consented, setConsented] = useState(false)
 
   const fileRef = useRef<HTMLInputElement>(null)
   const capturedFileRef = useRef<File | null>(null)
@@ -236,9 +237,23 @@ export function MarkingPage() {
                     <li>Good lighting — avoid shadows</li>
                   </ul>
                 </div>
+                <div className="marking-privacy-notice">
+                  <p className="marking-privacy-text">
+                    Please ensure the photo does not include the pupil's name or any other information that could identify them. The image is processed by an AI service and must not contain personal data.
+                  </p>
+                  <label className="marking-consent-label">
+                    <input
+                      type="checkbox"
+                      checked={consented}
+                      onChange={e => setConsented(e.target.checked)}
+                    />
+                    I confirm this image does not contain any pupil names or identifying information.
+                  </label>
+                </div>
                 <button
                   className="marking-btn marking-btn--capture"
                   onClick={() => fileRef.current?.click()}
+                  disabled={!consented}
                 >
                   Take photo
                 </button>
