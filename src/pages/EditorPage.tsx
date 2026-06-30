@@ -138,7 +138,7 @@ export function EditorPage() {
       // Returning via history after quiz navigation — state was cleared to prevent stale restoration.
       // Fetch the latest saved version from Supabase instead.
       fetchById(location.state.worksheetId as string).then(entry => {
-        if (entry) dispatch({ type: 'LOAD_WORKSHEET', worksheet: { id: entry.id, blocks: entry.blocks, oakContext: entry.oakContext } })
+        if (entry) dispatch({ type: 'LOAD_WORKSHEET', worksheet: entry.worksheet })
       })
       setSelectedId(null)
     } else if (typeof location.state?.preset === 'number') {
