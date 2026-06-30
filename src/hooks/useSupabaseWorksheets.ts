@@ -260,5 +260,12 @@ export function useSupabaseWorksheets(profileId: string | null) {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  return { entries, loading, save, annotate, publish, unpublish, enableShare, fetchPublic, fetchPublicById, fetchByShareId, copyToMyLibrary, remove, reload: load }
+  async function fetchById(id: string): Promise<WorksheetEntry | null> {
+    if (!isConfigured) return null
+    const { data } = await supabase.from('worksheets').select('*').eq('id', id).single()
+    if (!data) return null
+    return rowToEntry(data as Record<string, unknown>)
+  }
+
+  return { entries, loading, save, annotate, publish, unpublish, enableShare, fetchPublic, fetchPublicById, fetchByShareId, copyToMyLibrary, remove, reload: load, fetchById }
 }

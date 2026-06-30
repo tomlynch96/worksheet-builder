@@ -39,7 +39,7 @@ const printPageStyle = `
 export function EditorPage() {
   const { profile } = useProfileContext()
   const { worksheet, dispatch } = useWorksheet()
-  const { save, publish, enableShare, entries } = useSupabaseWorksheets(profile?.id ?? null)
+  const { save, publish, enableShare, entries, fetchById } = useSupabaseWorksheets(profile?.id ?? null)
   const { save: saveQuiz, getByWorksheetId } = useMCQuiz(profile?.id ?? null)
   const { trackEdit } = useEditTracking(profile?.id ?? null)
   const nudge = useAnnotateNudge(worksheet.id ?? null)
@@ -134,6 +134,13 @@ export function EditorPage() {
         originalBlocksRef.current = ws.blocks
         worksheetTypeRef.current = location.state.worksheetType ?? ''
       }
+    } else if (location.state?.worksheetId) {
+      // Returning via history after quiz navigation — state was cleared to prevent stale restoration.
+      // Fetch the latest saved version from Supabase instead.
+      fetchById(location.state.worksheetId as string).then(entry => {
+        if (entry) dispatch({ type: 'LOAD_WORKSHEET', worksheet: { id: entry.id, blocks: entry.blocks, oakContext: entry.oakContext } })
+      })
+      setSelectedId(null)
     } else if (typeof location.state?.preset === 'number') {
       dispatch({ type: 'LOAD_PRESET', worksheet: PRESETS[location.state.preset].worksheet })
       setSelectedId(null)
@@ -280,7 +287,13 @@ export function EditorPage() {
       const quizTitle = `${header?.title || 'Untitled'} — Follow-up Quiz`
       const quiz = await saveQuiz(worksheet.id, quizTitle, questions, questionCount, versionCount)
       setShowQuizModal(false)
-      if (quiz) navigate(`/quiz/${quiz.id}`)
+      if (quiz) {
+        // Replace the current history entry, stripping the stale worksheet object from state.
+        // When the user navigates back from the quiz page, the editor will fetch the latest
+        // saved version from Supabase rather than restoring the original pre-edit state.
+        navigate('/editor', { replace: true, state: { worksheetId: worksheet.id } })
+        navigate(`/quiz/${quiz.id}`)
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save quiz')
     } finally {
