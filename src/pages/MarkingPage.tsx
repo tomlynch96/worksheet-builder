@@ -41,13 +41,13 @@ interface ScanResult {
 // ── Main component ───────────────────────────────────────────────────────────
 
 export function MarkingPage() {
-  const { quizId, versionNumber: versionParam } = useParams<{ quizId: string; versionNumber: string }>()
-  const versionNumber = parseInt(versionParam ?? '1', 10)
+  const { quizId } = useParams<{ quizId: string }>()
   const { profile } = useProfileContext()
   const { fetchById, saveScan } = useMCQuiz(profile?.id ?? null)
 
   const [quiz, setQuiz] = useState<MCQuiz | null>(null)
-  const [version, setVersion] = useState<MCQuizVersion | null>(null)
+  const [allVersions, setAllVersions] = useState<MCQuizVersion[]>([])
+  const [detectedVersion, setDetectedVersion] = useState<MCQuizVersion | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -66,13 +66,10 @@ export function MarkingPage() {
     fetchById(quizId).then(q => {
       if (!q) { setError('Quiz not found.'); setLoading(false); return }
       setQuiz(q)
-      const versions = computeVersions(q.questions, q.version_count, q.id)
-      const v = versions.find(v => v.versionNumber === versionNumber)
-      if (!v) { setError(`Version ${versionNumber} not found.`); setLoading(false); return }
-      setVersion(v)
+      setAllVersions(computeVersions(q.questions, q.version_count, q.id))
       setLoading(false)
     })
-  }, [quizId, versionNumber]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quizId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -81,12 +78,13 @@ export function MarkingPage() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(URL.createObjectURL(file))
     setScanResult(null)
+    setDetectedVersion(null)
     setSaved(false)
     e.target.value = ''
   }
 
   async function handleScan() {
-    if (!capturedFileRef.current || !quiz || !version) return
+    if (!capturedFileRef.current || !quiz || !allVersions.length) return
     setScanning(true)
     setError(null)
     try {
@@ -97,12 +95,14 @@ export function MarkingPage() {
         body: JSON.stringify({
           imageBase64: base64,
           imageMimeType: mimeType,
-          questionCount: version.answerKey.length,
-          answerKey: version.answerKey,
+          questionCount: quiz.questions.length,
+          versions: allVersions.map(v => ({ code: v.code, answerKey: v.answerKey })),
         }),
       })
-      const data = await res.json() as ScanResult & { error?: string }
+      const data = await res.json() as ScanResult & { versionCode?: string; error?: string }
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`)
+      const matched = allVersions.find(v => v.code === data.versionCode) ?? null
+      setDetectedVersion(matched)
       setScanResult(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Scan failed — try a clearer photo')
@@ -112,18 +112,17 @@ export function MarkingPage() {
   }
 
   async function handleSave() {
-    if (!scanResult || !quiz || !version || !profile) return
+    if (!scanResult || !quiz || !detectedVersion || !profile) return
     setSaving(true)
-    // Build per-canonical-question results
     const questionResults: Record<string, boolean> = {}
-    version.questionOrder.forEach((canonicalIdx, displayIdx) => {
+    detectedVersion.questionOrder.forEach((canonicalIdx, displayIdx) => {
       const q = quiz.questions[canonicalIdx]
       questionResults[q.id] = scanResult.results[displayIdx]?.correct ?? false
     })
     const scan: Omit<QuizScan, 'id' | 'scanned_at'> = {
       quiz_id: quiz.id,
       profile_id: profile.id,
-      version_number: versionNumber,
+      version_number: detectedVersion.versionNumber,
       score: scanResult.score,
       question_count: scanResult.total,
       question_results: questionResults,
@@ -135,6 +134,7 @@ export function MarkingPage() {
 
   function reset() {
     setScanResult(null)
+    setDetectedVersion(null)
     setPreviewUrl(null)
     capturedFileRef.current = null
     setSaved(false)
@@ -154,8 +154,8 @@ export function MarkingPage() {
         <div className="marking-header">
           <div className="marking-badge">MC Quiz</div>
           <h1 className="marking-title">{quiz?.title ?? 'Follow-up Quiz'}</h1>
-          {version && (
-            <div className="marking-version">Version {version.code}</div>
+          {detectedVersion && (
+            <div className="marking-version">Version {detectedVersion.code}</div>
           )}
         </div>
 
@@ -171,7 +171,7 @@ export function MarkingPage() {
 
             <div className="marking-breakdown">
               {scanResult.results.map((r, i) => {
-                const canonicalIdx = version!.questionOrder[i]
+                const canonicalIdx = detectedVersion?.questionOrder[i] ?? i
                 const qText = quiz!.questions[canonicalIdx]?.text ?? ''
                 return (
                   <div key={i} className={`marking-row marking-row--${r.correct ? 'correct' : 'wrong'}`}>

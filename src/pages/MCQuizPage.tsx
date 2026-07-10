@@ -30,7 +30,7 @@ function BubbleSheet({
   quizId: string
 }) {
   const qCount = version.questionOrder.length
-  const markUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/mark/${quizId}/${version.versionNumber}`
+  const markUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/mark/${quizId}`
 
   return (
     <div className="mcq-bubble-sheet">

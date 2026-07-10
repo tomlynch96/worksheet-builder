@@ -60,6 +60,7 @@ export default function App() {
           <Route path="/schemes" element={<AuthGate><SchemesPage /></AuthGate>} />
           <Route path="/schemes/:id" element={<AuthGate><SchemeEditorPage /></AuthGate>} />
           <Route path="/quiz/:id" element={<AuthGate><MCQuizPage /></AuthGate>} />
+          <Route path="/mark/:quizId" element={<MarkingPage />} />
           <Route path="/mark/:quizId/:versionNumber" element={<MarkingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
