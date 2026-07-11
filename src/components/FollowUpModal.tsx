@@ -4,7 +4,9 @@ import { GeneratingScreen, QuestionCard } from './mcQuiz/QuizReviewShared'
 import './MCQuizModal.css'
 import './FollowUpModal.css'
 
-const MAX_FILE_BYTES = 4 * 1024 * 1024 // stay under Vercel's request body limit once base64-encoded
+// Vercel serverless functions hard-cap the request body at 4.5MB, and base64 inflates
+// the raw file size by ~33% once wrapped in the JSON payload — cap well under that.
+const MAX_FILE_BYTES = 3 * 1024 * 1024
 const ACCEPTED_TYPES = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -24,6 +26,13 @@ function readFileAsBase64(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(file)
   })
+}
+
+function describeGenerationError(err: unknown): string {
+  if (err instanceof TypeError && err.message === 'Failed to fetch') {
+    return 'Could not reach the server — the file may be too large, or your connection dropped. Try a smaller file.'
+  }
+  return err instanceof Error ? err.message : 'Generation failed'
 }
 
 async function fetchQuestions(payload: {
@@ -103,7 +112,7 @@ export function FollowUpModal({ onConfirm, onClose, saving }: Props) {
       setDraftQuestions(questions)
       setStage('review')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed')
+      setError(describeGenerationError(err))
       setStage('upload')
     }
   }
