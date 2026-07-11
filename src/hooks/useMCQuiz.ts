@@ -80,7 +80,7 @@ export function useMCQuiz(profileId: string | null) {
     return null
   }
 
-  async function fetchFollowUps(): Promise<MCQuiz[]> {
+  const fetchFollowUps = useCallback(async (): Promise<MCQuiz[]> => {
     if (!profileId || !isConfigured) return []
     const { data } = await supabase
       .from('mc_quizzes')
@@ -89,7 +89,7 @@ export function useMCQuiz(profileId: string | null) {
       .eq('source_type', 'document')
       .order('created_at', { ascending: false })
     return (data ?? []) as MCQuiz[]
-  }
+  }, [profileId])
 
   async function remove(id: string) {
     if (!isConfigured) return
