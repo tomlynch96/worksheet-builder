@@ -4,6 +4,7 @@ import { Topbar } from '../components/layout/Topbar'
 import { FollowUpModal } from '../components/FollowUpModal'
 import { useProfileContext } from '../context/ProfileContext'
 import { useMCQuiz } from '../hooks/useMCQuiz'
+import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { supabase, isConfigured } from '../lib/supabase'
 import type { MCQuestion, MCQuiz } from '../types/mcQuiz'
 import '../pages/AdminPage.css'
@@ -17,6 +18,7 @@ export function FollowUpsPage() {
   const { profile } = useProfileContext()
   const navigate = useNavigate()
   const { saveFollowUp, fetchFollowUps, remove } = useMCQuiz(profile?.id ?? null)
+  const { fetchById: fetchWorksheetById } = useSupabaseWorksheets(profile?.id ?? null)
 
   const [followUps, setFollowUps] = useState<MCQuiz[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,6 +26,7 @@ export function FollowUpsPage() {
   const [saving, setSaving] = useState(false)
   const [removing, setRemoving] = useState<string | null>(null)
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [openingWorksheet, setOpeningWorksheet] = useState<string | null>(null)
   const [view, setView] = useState<'uploads' | 'all'>('uploads')
 
   useEffect(() => {
@@ -85,6 +88,20 @@ export function FollowUpsPage() {
     }
   }
 
+  async function handleOpenWorksheet(entry: MCQuiz) {
+    if (!entry.worksheet_id) return
+    setOpeningWorksheet(entry.id)
+    try {
+      const worksheetEntry = await fetchWorksheetById(entry.worksheet_id)
+      if (!worksheetEntry) throw new Error('Worksheet not found — it may have been deleted.')
+      navigate('/editor', { state: { worksheet: worksheetEntry.worksheet } })
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to open worksheet')
+    } finally {
+      setOpeningWorksheet(null)
+    }
+  }
+
   async function handleDelete(entry: MCQuiz) {
     if (!confirm(`Delete "${entry.title || 'Untitled'}"? This cannot be undone.`)) return
     setRemoving(entry.id)
@@ -104,7 +121,7 @@ export function FollowUpsPage() {
           <p className="admin-subtitle">
             {followUps.length} follow up{followUps.length !== 1 ? 's' : ''} · upload a PDF, Word doc, or image to generate a multiple choice follow-up quiz
           </p>
-          <button className="admin-save-btn" onClick={() => setShowModal(true)}>
+          <button className="admin-save-btn fu-new-btn" onClick={() => setShowModal(true)}>
             + New follow up
           </button>
         </div>
@@ -155,7 +172,16 @@ export function FollowUpsPage() {
                     </span>
                   </td>
                   <td className="admin-cell-spec">
-                    {entry.source_file_path ? (
+                    {entry.source_type === 'worksheet' && entry.worksheet_id ? (
+                      <button
+                        className="fu-source-link"
+                        onClick={() => handleOpenWorksheet(entry)}
+                        disabled={openingWorksheet === entry.id}
+                        title="Open the source worksheet in the editor"
+                      >
+                        {openingWorksheet === entry.id ? 'Opening…' : 'Open worksheet'}
+                      </button>
+                    ) : entry.source_file_path ? (
                       <button
                         className="fu-source-link"
                         onClick={() => handleDownloadSource(entry)}
