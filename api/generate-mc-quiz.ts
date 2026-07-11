@@ -10,6 +10,7 @@ Rules:
 - Distractors must be plausible — wrong answers a student might actually choose.
 - Use correct scientific language and units.
 - Do NOT reference specific values from graphs, tables, or data that pupils would have plotted themselves — pupils will not have those visuals in front of them during the quiz. Ask about concepts and relationships instead (e.g. "what does a steeper gradient indicate?" not "what was the gradient of the line?").
+- For any calculation question, invent NEW numerical values rather than reusing the exact figures from the worksheet — the correct option and calculation must still be derivable from the question stem alone, but the numbers must differ from the source so pupils cannot just recall a memorised answer instead of redoing the working.
 - Output ONLY valid JSON — no markdown, no extra text.
 
 Output format:
