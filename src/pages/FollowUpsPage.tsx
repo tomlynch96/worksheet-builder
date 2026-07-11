@@ -29,10 +29,6 @@ export function FollowUpsPage() {
   const [openingWorksheet, setOpeningWorksheet] = useState<string | null>(null)
   const [view, setView] = useState<'uploads' | 'all'>('uploads')
 
-  useEffect(() => {
-    if (!profile?.is_admin) navigate('/', { replace: true })
-  }, [profile, navigate])
-
   const load = useCallback(async () => {
     setLoading(true)
     const rows = await fetchFollowUps(view === 'all')
@@ -109,8 +105,6 @@ export function FollowUpsPage() {
     setFollowUps(prev => prev.filter(f => f.id !== entry.id))
     setRemoving(null)
   }
-
-  if (!profile?.is_admin) return null
 
   return (
     <div className="admin-layout">

@@ -38,14 +38,12 @@ export function Topbar({ actions }: TopbarProps) {
           <Link className={`topbar-nav-link${pathname === '/library' ? ' topbar-nav-link--active' : ''}`} to="/library">
             Public Library
           </Link>
+          <Link className={`topbar-nav-link${pathname === '/follow-ups' ? ' topbar-nav-link--active' : ''}`} to="/follow-ups">
+            Follow ups
+          </Link>
           {profile?.is_admin && (
             <Link className={`topbar-nav-link${pathname === '/oak' ? ' topbar-nav-link--active' : ''}`} to="/oak">
               Oak
-            </Link>
-          )}
-          {profile?.is_admin && (
-            <Link className={`topbar-nav-link${pathname === '/follow-ups' ? ' topbar-nav-link--active' : ''}`} to="/follow-ups">
-              Follow ups
             </Link>
           )}
           {profile?.is_admin && (
