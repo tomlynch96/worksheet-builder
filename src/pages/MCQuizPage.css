@@ -158,28 +158,6 @@
   font-family: monospace;
 }
 
-.mcq-bubble-student {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  max-width: 320px;
-}
-
-.mcq-bubble-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #374151;
-}
-
-.mcq-bubble-line {
-  flex: 1;
-  border-bottom: 1px solid #374151;
-  height: 16px;
-}
-
 .mcq-bubble-instructions {
   font-size: 11px;
   color: #6b7280;

@@ -39,10 +39,6 @@ function BubbleSheet({
           <div className="mcq-bubble-title">{quizTitle}</div>
           <div className="mcq-bubble-version">Version: <strong>{version.code}</strong></div>
         </div>
-        <div className="mcq-bubble-student">
-          <div className="mcq-bubble-field"><span>Class:</span><div className="mcq-bubble-line" /></div>
-          <div className="mcq-bubble-field"><span>Date:</span><div className="mcq-bubble-line" /></div>
-        </div>
         <div className="mcq-bubble-qr">
           <QRCode value={markUrl} size={64} />
           <div className="mcq-bubble-qr-label">Scan to mark</div>
