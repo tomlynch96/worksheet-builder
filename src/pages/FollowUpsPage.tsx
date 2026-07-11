@@ -23,6 +23,7 @@ export function FollowUpsPage() {
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [removing, setRemoving] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile?.is_admin) navigate('/', { replace: true })
@@ -64,6 +65,22 @@ export function FollowUpsPage() {
       alert(err instanceof Error ? err.message : 'Failed to save follow up')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDownloadSource(entry: MCQuiz) {
+    if (!entry.source_file_path) return
+    setDownloading(entry.id)
+    try {
+      const { data, error } = await supabase.storage
+        .from('follow-up-sources')
+        .createSignedUrl(entry.source_file_path, 60)
+      if (error || !data?.signedUrl) throw error || new Error('Could not create download link')
+      window.open(data.signedUrl, '_blank')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to download original document')
+    } finally {
+      setDownloading(null)
     }
   }
 
@@ -115,7 +132,20 @@ export function FollowUpsPage() {
                       {entry.title || 'Untitled'}
                     </button>
                   </td>
-                  <td className="admin-cell-spec">{entry.source_file_name || '—'}</td>
+                  <td className="admin-cell-spec">
+                    {entry.source_file_path ? (
+                      <button
+                        className="fu-source-link"
+                        onClick={() => handleDownloadSource(entry)}
+                        disabled={downloading === entry.id}
+                        title="Download the original uploaded document"
+                      >
+                        {downloading === entry.id ? 'Preparing…' : (entry.source_file_name || 'Download')}
+                      </button>
+                    ) : (
+                      entry.source_file_name || '—'
+                    )}
+                  </td>
                   <td>{entry.question_count}</td>
                   <td>{entry.version_count}</td>
                   <td className="admin-cell-date">{formatDate(entry.created_at)}</td>
