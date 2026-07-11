@@ -80,14 +80,14 @@ export function useMCQuiz(profileId: string | null) {
     return null
   }
 
-  const fetchFollowUps = useCallback(async (): Promise<MCQuiz[]> => {
+  const fetchFollowUps = useCallback(async (includeWorksheetQuizzes = false): Promise<MCQuiz[]> => {
     if (!profileId || !isConfigured) return []
-    const { data } = await supabase
+    let query = supabase
       .from('mc_quizzes')
       .select('*')
       .eq('profile_id', profileId)
-      .eq('source_type', 'document')
-      .order('created_at', { ascending: false })
+    if (!includeWorksheetQuizzes) query = query.eq('source_type', 'document')
+    const { data } = await query.order('created_at', { ascending: false })
     return (data ?? []) as MCQuiz[]
   }, [profileId])
 

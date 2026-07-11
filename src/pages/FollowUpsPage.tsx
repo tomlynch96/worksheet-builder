@@ -24,6 +24,7 @@ export function FollowUpsPage() {
   const [saving, setSaving] = useState(false)
   const [removing, setRemoving] = useState<string | null>(null)
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [view, setView] = useState<'uploads' | 'all'>('uploads')
 
   useEffect(() => {
     if (!profile?.is_admin) navigate('/', { replace: true })
@@ -31,10 +32,10 @@ export function FollowUpsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const rows = await fetchFollowUps()
+    const rows = await fetchFollowUps(view === 'all')
     setFollowUps(rows)
     setLoading(false)
-  }, [fetchFollowUps])
+  }, [fetchFollowUps, view])
 
   useEffect(() => { load() }, [load])
 
@@ -108,6 +109,21 @@ export function FollowUpsPage() {
           </button>
         </div>
 
+        <div className="fu-tabs">
+          <button
+            className={`fu-tab${view === 'uploads' ? ' fu-tab--active' : ''}`}
+            onClick={() => setView('uploads')}
+          >
+            Uploaded documents
+          </button>
+          <button
+            className={`fu-tab${view === 'all' ? ' fu-tab--active' : ''}`}
+            onClick={() => setView('all')}
+          >
+            Include worksheet quizzes
+          </button>
+        </div>
+
         {loading ? (
           <div className="admin-empty">Loading…</div>
         ) : followUps.length === 0 ? (
@@ -117,6 +133,7 @@ export function FollowUpsPage() {
             <thead>
               <tr>
                 <th>Title</th>
+                <th>Type</th>
                 <th>Source</th>
                 <th>Qs</th>
                 <th>Versions</th>
@@ -131,6 +148,11 @@ export function FollowUpsPage() {
                     <button className="fu-title-link" onClick={() => navigate(`/quiz/${entry.id}`)}>
                       {entry.title || 'Untitled'}
                     </button>
+                  </td>
+                  <td>
+                    <span className={`fu-type-badge fu-type-badge--${entry.source_type}`}>
+                      {entry.source_type === 'document' ? 'Uploaded' : 'Worksheet'}
+                    </span>
                   </td>
                   <td className="admin-cell-spec">
                     {entry.source_file_path ? (
