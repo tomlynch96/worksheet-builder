@@ -1,94 +1,39 @@
 import { useState } from 'react'
-import type { Worksheet } from '../types/worksheet'
 import type { MCQuestion } from '../types/mcQuiz'
 import { GeneratingScreen, QuestionCard } from './mcQuiz/QuizReviewShared'
 import './MCQuizModal.css'
+import './FollowUpModal.css'
 
-// ── Worksheet content extractor ───────────────────────────────────────────────
+const MAX_FILE_BYTES = 4 * 1024 * 1024 // stay under Vercel's request body limit once base64-encoded
+const ACCEPTED_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]
 
-function extractWorksheetContent(worksheet: Worksheet): string {
-  const lines: string[] = []
-  for (const block of worksheet.blocks) {
-    switch (block.type) {
-      case 'header':
-        if ('title' in block) lines.push(`Title: ${block.title}`)
-        if ('topic' in block) lines.push(`Topic: ${block.topic}`)
-        break
-      case 'information':
-        if ('html' in block) {
-          const text = String(block.html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-          if (text) lines.push(`Information: ${text}`)
-        }
-        break
-      case 'question': {
-        const q = block as unknown as Record<string, unknown>
-        if (q.parts && Array.isArray(q.parts)) {
-          for (const p of q.parts as Record<string, unknown>[]) {
-            if (p.text) lines.push(`Question: ${p.text}`)
-            if (p.markScheme) lines.push(`Answer: ${p.markScheme}`)
-          }
-        } else {
-          if (q.text) lines.push(`Question: ${q.text}`)
-          if (q.markScheme) lines.push(`Answer: ${q.markScheme}`)
-        }
-        break
-      }
-      case 'multiple_choice': {
-        const mc = block as unknown as Record<string, unknown>
-        if (mc.question) lines.push(`MCQ: ${mc.question}`)
-        if (mc.options && Array.isArray(mc.options)) lines.push(`Options: ${(mc.options as string[]).join(' / ')}`)
-        if (mc.correctIndex !== undefined && mc.options && Array.isArray(mc.options))
-          lines.push(`Correct: ${(mc.options as string[])[mc.correctIndex as number]}`)
-        break
-      }
-      case 'worked_example': {
-        const we = block as unknown as Record<string, unknown>
-        if (we.title) lines.push(`Worked example: ${we.title}`)
-        if (we.steps && Array.isArray(we.steps))
-          for (const s of we.steps as Record<string, unknown>[])
-            if (s.text) lines.push(`Step: ${s.text}`)
-        break
-      }
-      case 'cloze': {
-        const cl = block as unknown as Record<string, unknown>
-        if (cl.text) lines.push(`Cloze: ${cl.text}`)
-        break
-      }
-      case 'match_them_up': {
-        const mt = block as unknown as Record<string, unknown>
-        if (mt.pairs && Array.isArray(mt.pairs))
-          for (const p of mt.pairs as Record<string, unknown>[])
-            if (p.term && p.definition) lines.push(`Match: ${p.term} → ${p.definition}`)
-        break
-      }
-      case 'order_steps': {
-        const os = block as unknown as Record<string, unknown>
-        if (os.steps && Array.isArray(os.steps))
-          lines.push(`Steps to order: ${(os.steps as string[]).join(' | ')}`)
-        break
-      }
-      case 'data': {
-        const dt = block as unknown as Record<string, unknown>
-        if (dt.title) lines.push(`Data table: ${dt.title}`)
-        break
-      }
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      resolve(result.split(',')[1] ?? '')
     }
-  }
-  return lines.join('\n')
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
 }
 
-// ── API helper ────────────────────────────────────────────────────────────────
-
 async function fetchQuestions(payload: {
-  worksheetContent: string
-  questionCount: number
+  fileBase64: string
+  mimeType: string
   title: string
-  topic: string
-  examBoard: string
-  tier: string
+  questionCount: number
   replaceContext?: string
 }): Promise<MCQuestion[]> {
-  const res = await fetch('/api/generate-mc-quiz', {
+  const res = await fetch('/api/generate-follow-up-quiz', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -101,48 +46,70 @@ async function fetchQuestions(payload: {
   return questions
 }
 
-// ── Main modal ────────────────────────────────────────────────────────────────
-
 interface Props {
-  worksheet: Worksheet
-  onConfirm: (questions: MCQuestion[], questionCount: number, versionCount: number) => Promise<void>
+  onConfirm: (
+    title: string,
+    questions: MCQuestion[],
+    questionCount: number,
+    versionCount: number,
+    sourceFile: { file: File; base64: string; mimeType: string },
+  ) => Promise<void>
   onClose: () => void
   saving: boolean
 }
 
-export function MCQuizModal({ worksheet, onConfirm, onClose, saving }: Props) {
-  const [stage, setStage] = useState<'config' | 'generating' | 'review'>('config')
+export function FollowUpModal({ onConfirm, onClose, saving }: Props) {
+  const [stage, setStage] = useState<'upload' | 'generating' | 'review'>('upload')
+  const [title, setTitle] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [fileBase64, setFileBase64] = useState<string | null>(null)
   const [questionCount, setQuestionCount] = useState(10)
   const [versionCount, setVersionCount] = useState(3)
   const [draftQuestions, setDraftQuestions] = useState<MCQuestion[]>([])
   const [replacingIdx, setReplacingIdx] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const header = worksheet.blocks.find(b => b.type === 'header') as Record<string, string> | undefined
-  const title = header?.title || 'Untitled'
-  const worksheetContent = extractWorksheetContent(worksheet)
-  const basePayload = {
-    worksheetContent,
-    title,
-    topic: header?.topic || '',
-    examBoard: header?.examBoard || 'AQA',
-    tier: header?.tier || 'higher',
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    setError(null)
+    setFile(null)
+    setFileBase64(null)
+    if (!f) return
+    if (!ACCEPTED_TYPES.includes(f.type)) {
+      setError('Unsupported file type — please upload a PDF, Word document, or image.')
+      return
+    }
+    if (f.size > MAX_FILE_BYTES) {
+      setError(`File too large — please keep uploads under ${MAX_FILE_BYTES / (1024 * 1024)}MB.`)
+      return
+    }
+    setFile(f)
+    if (!title) setTitle(f.name.replace(/\.[^.]+$/, ''))
   }
 
   async function handleGenerate() {
+    if (!file) return
     setError(null)
     setStage('generating')
     try {
-      const questions = await fetchQuestions({ ...basePayload, questionCount })
+      const base64 = await readFileAsBase64(file)
+      setFileBase64(base64)
+      const questions = await fetchQuestions({
+        fileBase64: base64,
+        mimeType: file.type,
+        title: title || file.name,
+        questionCount,
+      })
       setDraftQuestions(questions)
       setStage('review')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed')
-      setStage('config')
+      setStage('upload')
     }
   }
 
   async function handleReplace(idx: number) {
+    if (!file || !fileBase64) return
     setReplacingIdx(idx)
     try {
       const otherTexts = draftQuestions
@@ -150,7 +117,13 @@ export function MCQuizModal({ worksheet, onConfirm, onClose, saving }: Props) {
         .map((q, i) => `Q${i + 1}: ${q.text}`)
         .join('\n')
       const replaceContext = `Generate exactly 1 replacement question. The other questions already cover:\n${otherTexts}\nThe replacement must test a DIFFERENT concept not already assessed.`
-      const [replacement] = await fetchQuestions({ ...basePayload, questionCount: 1, replaceContext })
+      const [replacement] = await fetchQuestions({
+        fileBase64,
+        mimeType: file.type,
+        title: title || file.name,
+        questionCount: 1,
+        replaceContext,
+      })
       setDraftQuestions(prev => prev.map((q, i) => i === idx ? { ...replacement, id: q.id } : q))
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Replace failed')
@@ -164,24 +137,50 @@ export function MCQuizModal({ worksheet, onConfirm, onClose, saving }: Props) {
   }
 
   async function handleConfirm() {
-    await onConfirm(draftQuestions, questionCount, versionCount)
+    if (!file || !fileBase64) return
+    await onConfirm(title || file.name, draftQuestions, questionCount, versionCount, {
+      file,
+      base64: fileBase64,
+      mimeType: file.type,
+    })
   }
 
-  // ── Config stage ─────────────────────────────────────────────────────────
-  if (stage === 'config') {
+  // ── Upload stage ─────────────────────────────────────────────────────────
+  if (stage === 'upload') {
     return (
       <div className="mcq-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
         <div className="mcq-modal">
           <div className="mcq-modal-header">
-            <h2 className="mcq-modal-title">Generate Follow-up Quiz</h2>
+            <h2 className="mcq-modal-title">New Follow Up</h2>
             <button className="mcq-modal-close" onClick={onClose}>✕</button>
           </div>
 
           <div className="mcq-modal-body">
             {error && <p className="mcq-error">{error}</p>}
             <p className="mcq-modal-desc">
-              Create a multiple choice quiz based on <strong>{title}</strong>. You'll be able to review and edit each question before saving.
+              Upload a PDF, Word document, or image and get a multiple choice follow-up quiz built from its content.
             </p>
+
+            <div className="fu-field">
+              <label className="mcq-label">Title</label>
+              <input
+                className="fu-title-input"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Electromagnetic waves — homework sheet"
+              />
+            </div>
+
+            <div className="fu-field">
+              <label className="mcq-label">Document</label>
+              <input
+                className="fu-file-input"
+                type="file"
+                accept=".pdf,.docx,.doc,image/*"
+                onChange={handleFileChange}
+              />
+              {file && <p className="fu-file-name">{file.name}</p>}
+            </div>
 
             <div className="mcq-modal-fields">
               <div className="mcq-field">
@@ -202,15 +201,11 @@ export function MCQuizModal({ worksheet, onConfirm, onClose, saving }: Props) {
                 </div>
               </div>
             </div>
-
-            <p className="mcq-modal-hint">
-              Each version shuffles question order and answer positions — students next to each other see different answer sequences.
-            </p>
           </div>
 
           <div className="mcq-modal-footer">
             <button className="mcq-btn-cancel" onClick={onClose}>Cancel</button>
-            <button className="mcq-btn-generate" onClick={handleGenerate}>
+            <button className="mcq-btn-generate" onClick={handleGenerate} disabled={!file}>
               Generate {questionCount} questions →
             </button>
           </div>
@@ -256,7 +251,7 @@ export function MCQuizModal({ worksheet, onConfirm, onClose, saving }: Props) {
         </div>
 
         <div className="mcq-modal-footer">
-          <button className="mcq-btn-cancel" onClick={() => setStage('config')} disabled={saving || replacingIdx !== null}>
+          <button className="mcq-btn-cancel" onClick={() => setStage('upload')} disabled={saving || replacingIdx !== null}>
             ← Back
           </button>
           <button
@@ -264,7 +259,7 @@ export function MCQuizModal({ worksheet, onConfirm, onClose, saving }: Props) {
             onClick={handleConfirm}
             disabled={saving || replacingIdx !== null}
           >
-            {saving ? 'Saving…' : `Save quiz · ${versionCount} version${versionCount !== 1 ? 's' : ''}`}
+            {saving ? 'Saving…' : `Save follow up · ${versionCount} version${versionCount !== 1 ? 's' : ''}`}
           </button>
         </div>
       </div>

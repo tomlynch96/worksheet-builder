@@ -51,6 +51,46 @@ export function useMCQuiz(profileId: string | null) {
     return null
   }
 
+  async function saveFollowUp(
+    title: string,
+    questions: MCQuestion[],
+    questionCount: number,
+    versionCount: number,
+    sourceFile: { path: string; name: string; type: string },
+  ): Promise<MCQuiz | null> {
+    if (!profileId || !isConfigured) return null
+    const row = {
+      profile_id: profileId,
+      worksheet_id: null,
+      title,
+      question_count: questionCount,
+      version_count: versionCount,
+      questions,
+      source_type: 'document' as const,
+      source_file_path: sourceFile.path,
+      source_file_name: sourceFile.name,
+      source_file_type: sourceFile.type,
+    }
+    const { data } = await supabase.from('mc_quizzes').insert(row).select().maybeSingle()
+    if (data) {
+      const quiz = data as MCQuiz
+      setQuizzes(prev => [quiz, ...prev])
+      return quiz
+    }
+    return null
+  }
+
+  async function fetchFollowUps(): Promise<MCQuiz[]> {
+    if (!profileId || !isConfigured) return []
+    const { data } = await supabase
+      .from('mc_quizzes')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('source_type', 'document')
+      .order('created_at', { ascending: false })
+    return (data ?? []) as MCQuiz[]
+  }
+
   async function remove(id: string) {
     if (!isConfigured) return
     await supabase.from('mc_quizzes').delete().eq('id', id)
@@ -77,5 +117,5 @@ export function useMCQuiz(profileId: string | null) {
     return data as QuizScan | null
   }
 
-  return { quizzes, loading, fetchById, save, remove, getByWorksheetId, fetchScans, saveScan }
+  return { quizzes, loading, fetchById, save, saveFollowUp, fetchFollowUps, remove, getByWorksheetId, fetchScans, saveScan }
 }

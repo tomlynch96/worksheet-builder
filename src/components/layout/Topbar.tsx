@@ -44,6 +44,11 @@ export function Topbar({ actions }: TopbarProps) {
             </Link>
           )}
           {profile?.is_admin && (
+            <Link className={`topbar-nav-link${pathname === '/follow-ups' ? ' topbar-nav-link--active' : ''}`} to="/follow-ups">
+              Follow ups
+            </Link>
+          )}
+          {profile?.is_admin && (
             <Link className={`topbar-nav-link topbar-nav-link--admin${pathname === '/admin' ? ' topbar-nav-link--active' : ''}`} to="/admin">
               Admin
             </Link>

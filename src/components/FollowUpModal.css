@@ -1,0 +1,28 @@
+.fu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.fu-title-input,
+.fu-file-input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+}
+
+.fu-title-input:focus {
+  outline: none;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.15);
+}
+
+.fu-file-name {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 4px 0 0;
+}

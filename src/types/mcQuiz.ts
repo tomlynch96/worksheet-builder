@@ -15,11 +15,15 @@ export interface MCQuizVersion {
 export interface MCQuiz {
   id: string
   profile_id: string
-  worksheet_id: string
+  worksheet_id: string | null
   title: string
   question_count: number
   version_count: number
   questions: MCQuestion[]
+  source_type: 'worksheet' | 'document'
+  source_file_path?: string | null
+  source_file_name?: string | null
+  source_file_type?: string | null
   created_at: string
   updated_at: string
 }

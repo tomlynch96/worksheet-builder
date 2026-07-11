@@ -14,6 +14,7 @@ import { PublicLibraryPage } from './pages/PublicLibraryPage'
 import { LibraryPreviewPage } from './pages/LibraryPreviewPage'
 import { SharePreviewPage } from './pages/SharePreviewPage'
 import { AdminPage } from './pages/AdminPage'
+import { FollowUpsPage } from './pages/FollowUpsPage'
 import { SchemesPage } from './pages/SchemesPage'
 import { SchemeEditorPage } from './pages/SchemeEditorPage'
 import { MCQuizPage } from './pages/MCQuizPage'
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/library/:id" element={<AuthGate><LibraryPreviewPage /></AuthGate>} />
           <Route path="/share/:id" element={<SharePreviewPage />} />
           <Route path="/admin" element={<AuthGate><AdminPage /></AuthGate>} />
+          <Route path="/follow-ups" element={<AuthGate><FollowUpsPage /></AuthGate>} />
           <Route path="/schemes" element={<AuthGate><SchemesPage /></AuthGate>} />
           <Route path="/schemes/:id" element={<AuthGate><SchemeEditorPage /></AuthGate>} />
           <Route path="/quiz/:id" element={<AuthGate><MCQuizPage /></AuthGate>} />
