@@ -1,264 +1,204 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import '../components/preview/WorksheetPreview.css'
+import { useState } from 'react'
 import './LandingPage.css'
 
-// ── Timing constants ───────────────────────────────────────────────────────
-const TYPING_SPEED = 26
-const RESULT_DELAY = 450
-const RESULT_HOLD  = 4500
+// ── Example worksheet preview (Animal Cells, pre-seeded from Oak National Academy) ──
+const WORKSHEET_PAGE_COUNT = 9
+const WORKSHEET_PDF_URL = '/example-worksheet/animal-cells.pdf'
+const pageImageUrl = (n: number) => `/example-worksheet/page-${n}.png`
 
-// ── Demo definitions ───────────────────────────────────────────────────────
-const DEMOS = [
-  { prompt: 'Question: students complete a density table and plot a bar chart of their results', label: 'Exam-style question', color: '#4338ca' },
-  { prompt: 'Match them up: the function of different organelles in an animal cell',            label: 'Match them up',      color: '#047857' },
-  { prompt: 'Cloze passage: the effect of temperature on gas pressure — 6 key words',          label: 'Cloze passage',      color: '#b45309' },
-]
-
-// ── Block previews — exact pr- classes, matching actual worksheet preview ──
-
-function DensityDemo() {
-  const rows: [string, string, string][] = [
-    ['Iron', '158', '20'],
-    ['Copper', '178', '20'],
-    ['Aluminium', '54', '20'],
-    ['Lead', '226', '20'],
-  ]
-  // Match PreviewDataBar constants exactly
-  const BAR_W = 440, BAR_H = 280
-  const BAR_ML = 48, BAR_MR = 16, BAR_MT = 16, BAR_MB = 48
-  const BAR_PW = BAR_W - BAR_ML - BAR_MR
-  const BAR_PH = BAR_H - BAR_MT - BAR_MB
-  const yMax = 12
-  const yTicks = [0, 2, 4, 6, 8, 10, 12]
-  const total = rows.length
-  const gap = BAR_PW / total
-  function barY(v: number) { return BAR_MT + BAR_PH - (v / yMax) * BAR_PH }
+function PdfClickThrough() {
+  const [page, setPage] = useState(1)
+  const go = (delta: number) => setPage(p => Math.min(WORKSHEET_PAGE_COUNT, Math.max(1, p + delta)))
 
   return (
-    <div className="demo-preview-content">
-      <div className="pr-question">
-        <div className="pr-question-stem">
-          <span className="pr-q-num">1.</span>
-          <span className="pr-q-text">
-            A student investigates the density of different metals.
-            Complete the results table and use your values to plot a bar chart.
-          </span>
-          <span className="pr-marks">[6 marks]</span>
-        </div>
+    <div className="pdf-preview">
+      <a
+        className="pdf-preview-frame"
+        href={WORKSHEET_PDF_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open the full Animal Cells worksheet PDF in a new tab"
+      >
+        <img
+          src={pageImageUrl(page)}
+          alt={`Animal Cells worksheet — page ${page} of ${WORKSHEET_PAGE_COUNT}`}
+          className="pdf-preview-img"
+        />
+        <span className="pdf-preview-expand">Open full PDF ↗</span>
+      </a>
+
+      <div className="pdf-preview-controls">
+        <button
+          type="button"
+          className="pdf-preview-arrow"
+          onClick={() => go(-1)}
+          disabled={page === 1}
+          aria-label="Previous page"
+        >
+          ‹
+        </button>
+        <span className="pdf-preview-count">Page {page} of {WORKSHEET_PAGE_COUNT}</span>
+        <button
+          type="button"
+          className="pdf-preview-arrow"
+          onClick={() => go(1)}
+          disabled={page === WORKSHEET_PAGE_COUNT}
+          aria-label="Next page"
+        >
+          ›
+        </button>
       </div>
 
-      <div className="pr-data-table">
-        <p className="pr-data-heading">Results table</p>
-        <table className="pr-table">
-          <thead>
-            <tr>
-              <th className="pr-th" style={{ textAlign: 'left' }}>Metal</th>
-              <th className="pr-th">Mass (g)</th>
-              <th className="pr-th">Volume (cm³)</th>
-              <th className="pr-th">Density (g/cm³)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([metal, mass, vol]) => (
-              <tr key={metal}>
-                <td className="pr-td" style={{ textAlign: 'left' }}>{metal}</td>
-                <td className="pr-td">{mass}</td>
-                <td className="pr-td">{vol}</td>
-                <td className="pr-td">&nbsp;</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bar chart — matches PreviewDataBar with no bars (student plots these) */}
-      <div className="pr-data-graph">
-        <svg width={BAR_W} height={BAR_H} className="pr-graph-svg" style={{ maxWidth: '100%' }}>
-          {/* Minor gridlines */}
-          {[1,3,5,7,9,11].map(v => (
-            <line key={v} x1={BAR_ML} y1={barY(v)} x2={BAR_ML + BAR_PW} y2={barY(v)} stroke="#e5e7eb" strokeWidth="0.5" />
-          ))}
-          {/* Major gridlines + y labels */}
-          {yTicks.map(v => (
-            <g key={v}>
-              <line x1={BAR_ML} y1={barY(v)} x2={BAR_ML + BAR_PW} y2={barY(v)} stroke="#d1d5db" strokeWidth="1" />
-              <text x={BAR_ML - 4} y={barY(v) + 3} textAnchor="end" fontSize="9" fill="#374151">{v}</text>
-            </g>
-          ))}
-          {/* Axes */}
-          <line x1={BAR_ML} y1={BAR_MT} x2={BAR_ML} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
-          <line x1={BAR_ML} y1={BAR_MT + BAR_PH} x2={BAR_ML + BAR_PW} y2={BAR_MT + BAR_PH} stroke="#374151" strokeWidth="1.5" />
-          {/* X labels only — no bars */}
-          {rows.map(([metal], i) => {
-            const cx = BAR_ML + gap * i + gap / 2
-            return (
-              <text key={metal} x={cx} y={BAR_MT + BAR_PH + 14} textAnchor="middle" fontSize="9" fill="#374151">{metal}</text>
-            )
-          })}
-          {/* Axis labels */}
-          <text x={BAR_ML + BAR_PW / 2} y={BAR_H - 3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937">Metal</text>
-          <text x={10} y={BAR_MT + BAR_PH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="#1f2937" transform={`rotate(-90, 10, ${BAR_MT + BAR_PH / 2})`}>Density (g/cm³)</text>
-        </svg>
-      </div>
-    </div>
-  )
-}
-
-function MatchDemo() {
-  const terms = ['Nucleus', 'Mitochondria', 'Ribosome', 'Cell membrane', 'Cytoplasm']
-  const defs  = [
-    'Controls what enters and leaves the cell',
-    'Jelly-like fluid where chemical reactions occur',
-    'Contains genetic information; controls the cell',
-    'Where proteins are synthesised',
-    'Site of aerobic respiration; releases energy',
-  ]
-  return (
-    <div className="demo-preview-content pr-match">
-      <div className="pr-question-stem">
-        <span className="pr-q-num">2.</span>
-        <span className="pr-q-text">Draw a line to match each cell structure to its function.</span>
-        <span className="pr-marks">[4 marks]</span>
-      </div>
-      <div className="pr-match-table">
-        <div className="pr-match-col">
-          {terms.map(t => (
-            <div key={t} className="pr-match-cell pr-match-cell--left">{t}</div>
-          ))}
-        </div>
-        <div className="pr-match-gap" />
-        <div className="pr-match-col">
-          {defs.map(d => (
-            <div key={d} className="pr-match-cell pr-match-cell--right">{d}</div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ClozeDemo() {
-  const words = ['increases', 'kinetic energy', 'faster', 'frequently', 'force', 'pressure']
-  return (
-    <div className="demo-preview-content pr-cloze">
-      <div className="pr-question-stem">
-        <span className="pr-q-num">3.</span>
-        <span className="pr-q-text">Complete the passage using the words in the box.</span>
-        <span className="pr-marks">[6 marks]</span>
-      </div>
-      <div className="pr-word-bank">
-        {words.map(w => <span key={w} className="pr-word-bank-word">{w}</span>)}
-      </div>
-      <p className="pr-cloze-text">
-        When the temperature of a gas{' '}
-        <span className="pr-cloze-blank" style={{ width: '6em' }} />
-        {', '}the particles gain more{' '}
-        <span className="pr-cloze-blank" style={{ width: '8em' }} />
-        {'. '}This causes them to move{' '}
-        <span className="pr-cloze-blank" style={{ width: '4em' }} />
-        {' '}and collide with the container walls more{' '}
-        <span className="pr-cloze-blank" style={{ width: '6.5em' }} />
-        {'. '}Each collision exerts a{' '}
-        <span className="pr-cloze-blank" style={{ width: '4em' }} />
-        {' '}on the walls, so the{' '}
-        <span className="pr-cloze-blank" style={{ width: '5em' }} />
-        {' '}also increases.
+      <p className="pdf-preview-credit">
+        Objectives, questions, misconceptions and images seeded from Oak National Academy lesson resources.
       </p>
     </div>
   )
 }
 
-const DEMO_CONTENT = [<DensityDemo />, <MatchDemo />, <ClozeDemo />]
+// ── Philosophy bullets ──────────────────────────────────────────────────────
 
-// ── Typewriter ─────────────────────────────────────────────────────────────
+const PHILOSOPHY_POINTS = [
+  {
+    title: 'Starts super-easy',
+    body: "Most independent practice fails because the class never really settles. Real, silent focus takes a few minutes to build, and any uncertainty about how to start ruins it — so early questions (often a quick recap of key facts) need to be unmissable.",
+  },
+  {
+    title: 'Repeats the same idea, slightly differently',
+    body: "As experts we badly underestimate how much repetition it takes to build fluency. The goal isn't 'until they get it right' — it's 'until they can't get it wrong'.",
+  },
+  {
+    title: 'Builds in complexity',
+    body: "By the end, the same core idea is applied in far harder contexts. Not every pupil gets there — that's fine. It's the only part of the lesson where pupils genuinely work at their own pace.",
+  },
+  {
+    title: 'Keeps scientific skills embedded',
+    body: "AI makes short knowledge questions trivial to generate. That can't come at the expense of graphs and diagrams — the real risk when teachers build their own resources from scratch.",
+  },
+]
 
-function useTypewriter(text: string, speed: number) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (count >= text.length) return
-    const id = setInterval(() => setCount(c => Math.min(c + 1, text.length)), speed)
-    return () => clearInterval(id)
-  }, [text, speed, count])
-  return { typed: text.slice(0, count), done: count >= text.length }
-}
-
-// ── DemoTile — key-based remount keeps state clean per slide ──────────────
-
-function DemoTile({ demo, onComplete }: { demo: typeof DEMOS[number]; onComplete: () => void }) {
-  const [phase, setPhase] = useState<'typing' | 'result'>('typing')
-  const { typed, done } = useTypewriter(demo.prompt, TYPING_SPEED)
-  const onCompleteRef = useRef(onComplete)
-  onCompleteRef.current = onComplete
-
-  useEffect(() => {
-    if (!done || phase !== 'typing') return
-    const t = setTimeout(() => setPhase('result'), RESULT_DELAY)
-    return () => clearTimeout(t)
-  }, [done, phase])
-
-  useEffect(() => {
-    if (phase !== 'result') return
-    const t = setTimeout(() => onCompleteRef.current(), RESULT_HOLD)
-    return () => clearTimeout(t)
-  }, [phase])
-
-  const idx = DEMOS.indexOf(demo)
-
+function PhilosophySummary() {
   return (
-    <div className="demo-tile">
-      <div className="demo-prompt-area" style={{ '--demo-color': demo.color } as React.CSSProperties}>
-        <div className="demo-prompt-header">
-          <span className="demo-prompt-icon">✦</span>
-          <span className="demo-prompt-label">{demo.label}</span>
-        </div>
-        <p className="demo-prompt-text">
-          {typed}
-          <span className={`demo-cursor${done ? ' demo-cursor--hidden' : ''}`}>|</span>
-        </p>
-      </div>
-      <div className={`demo-result-area${phase === 'result' ? ' demo-result-area--visible' : ''}`}>
-        {DEMO_CONTENT[idx]}
-      </div>
-    </div>
-  )
-}
+    <div className="philosophy">
+      <h2 className="philosophy-title">Why these worksheets look the way they do</h2>
+      <p className="philosophy-intro">
+        The most impactful change in my teaching recently has been giving classes way more time to
+        practise independently. The hard part is finding resources that make that time actually work —
+        here's what I look for:
+      </p>
 
-// ── Carousel ───────────────────────────────────────────────────────────────
-
-function DemoCarousel() {
-  const [slide, setSlide] = useState(0)
-  const advance = useCallback(() => setSlide(s => (s + 1) % DEMOS.length), [])
-  return (
-    <div className="demo-carousel">
-      <DemoTile key={slide} demo={DEMOS[slide]} onComplete={advance} />
-      <div className="demo-dots">
-        {DEMOS.map((_, i) => (
-          <button
-            key={i}
-            className={`demo-dot${i === slide ? ' demo-dot--active' : ''}`}
-            onClick={() => setSlide(i)}
-            aria-label={`Demo ${i + 1}`}
-          />
+      <ul className="philosophy-list">
+        {PHILOSOPHY_POINTS.map(point => (
+          <li key={point.title} className="philosophy-item">
+            <span className="philosophy-item-title">{point.title}</span>
+            <span className="philosophy-item-body">{point.body}</span>
+          </li>
         ))}
-      </div>
+      </ul>
+
+      <p className="philosophy-note">
+        Reasonable pushback: "sounds great, but where does the lesson time come from?" I'm still
+        working through that properly — more on it soon.
+      </p>
+
+      <a className="landing-cta" href="/onboarding">Try it now</a>
+      <p className="landing-cta-note">Help shape what this project becomes</p>
     </div>
   )
 }
 
-// ── Landing page ───────────────────────────────────────────────────────────
+// ── Worksheet → Bubble sheet illustration ───────────────────────────────────
+
+function WorksheetToBubbleSheet() {
+  const worksheetLines = [0.9, 0.65, 0.8, 0.4]
+  const bubbleRows = 5
+  const bubbleCols = 4 // A, B, C, D
+  const answerKey = [1, 3, 0, 2, 1] // filled column index per row
+
+  return (
+    <svg viewBox="0 0 640 260" className="mcq-svg" role="img" aria-labelledby="mcqSvgTitle">
+      <title id="mcqSvgTitle">A worksheet transforming into a bubble-sheet multiple choice test</title>
+
+      {/* Worksheet card */}
+      <g transform="translate(20, 20)">
+        <rect width="180" height="220" rx="10" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
+        <rect x="16" y="16" width="148" height="10" rx="3" fill="#111827" />
+        <rect x="16" y="34" width="90" height="7" rx="3" fill="#9ca3af" />
+
+        {worksheetLines.map((w, i) => (
+          <rect key={i} x="16" y={58 + i * 16} width={148 * w} height="6" rx="3" fill="#d1d5db" />
+        ))}
+
+        {/* tiny graph, nodding to the graph-skills emphasis */}
+        <g transform="translate(16, 138)">
+          <line x1="0" y1="60" x2="0" y2="0" stroke="#9ca3af" strokeWidth="2" />
+          <line x1="0" y1="60" x2="110" y2="60" stroke="#9ca3af" strokeWidth="2" />
+          <polyline points="10,50 35,30 60,38 85,12 105,20" fill="none" stroke="#4f46e5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      </g>
+
+      {/* Arrow */}
+      <g transform="translate(228, 118)">
+        <line x1="0" y1="12" x2="164" y2="12" stroke="#c7d2fe" strokeWidth="3" strokeDasharray="7 7" />
+        <path d="M156 2 L172 12 L156 22 Z" fill="#4f46e5" />
+        <text x="82" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#4f46e5" letterSpacing="0.04em">
+          AUTO-GENERATED
+        </text>
+      </g>
+
+      {/* Bubble sheet card */}
+      <g transform="translate(440, 20)">
+        <rect width="180" height="220" rx="10" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
+        <rect x="16" y="16" width="110" height="10" rx="3" fill="#111827" />
+        <rect x="16" y="34" width="70" height="7" rx="3" fill="#9ca3af" />
+
+        {/* barcode-style ID strip */}
+        {[...Array(14)].map((_, i) => (
+          <rect key={i} x={140 + i * 2.4} y="14" width="1.3" height="22" fill="#d1d5db" />
+        ))}
+
+        {/* column headers A B C D */}
+        {['A', 'B', 'C', 'D'].map((label, c) => (
+          <text
+            key={label}
+            x={100 + c * 20}
+            y="56"
+            textAnchor="middle"
+            fontSize="9"
+            fontWeight="700"
+            fill="#6b7280"
+          >
+            {label}
+          </text>
+        ))}
+
+        {[...Array(bubbleRows)].map((_, r) => (
+          <g key={r}>
+            <text x="16" y={72 + r * 26} fontSize="9" fill="#6b7280">{r + 1}</text>
+            {[...Array(bubbleCols)].map((_, c) => {
+              const filled = answerKey[r] === c
+              return (
+                <circle
+                  key={c}
+                  cx={100 + c * 20}
+                  cy={68 + r * 26}
+                  r="6.5"
+                  fill={filled ? '#4f46e5' : '#fff'}
+                  stroke={filled ? '#4f46e5' : '#d1d5db'}
+                  strokeWidth="1.6"
+                />
+              )
+            })}
+          </g>
+        ))}
+      </g>
+    </svg>
+  )
+}
+
+// ── Landing page ─────────────────────────────────────────────────────────────
 
 export function LandingPage() {
-  const [hazeOpacity, setHazeOpacity] = useState(1)
-
-  useEffect(() => {
-    const onScroll = () => {
-      const ratio = Math.min(1, window.scrollY / (window.innerHeight * 0.6))
-      setHazeOpacity(1 - ratio)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
     <div className="landing">
 
@@ -267,25 +207,7 @@ export function LandingPage() {
         <a className="landing-nav-cta" href="/onboarding">Log in / Sign up</a>
       </nav>
 
-      {/* ── Hero: full-viewport video only ── */}
-      <section className="landing-hero">
-        <video className="landing-video" autoPlay muted loop playsInline src="/intro.mp4" />
-        {/* Purple-blue tint that fades as the user scrolls */}
-        <div className="landing-hero-haze" style={{ opacity: hazeOpacity }} />
-        {/* Gradient blends video into white below */}
-        <div className="landing-hero-fade" />
-        {/* Scroll hint sits in the fade zone — dark text against the whitening gradient */}
-        <a className="landing-scroll-hint" href="#tagline" aria-label="Scroll down">
-          <span className="landing-scroll-label">See it in action</span>
-          <div className="landing-scroll-arrow">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-        </a>
-      </section>
-
-      {/* ── Tagline: headline + sub on white ── */}
+      {/* ── Headline ── */}
       <section className="landing-tagline-section" id="tagline">
         <h1 className="landing-tagline-title">
           Paper-based teaching,<br />powered by AI.
@@ -295,22 +217,51 @@ export function LandingPage() {
         </p>
       </section>
 
-      {/* ── Demo carousel ── */}
-      <section className="landing-demo" id="demo">
-        <div className="landing-demo-head">
-          <h2 className="landing-demo-title">You do the thinking, AI does the leg-work</h2>
-          <p className="landing-demo-sub">
-            Describe what you need. Get exam-aligned questions, data tables, graphs, cloze passages, and mark schemes — ready to print.
-          </p>
-        </div>
+      {/* ── Example worksheet + philosophy, side by side ── */}
+      <section className="landing-showcase">
+        <PdfClickThrough />
+        <PhilosophySummary />
+      </section>
 
-        <DemoCarousel />
+      {/* ── Worksheet → bubble sheet feature ── */}
+      <section className="landing-mcq">
+        <WorksheetToBubbleSheet />
+        <h2 className="landing-mcq-title">From worksheet to bubble sheet</h2>
+        <p className="landing-mcq-body">
+          Once a class has practised a topic on paper, turn that same content into a personalised
+          multiple-choice test — questions and options shuffled per student, so every pupil gets a
+          different answer key. Auto-markable, low-effort, and hard to cheat on. Still in development,
+          but coming to every scheme of work.
+        </p>
+        <a className="landing-cta" href="/onboarding">Join the initial trial</a>
+      </section>
 
-        <div className="landing-cta-wrap">
-          <a className="landing-cta" href="/onboarding">
-            Join the initial trial
-          </a>
-          <p className="landing-cta-note">Help shape what this project becomes</p>
+      {/* ── Videos ── */}
+      <section className="landing-videos">
+        <h2 className="landing-videos-title">See it in action</h2>
+        <div className="landing-videos-grid">
+          <div className="landing-video-card">
+            <div className="landing-video-embed">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/kN-pWBYZXjs"
+                title="Graph features"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <h3 className="landing-video-card-title">Graph features</h3>
+          </div>
+          <div className="landing-video-card">
+            <div className="landing-video-embed">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/aO1_hZk5_dE"
+                title="Follow-up quizzes"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <h3 className="landing-video-card-title">Follow-up quizzes</h3>
+          </div>
         </div>
       </section>
 
