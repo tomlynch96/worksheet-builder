@@ -200,10 +200,20 @@ export function LandingPage() {
   return (
     <div className="landing">
 
-      {/* ── Nav: just the log in / sign up link ── */}
-      <nav className="landing-nav">
-        <a className="landing-nav-cta" href="/onboarding">Log in / Sign up</a>
-      </nav>
+      {/* ── Top bar ── */}
+      <header className="landing-topbar">
+        <a href="#tagline" className="landing-topbar-brand">
+          <span className="landing-topbar-logo-clip">
+            <img src="/logo.svg" className="landing-topbar-logo" alt="The Worksheet Project" />
+          </span>
+        </a>
+        <nav className="landing-topbar-nav">
+          <a className="landing-topbar-link" href="#example">Example worksheet</a>
+          <a className="landing-topbar-link" href="#features">Features</a>
+          <a className="landing-topbar-link" href="#videos">Videos</a>
+        </nav>
+        <a className="landing-topbar-cta" href="/onboarding">Log in / Sign up</a>
+      </header>
 
       {/* ── Hero: huge logo, headline beside it ── */}
       <section className="landing-hero" id="tagline">
@@ -221,13 +231,13 @@ export function LandingPage() {
       </section>
 
       {/* ── Example worksheet + philosophy, side by side ── */}
-      <section className="landing-showcase">
+      <section className="landing-showcase" id="example">
         <PdfClickThrough />
         <PhilosophySummary />
       </section>
 
       {/* ── Worksheet → bubble sheet feature ── */}
-      <section className="landing-mcq">
+      <section className="landing-mcq" id="features">
         <WorksheetToBubbleSheet />
         <h2 className="landing-mcq-title">From worksheet to bubble sheet</h2>
         <p className="landing-mcq-body">
@@ -240,7 +250,7 @@ export function LandingPage() {
       </section>
 
       {/* ── Videos ── */}
-      <section className="landing-videos">
+      <section className="landing-videos" id="videos">
         <h2 className="landing-videos-title">See it in action</h2>
         <div className="landing-videos-grid">
           <div className="landing-video-card">

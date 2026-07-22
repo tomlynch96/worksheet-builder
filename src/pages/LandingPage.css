@@ -4,34 +4,90 @@
   font-family: system-ui, -apple-system, sans-serif;
 }
 
+.landing-hero,
+.landing-showcase,
+.landing-mcq,
+.landing-videos {
+  scroll-margin-top: 68px;
+}
+
 /* ════════════════════════════════════════════
-   Nav: slim, just the log in / sign up link
+   Top bar
 ════════════════════════════════════════════ */
-.landing-nav {
+.landing-topbar {
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 68px;
   display: flex;
-  justify-content: flex-end;
-  padding: 18px 28px;
-  background: rgba(255, 255, 255, 0.85);
+  align-items: center;
+  gap: 32px;
+  padding: 0 28px;
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(6px);
+  border-bottom: 1px solid #eef0f4;
 }
 
-.landing-nav-cta {
+.landing-topbar-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.landing-topbar-logo-clip {
+  height: 40px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.landing-topbar-logo {
+  height: calc(40px / 0.6);
+  display: block;
+}
+
+.landing-topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-right: auto;
+}
+
+.landing-topbar-link {
   font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.landing-topbar-link:hover {
+  color: #4f46e5;
+}
+
+.landing-topbar-cta {
+  font-size: 13px;
   font-weight: 600;
   color: #fff;
   text-decoration: none;
   background: #4f46e5;
   border: 1px solid #4f46e5;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 8px;
   transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
 }
-.landing-nav-cta:hover {
+.landing-topbar-cta:hover {
   background: #4338ca;
   border-color: #4338ca;
+}
+
+@media (max-width: 640px) {
+  .landing-topbar-nav {
+    display: none;
+  }
+  .landing-topbar {
+    justify-content: space-between;
+  }
 }
 
 /* ════════════════════════════════════════════
