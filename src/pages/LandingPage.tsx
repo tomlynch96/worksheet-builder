@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import '../components/layout/Topbar.css'
 import './LandingPage.css'
 
 // ── Example worksheet preview (Animal Cells, pre-seeded from Oak National Academy) ──
@@ -194,32 +195,188 @@ function WorksheetToBubbleSheet() {
   )
 }
 
+// ── Prompt → worksheet → bubble sheet flow (animates once, then stays static) ──
+
+function PromptPanel() {
+  return (
+    <svg viewBox="0 0 200 190" className="flow-svg" role="img" aria-label="A teacher typing a prompt describing the worksheet they need">
+      <rect x="4" y="4" width="192" height="182" rx="12" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
+      <circle className="flow-fade" cx="28" cy="30" r="10" fill="#4f46e5" style={{ animationDelay: '0.1s' }} />
+      <text className="flow-fade" x="28" y="34" textAnchor="middle" fontSize="12" fill="#fff" style={{ animationDelay: '0.1s' }}>✦</text>
+      <text className="flow-fade" x="46" y="34" fontSize="9" fontWeight="700" fill="#4338ca" letterSpacing="0.05em" style={{ animationDelay: '0.2s' }}>
+        YOUR PROMPT
+      </text>
+
+      <text className="flow-fade" x="24" y="66" fontSize="11" fontStyle="italic" fill="#374151" style={{ animationDelay: '0.4s' }}>
+        Worksheet on animal cells,
+      </text>
+      <text className="flow-fade" x="24" y="84" fontSize="11" fontStyle="italic" fill="#374151" style={{ animationDelay: '0.62s' }}>
+        Year 8, starting easy and
+      </text>
+      <text className="flow-fade" x="24" y="102" fontSize="11" fontStyle="italic" fill="#374151" style={{ animationDelay: '0.84s' }}>
+        building to harder questions.
+      </text>
+
+      <rect className="flow-cursor" x="184" y="91" width="2.4" height="13" fill="#4f46e5" style={{ animationDelay: '1.05s, 1.35s' }} />
+    </svg>
+  )
+}
+
+function WorksheetPanel() {
+  const lines = [0.85, 0.6, 0.75, 0.4]
+  return (
+    <svg viewBox="0 0 200 190" className="flow-svg" role="img" aria-label="A print-ready worksheet being generated">
+      <rect x="4" y="4" width="192" height="182" rx="12" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
+      <rect className="flow-fade" x="20" y="22" width="130" height="10" rx="3" fill="#111827" style={{ animationDelay: '1.6s' }} />
+      <rect className="flow-fade" x="20" y="40" width="80" height="7" rx="3" fill="#9ca3af" style={{ animationDelay: '1.75s' }} />
+      {lines.map((w, i) => (
+        <rect
+          key={i}
+          className="flow-fade"
+          x="20"
+          y={62 + i * 15}
+          width={152 * w}
+          height="6"
+          rx="3"
+          fill="#d1d5db"
+          style={{ animationDelay: `${1.9 + i * 0.13}s` }}
+        />
+      ))}
+      <g transform="translate(20, 132)">
+        <line className="flow-fade" x1="0" y1="40" x2="0" y2="0" stroke="#9ca3af" strokeWidth="2" style={{ animationDelay: '2.5s' }} />
+        <line className="flow-fade" x1="0" y1="40" x2="130" y2="40" stroke="#9ca3af" strokeWidth="2" style={{ animationDelay: '2.5s' }} />
+        <polyline
+          className="flow-draw-el"
+          points="12,32 38,16 64,22 92,6 118,14"
+          fill="none"
+          stroke="#4f46e5"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ animationDelay: '2.65s' }}
+        />
+      </g>
+    </svg>
+  )
+}
+
+function BubbleSheetPanel() {
+  const answerKey = [1, 3, 0, 2, 1]
+  return (
+    <svg viewBox="0 0 200 190" className="flow-svg" role="img" aria-label="The worksheet becoming an auto-markable bubble sheet">
+      <rect x="4" y="4" width="192" height="182" rx="12" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
+      <rect className="flow-fade" x="20" y="22" width="100" height="10" rx="3" fill="#111827" style={{ animationDelay: '3.4s' }} />
+      {[...Array(12)].map((_, i) => (
+        <rect key={i} className="flow-fade" x={140 + i * 3.6} y="18" width="1.8" height="18" fill="#d1d5db" style={{ animationDelay: '3.4s' }} />
+      ))}
+      {['A', 'B', 'C', 'D'].map((label, c) => (
+        <text key={label} className="flow-fade" x={92 + c * 20} y="50" textAnchor="middle" fontSize="9" fontWeight="700" fill="#6b7280" style={{ animationDelay: '3.5s' }}>
+          {label}
+        </text>
+      ))}
+      {answerKey.map((filledCol, r) => (
+        <g key={r}>
+          <text className="flow-fade" x="20" y={68 + r * 26} fontSize="9" fill="#6b7280" style={{ animationDelay: '3.5s' }}>{r + 1}</text>
+          {[0, 1, 2, 3].map(c => {
+            const filled = c === filledCol
+            return filled ? (
+              <circle
+                key={c}
+                className="flow-pop-el"
+                cx={92 + c * 20}
+                cy={64 + r * 26}
+                r="6.5"
+                fill="#4f46e5"
+                stroke="#4f46e5"
+                strokeWidth="1.6"
+                style={{ animationDelay: `${3.7 + r * 0.14}s` }}
+              />
+            ) : (
+              <circle key={c} cx={92 + c * 20} cy={64 + r * 26} r="6.5" fill="#fff" stroke="#d1d5db" strokeWidth="1.6" />
+            )
+          })}
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function FlowArrow({ delay }: { delay: number }) {
+  return (
+    <div className="flow-arrow" aria-hidden="true">
+      <svg viewBox="0 0 60 24" className="flow-arrow-svg">
+        <line className="flow-draw-el" x1="2" y1="12" x2="44" y2="12" stroke="#c7d2fe" strokeWidth="3" style={{ animationDelay: `${delay}s` }} />
+        <path className="flow-fade" d="M38 4 L54 12 L38 20 Z" fill="#4f46e5" style={{ animationDelay: `${delay + 0.15}s` }} />
+      </svg>
+    </div>
+  )
+}
+
+function PromptToBubbleSheetFlow() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [played, setPlayed] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setPlayed(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className={`flow${played ? ' flow--played' : ''}`}>
+      <div className="flow-step">
+        <PromptPanel />
+        <p className="flow-step-title">Describe what you need</p>
+      </div>
+      <FlowArrow delay={1.35} />
+      <div className="flow-step">
+        <WorksheetPanel />
+        <p className="flow-step-title">Get a print-ready worksheet</p>
+      </div>
+      <FlowArrow delay={3.2} />
+      <div className="flow-step">
+        <BubbleSheetPanel />
+        <p className="flow-step-title">Auto-mark with a bubble sheet</p>
+      </div>
+    </div>
+  )
+}
+
 // ── Landing page ─────────────────────────────────────────────────────────────
 
 export function LandingPage() {
   return (
-    <div className="landing">
+    <div className="landing" id="top">
 
-      {/* ── Top bar ── */}
-      <header className="landing-topbar">
-        <a href="#tagline" className="landing-topbar-brand">
-          <span className="landing-topbar-logo-clip">
-            <img src="/logo.svg" className="landing-topbar-logo" alt="The Worksheet Project" />
+      {/* ── Top bar: same as the main app's topbar, different links ── */}
+      <header className="topbar">
+        <a href="#top" className="topbar-brand">
+          <span className="topbar-logo-clip">
+            <img src="/logo.svg" className="topbar-logo" alt="The Worksheet Project" />
           </span>
         </a>
-        <nav className="landing-topbar-nav">
-          <a className="landing-topbar-link" href="#example">Example worksheet</a>
-          <a className="landing-topbar-link" href="#features">Features</a>
-          <a className="landing-topbar-link" href="#videos">Videos</a>
+        <nav className="topbar-nav">
+          <a className="topbar-nav-link" href="#example">Example worksheet</a>
+          <a className="topbar-nav-link" href="#features">Features</a>
+          <a className="topbar-nav-link" href="#videos">Videos</a>
         </nav>
-        <a className="landing-topbar-cta" href="/onboarding">Log in / Sign up</a>
+        <div className="topbar-right">
+          <a className="btn-download" href="/onboarding">Log in / Sign up</a>
+        </div>
       </header>
 
-      {/* ── Hero: huge logo, headline beside it ── */}
+      {/* ── Hero: dusty purple gradient, headline only ── */}
       <section className="landing-hero" id="tagline">
-        <div className="landing-logo-clip">
-          <img src="/logo.svg" className="landing-logo-img" alt="The Worksheet Project" />
-        </div>
         <div className="landing-hero-copy">
           <h1 className="landing-tagline-title">
             Paper-based teaching,<br />powered by AI.
@@ -228,6 +385,11 @@ export function LandingPage() {
             The AI worksheet platform that improves with every teacher who uses it.
           </p>
         </div>
+      </section>
+
+      {/* ── Prompt → worksheet → bubble sheet flow ── */}
+      <section className="landing-flow">
+        <PromptToBubbleSheetFlow />
       </section>
 
       {/* ── Example worksheet + philosophy, side by side ── */}
