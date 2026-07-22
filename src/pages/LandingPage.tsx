@@ -82,9 +82,7 @@ function PhilosophySummary() {
     <div className="philosophy">
       <h2 className="philosophy-title">Why these worksheets look the way they do</h2>
       <p className="philosophy-intro">
-        The most impactful change in my teaching recently has been giving classes way more time to
-        practise independently. The hard part is finding resources that make that time actually work —
-        here's what I look for:
+        What does a good worksheet look like? This didn't use to exist, but with AI — now it can.
       </p>
 
       <ul className="philosophy-list">
@@ -202,20 +200,23 @@ export function LandingPage() {
   return (
     <div className="landing">
 
-      {/* ── Nav ── */}
-      <nav className="landing-nav">
+      {/* ── Header: big logo, headline beside it, log in to the right ── */}
+      <header className="landing-header" id="tagline">
+        <div className="landing-header-brand">
+          <div className="landing-logo-clip">
+            <img src="/logo.svg" className="landing-logo-img" alt="The Worksheet Project" />
+          </div>
+          <div className="landing-header-copy">
+            <h1 className="landing-tagline-title">
+              Paper-based teaching,<br />powered by AI.
+            </h1>
+            <p className="landing-tagline-sub">
+              The AI worksheet platform that improves with every teacher who uses it.
+            </p>
+          </div>
+        </div>
         <a className="landing-nav-cta" href="/onboarding">Log in / Sign up</a>
-      </nav>
-
-      {/* ── Headline ── */}
-      <section className="landing-tagline-section" id="tagline">
-        <h1 className="landing-tagline-title">
-          Paper-based teaching,<br />powered by AI.
-        </h1>
-        <p className="landing-tagline-sub">
-          The AI worksheet platform that improves with every teacher who uses it.
-        </p>
-      </section>
+      </header>
 
       {/* ── Example worksheet + philosophy, side by side ── */}
       <section className="landing-showcase">
