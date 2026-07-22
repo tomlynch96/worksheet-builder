@@ -5,63 +5,17 @@
 }
 
 /* ════════════════════════════════════════════
-   Header: big logo, headline beside it, log in on the right
+   Nav: slim, just the log in / sign up link
 ════════════════════════════════════════════ */
-.landing-header {
+.landing-nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: flex-end;
+  padding: 18px 28px;
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(6px);
-  padding: 16px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.landing-header-brand {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.landing-logo-clip {
-  height: 84px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.landing-logo-img {
-  height: calc(84px / 0.6);
-  display: block;
-}
-
-.landing-header-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.landing-tagline-title {
-  font-family: 'Aileron', system-ui, sans-serif;
-  font-size: clamp(20px, 2.6vw, 30px);
-  font-weight: 800;
-  color: #111827;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.landing-tagline-sub {
-  font-size: clamp(13px, 1.3vw, 15px);
-  color: #6b7280;
-  line-height: 1.5;
-  margin: 0;
 }
 
 .landing-nav-cta {
@@ -74,21 +28,77 @@
   padding: 8px 18px;
   border-radius: 8px;
   transition: background 0.15s, border-color 0.15s;
-  flex-shrink: 0;
 }
 .landing-nav-cta:hover {
   background: #4338ca;
   border-color: #4338ca;
 }
 
+/* ════════════════════════════════════════════
+   Hero: huge logo, headline beside it
+════════════════════════════════════════════ */
+.landing-hero {
+  background: #fff;
+  padding: 48px 24px 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.landing-logo-clip {
+  height: 220px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.landing-logo-img {
+  height: calc(220px / 0.6);
+  display: block;
+}
+
+.landing-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 460px;
+}
+
+.landing-tagline-title {
+  font-family: 'Aileron', system-ui, sans-serif;
+  font-size: clamp(32px, 4.5vw, 52px);
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.landing-tagline-sub {
+  font-size: clamp(15px, 1.6vw, 18px);
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
 @media (max-width: 640px) {
-  .landing-header {
-    justify-content: center;
-    text-align: center;
-  }
-  .landing-header-brand {
+  .landing-hero {
     flex-direction: column;
     text-align: center;
+    padding: 32px 24px 56px;
+  }
+  .landing-logo-clip {
+    height: 160px;
+  }
+  .landing-logo-img {
+    height: calc(160px / 0.6);
+  }
+  .landing-hero-copy {
+    align-items: center;
   }
 }
 

@@ -200,23 +200,25 @@ export function LandingPage() {
   return (
     <div className="landing">
 
-      {/* ── Header: big logo, headline beside it, log in to the right ── */}
-      <header className="landing-header" id="tagline">
-        <div className="landing-header-brand">
-          <div className="landing-logo-clip">
-            <img src="/logo.svg" className="landing-logo-img" alt="The Worksheet Project" />
-          </div>
-          <div className="landing-header-copy">
-            <h1 className="landing-tagline-title">
-              Paper-based teaching,<br />powered by AI.
-            </h1>
-            <p className="landing-tagline-sub">
-              The AI worksheet platform that improves with every teacher who uses it.
-            </p>
-          </div>
-        </div>
+      {/* ── Nav: just the log in / sign up link ── */}
+      <nav className="landing-nav">
         <a className="landing-nav-cta" href="/onboarding">Log in / Sign up</a>
-      </header>
+      </nav>
+
+      {/* ── Hero: huge logo, headline beside it ── */}
+      <section className="landing-hero" id="tagline">
+        <div className="landing-logo-clip">
+          <img src="/logo.svg" className="landing-logo-img" alt="The Worksheet Project" />
+        </div>
+        <div className="landing-hero-copy">
+          <h1 className="landing-tagline-title">
+            Paper-based teaching,<br />powered by AI.
+          </h1>
+          <p className="landing-tagline-sub">
+            The AI worksheet platform that improves with every teacher who uses it.
+          </p>
+        </div>
+      </section>
 
       {/* ── Example worksheet + philosophy, side by side ── */}
       <section className="landing-showcase">
