@@ -6,7 +6,6 @@
 
 .landing-hero,
 .landing-showcase,
-.landing-mcq,
 .landing-videos {
   scroll-margin-top: 88px;
 }
@@ -15,20 +14,47 @@
    so colour, height and logo treatment match exactly — only the links differ. */
 
 /* ════════════════════════════════════════════
-   Hero: dusty purple gradient, headline only
+   Hero: faint violet glow, fading to white on the way down
+   (violet-600/300/200 — the same "AI feature" purple used for
+   .btn-topbar--ai, editor AI accents and spec badges elsewhere in the app)
 ════════════════════════════════════════════ */
 .landing-hero {
-  background:
-    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.55), transparent 60%),
-    linear-gradient(150deg, #f3eff9 0%, #ddccec 50%, #b99cce 100%);
-  padding: 88px 24px 96px;
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+  padding: 96px 24px 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
 }
 
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 640px 380px at 18% 0%, rgba(124, 58, 237, 0.14), transparent 65%),
+    radial-gradient(ellipse 560px 360px at 88% 8%, rgba(196, 181, 253, 0.32), transparent 62%),
+    radial-gradient(ellipse 820px 460px at 50% -15%, rgba(221, 214, 254, 0.55), transparent 70%);
+  pointer-events: none;
+}
+
+/* Fades the glow into the white section below as you scroll past it */
+.landing-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  background: linear-gradient(to bottom, transparent, #fff);
+  pointer-events: none;
+}
+
 .landing-hero-copy {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -365,42 +391,6 @@
 }
 
 /* ════════════════════════════════════════════
-   Worksheet → bubble sheet feature
-════════════════════════════════════════════ */
-.landing-mcq {
-  background: #fff;
-  padding: 88px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  text-align: center;
-}
-
-.mcq-svg {
-  width: 100%;
-  max-width: 640px;
-  height: auto;
-}
-
-.landing-mcq-title {
-  font-family: 'Aileron', system-ui, sans-serif;
-  font-size: clamp(22px, 3vw, 32px);
-  font-weight: 800;
-  color: #111827;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.landing-mcq-body {
-  font-size: 15px;
-  color: #6b7280;
-  line-height: 1.65;
-  max-width: 560px;
-  margin: 0;
-}
-
-/* ════════════════════════════════════════════
    Videos
 ════════════════════════════════════════════ */
 .landing-videos {
@@ -486,10 +476,6 @@
 .landing-cta:hover {
   background: #4338ca;
   transform: translateY(-1px);
-}
-
-.landing-mcq .landing-cta {
-  align-self: center;
 }
 
 .landing-cta-note {

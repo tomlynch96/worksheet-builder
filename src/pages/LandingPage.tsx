@@ -106,95 +106,6 @@ function PhilosophySummary() {
   )
 }
 
-// ── Worksheet → Bubble sheet illustration ───────────────────────────────────
-
-function WorksheetToBubbleSheet() {
-  const worksheetLines = [0.9, 0.65, 0.8, 0.4]
-  const bubbleRows = 5
-  const bubbleCols = 4 // A, B, C, D
-  const answerKey = [1, 3, 0, 2, 1] // filled column index per row
-
-  return (
-    <svg viewBox="0 0 640 260" className="mcq-svg" role="img" aria-labelledby="mcqSvgTitle">
-      <title id="mcqSvgTitle">A worksheet transforming into a bubble-sheet multiple choice test</title>
-
-      {/* Worksheet card */}
-      <g transform="translate(20, 20)">
-        <rect width="180" height="220" rx="10" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
-        <rect x="16" y="16" width="148" height="10" rx="3" fill="#111827" />
-        <rect x="16" y="34" width="90" height="7" rx="3" fill="#9ca3af" />
-
-        {worksheetLines.map((w, i) => (
-          <rect key={i} x="16" y={58 + i * 16} width={148 * w} height="6" rx="3" fill="#d1d5db" />
-        ))}
-
-        {/* tiny graph, nodding to the graph-skills emphasis */}
-        <g transform="translate(16, 138)">
-          <line x1="0" y1="60" x2="0" y2="0" stroke="#9ca3af" strokeWidth="2" />
-          <line x1="0" y1="60" x2="110" y2="60" stroke="#9ca3af" strokeWidth="2" />
-          <polyline points="10,50 35,30 60,38 85,12 105,20" fill="none" stroke="#4f46e5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-      </g>
-
-      {/* Arrow */}
-      <g transform="translate(228, 118)">
-        <line x1="0" y1="12" x2="164" y2="12" stroke="#c7d2fe" strokeWidth="3" strokeDasharray="7 7" />
-        <path d="M156 2 L172 12 L156 22 Z" fill="#4f46e5" />
-        <text x="82" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#4f46e5" letterSpacing="0.04em">
-          AUTO-GENERATED
-        </text>
-      </g>
-
-      {/* Bubble sheet card */}
-      <g transform="translate(440, 20)">
-        <rect width="180" height="220" rx="10" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
-        <rect x="16" y="16" width="110" height="10" rx="3" fill="#111827" />
-        <rect x="16" y="34" width="70" height="7" rx="3" fill="#9ca3af" />
-
-        {/* barcode-style ID strip */}
-        {[...Array(14)].map((_, i) => (
-          <rect key={i} x={140 + i * 2.4} y="14" width="1.3" height="22" fill="#d1d5db" />
-        ))}
-
-        {/* column headers A B C D */}
-        {['A', 'B', 'C', 'D'].map((label, c) => (
-          <text
-            key={label}
-            x={100 + c * 20}
-            y="56"
-            textAnchor="middle"
-            fontSize="9"
-            fontWeight="700"
-            fill="#6b7280"
-          >
-            {label}
-          </text>
-        ))}
-
-        {[...Array(bubbleRows)].map((_, r) => (
-          <g key={r}>
-            <text x="16" y={72 + r * 26} fontSize="9" fill="#6b7280">{r + 1}</text>
-            {[...Array(bubbleCols)].map((_, c) => {
-              const filled = answerKey[r] === c
-              return (
-                <circle
-                  key={c}
-                  cx={100 + c * 20}
-                  cy={68 + r * 26}
-                  r="6.5"
-                  fill={filled ? '#4f46e5' : '#fff'}
-                  stroke={filled ? '#4f46e5' : '#d1d5db'}
-                  strokeWidth="1.6"
-                />
-              )
-            })}
-          </g>
-        ))}
-      </g>
-    </svg>
-  )
-}
-
 // ── Prompt → worksheet → bubble sheet flow (animates once, then stays static) ──
 
 function PromptPanel() {
@@ -388,7 +299,7 @@ export function LandingPage() {
       </section>
 
       {/* ── Prompt → worksheet → bubble sheet flow ── */}
-      <section className="landing-flow">
+      <section className="landing-flow" id="features">
         <PromptToBubbleSheetFlow />
       </section>
 
@@ -396,19 +307,6 @@ export function LandingPage() {
       <section className="landing-showcase" id="example">
         <PdfClickThrough />
         <PhilosophySummary />
-      </section>
-
-      {/* ── Worksheet → bubble sheet feature ── */}
-      <section className="landing-mcq" id="features">
-        <WorksheetToBubbleSheet />
-        <h2 className="landing-mcq-title">From worksheet to bubble sheet</h2>
-        <p className="landing-mcq-body">
-          Once a class has practised a topic on paper, turn that same content into a personalised
-          multiple-choice test — questions and options shuffled per student, so every pupil gets a
-          different answer key. Auto-markable, low-effort, and hard to cheat on. Still in development,
-          but coming to every scheme of work.
-        </p>
-        <a className="landing-cta" href="/onboarding">Join the initial trial</a>
       </section>
 
       {/* ── Videos ── */}
