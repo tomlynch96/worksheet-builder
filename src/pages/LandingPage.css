@@ -20,6 +20,7 @@
 ════════════════════════════════════════════ */
 .landing-hero {
   position: relative;
+  min-height: calc(100vh - 88px);
   background: #fff url('/Background.svg') no-repeat center center;
   background-size: cover;
   overflow: hidden;
@@ -28,6 +29,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .landing-hero::before {
