@@ -14,7 +14,9 @@
    so colour, height and logo treatment match exactly — only the links differ. */
 
 /* ════════════════════════════════════════════
-   Hero: doodle background, fading to white on the way down
+   Hero: doodle background + faint violet glow, fading to white on the way down
+   (violet-600/300/200 — the same "AI feature" purple used for
+   .btn-topbar--ai, editor AI accents and spec badges elsewhere in the app)
 ════════════════════════════════════════════ */
 .landing-hero {
   position: relative;
@@ -26,6 +28,17 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 640px 380px at 18% 0%, rgba(124, 58, 237, 0.14), transparent 65%),
+    radial-gradient(ellipse 560px 360px at 88% 8%, rgba(196, 181, 253, 0.32), transparent 62%),
+    radial-gradient(ellipse 820px 460px at 50% -15%, rgba(221, 214, 254, 0.55), transparent 70%);
+  pointer-events: none;
 }
 
 /* Fades the artwork into the white section below as you scroll past it */
