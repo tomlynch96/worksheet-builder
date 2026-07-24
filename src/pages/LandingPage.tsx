@@ -281,6 +281,12 @@ interface Feature {
   accent: string
 }
 
+// Grid is 6 columns wide, 90px row unit — spans are chosen so each card's
+// shape follows its source screenshot's own aspect ratio instead of a
+// uniform grid, and the whole thing tiles with zero leftover gaps:
+//   rows 1-4:   Graph (hero, full width)
+//   rows 5-10:  Blocks (tall/narrow) | Worked examples (wide) over Follow-ups + Booklet (square-ish pair)
+//   rows 11-12: Numerical answers (wide) + Mark scheme (small, native aspect)
 const FEATURES: Feature[] = [
   {
     slug: 'graph',
@@ -288,8 +294,8 @@ const FEATURES: Feature[] = [
     body: "Build graph questions with ease. AI seeds the data and you decide how much or little pupils are expected to do with it. If needed, labelled axes, scales and example plots can be provided.",
     image: '/features/graph.png',
     alt: 'A graph question editor with a data table and blank labelled axes ready for pupils to plot',
-    colSpan: 4,
-    rowSpan: 2,
+    colSpan: 6,
+    rowSpan: 4,
     position: 'center 45%',
     bg: '#eff6ff',
     border: '#bfdbfe',
@@ -302,8 +308,8 @@ const FEATURES: Feature[] = [
     image: '/features/blocks.png',
     alt: 'The block picker menu showing question types like Multiple choice, Cloze activity and Worked example',
     colSpan: 2,
-    rowSpan: 2,
-    position: 'center 15%',
+    rowSpan: 6,
+    position: 'left center',
     bg: '#f5f3ff',
     border: '#ddd6fe',
     accent: '#5b21b6',
@@ -314,9 +320,9 @@ const FEATURES: Feature[] = [
     body: 'Add a worked example before any question to model the correct process to pupils.',
     image: '/features/worked-examples.png',
     alt: 'A worked example editor showing a step-by-step model answer for calculating energy transfer',
-    colSpan: 2,
-    rowSpan: 2,
-    position: '68% 40%',
+    colSpan: 4,
+    rowSpan: 3,
+    position: '78% 30%',
     bg: '#fffbeb',
     border: '#fde68a',
     accent: '#92400e',
@@ -328,8 +334,8 @@ const FEATURES: Feature[] = [
     image: '/features/follow-ups.png',
     alt: 'A bubble-sheet follow-up quiz with a QR code to scan and mark',
     colSpan: 2,
-    rowSpan: 2,
-    position: 'center 72%',
+    rowSpan: 3,
+    position: 'center 85%',
     bg: '#ecfeff',
     border: '#a5f3fc',
     accent: '#155e75',
@@ -341,8 +347,8 @@ const FEATURES: Feature[] = [
     image: '/features/booklet.png',
     alt: 'The booklet composer with a worksheet list, contents page and Print / Save PDF button',
     colSpan: 2,
-    rowSpan: 2,
-    position: '66% 60%',
+    rowSpan: 3,
+    position: '55% center',
     bg: '#fdf2f8',
     border: '#fbcfe8',
     accent: '#9d174d',
@@ -353,10 +359,9 @@ const FEATURES: Feature[] = [
     body: 'Let pupils check if they are on the right path by providing a list of possible numerical answers.',
     image: '/features/numerical-answers.png',
     alt: 'A numerical answers box with a scrambled list of possible answers',
-    colSpan: 2,
-    rowSpan: 1,
-    position: 'center 0%',
-    zoom: '290% auto',
+    colSpan: 4,
+    rowSpan: 2,
+    position: 'center top',
     bg: '#f0fdf4',
     border: '#bbf7d0',
     accent: '#166534',
@@ -368,7 +373,7 @@ const FEATURES: Feature[] = [
     image: '/features/mark-scheme.png',
     alt: 'A toggle switching between the worksheet view and the mark scheme view',
     colSpan: 2,
-    rowSpan: 1,
+    rowSpan: 2,
     position: 'center',
     bg: '#eef2ff',
     border: '#c7d2fe',
@@ -382,7 +387,7 @@ function FeatureSections() {
       {FEATURES.map(f => (
         <div
           key={f.slug}
-          className={`bento-tile${f.rowSpan === 1 ? ' bento-tile--wide' : ''}`}
+          className="bento-tile"
           style={{
             gridColumn: `span ${f.colSpan}`,
             gridRow: `span ${f.rowSpan}`,
