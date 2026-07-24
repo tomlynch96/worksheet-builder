@@ -451,7 +451,7 @@ export function LandingPage() {
       </section>
 
       {/* ── Prompt → worksheet → bubble sheet flow ── */}
-      <section className="landing-flow" id="features">
+      <section className="landing-flow">
         <PromptToBubbleSheetFlow />
       </section>
 
@@ -462,7 +462,7 @@ export function LandingPage() {
       </section>
 
       {/* ── Feature breakdown ── */}
-      <section className="landing-features">
+      <section className="landing-features" id="features">
         <FeatureSections />
       </section>
 

@@ -6,12 +6,20 @@
 
 .landing-hero,
 .landing-showcase,
+.landing-features,
 .landing-videos {
   scroll-margin-top: 88px;
 }
 
 /* Top bar reuses the main app's .topbar / .topbar-* classes (Topbar.css)
-   so colour, height and logo treatment match exactly — only the links differ. */
+   so colour, height and logo treatment match exactly — only the links differ.
+   It isn't sticky in the app shell (its own scroll container handles that),
+   so pin it here for the landing page specifically. */
+.landing .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
 /* ════════════════════════════════════════════
    Hero: doodle background + faint violet glow, fading to white on the way down
