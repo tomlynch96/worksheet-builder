@@ -263,7 +263,7 @@ function PromptToBubbleSheetFlow() {
   )
 }
 
-// ── Feature sections: one row per feature, image in a circular frame ───────
+// ── Feature bento grid: tile size follows the source image, info on hover ──
 
 interface Feature {
   slug: string
@@ -271,57 +271,35 @@ interface Feature {
   body: string
   image: string
   alt: string
-  size: number
+  colSpan: number
+  rowSpan: number
   /** rendered background width in px — controls zoom (bigger = tighter crop) */
   bgWidth: number
   position: string
-  nudge: number
 }
 
 const FEATURES: Feature[] = [
-  {
-    slug: 'blocks',
-    title: 'Blocks',
-    body: 'You make the pedagogical decisions by selecting what type of question you want next.',
-    image: '/features/blocks.png',
-    alt: 'The block picker menu showing question types like Multiple choice, Cloze activity and Worked example',
-    size: 260,
-    bgWidth: 320,
-    position: 'center 10%',
-    nudge: 0,
-  },
   {
     slug: 'graph',
     title: 'Graph',
     body: "Build graph questions with ease. AI seeds the data and you decide how much or little pupils are expected to do with it. If needed, labelled axes, scales and example plots can be provided.",
     image: '/features/graph.png',
     alt: 'A graph question editor with a data table and blank labelled axes ready for pupils to plot',
-    size: 340,
-    bgWidth: 700,
-    position: '74% 55%',
-    nudge: -24,
+    colSpan: 4,
+    rowSpan: 2,
+    bgWidth: 1050,
+    position: 'center 45%',
   },
   {
-    slug: 'numerical-answers',
-    title: 'Numerical answers',
-    body: 'Let pupils check if they are on the right path by providing a list of possible numerical answers.',
-    image: '/features/numerical-answers.png',
-    alt: 'A numerical answers box with a scrambled list of possible answers',
-    size: 220,
-    bgWidth: 1030,
-    position: 'center 5%',
-    nudge: 16,
-  },
-  {
-    slug: 'mark-scheme',
-    title: 'Mark scheme',
-    body: 'The mark scheme data is stored with the question. Edit the worksheet and the mark scheme updates automatically.',
-    image: '/features/mark-scheme.png',
-    alt: 'A toggle switching between the worksheet view and the mark scheme view',
-    size: 300,
-    bgWidth: 880,
-    position: 'center',
-    nudge: -12,
+    slug: 'blocks',
+    title: 'Blocks',
+    body: 'You make the pedagogical decisions by selecting what type of question you want next.',
+    image: '/features/blocks.png',
+    alt: 'The block picker menu showing question types like Multiple choice, Cloze activity and Worked example',
+    colSpan: 2,
+    rowSpan: 2,
+    bgWidth: 546,
+    position: 'center 15%',
   },
   {
     slug: 'worked-examples',
@@ -329,10 +307,10 @@ const FEATURES: Feature[] = [
     body: 'Add a worked example before any question to model the correct process to pupils.',
     image: '/features/worked-examples.png',
     alt: 'A worked example editor showing a step-by-step model answer for calculating energy transfer',
-    size: 300,
-    bgWidth: 620,
-    position: '73% 42%',
-    nudge: 20,
+    colSpan: 2,
+    rowSpan: 2,
+    bgWidth: 744,
+    position: '68% 40%',
   },
   {
     slug: 'follow-ups',
@@ -340,10 +318,10 @@ const FEATURES: Feature[] = [
     body: "Generate a scannable, self-marking quiz to check the learning has happened. Create as many versions as you like to feel confident pupils aren't copying!",
     image: '/features/follow-ups.png',
     alt: 'A bubble-sheet follow-up quiz with a QR code to scan and mark',
-    size: 280,
-    bgWidth: 365,
-    position: 'center 80%',
-    nudge: -18,
+    colSpan: 2,
+    rowSpan: 2,
+    bgWidth: 515,
+    position: 'center 72%',
   },
   {
     slug: 'booklet',
@@ -351,35 +329,55 @@ const FEATURES: Feature[] = [
     body: 'Made 7 worksheets for a topic? Put them together with our booklet generator.',
     image: '/features/booklet.png',
     alt: 'The booklet composer with a worksheet list, contents page and Print / Save PDF button',
-    size: 260,
-    bgWidth: 475,
-    position: '68% 62%',
-    nudge: 10,
+    colSpan: 2,
+    rowSpan: 2,
+    bgWidth: 674,
+    position: '66% 60%',
+  },
+  {
+    slug: 'numerical-answers',
+    title: 'Numerical answers',
+    body: 'Let pupils check if they are on the right path by providing a list of possible numerical answers.',
+    image: '/features/numerical-answers.png',
+    alt: 'A numerical answers box with a scrambled list of possible answers',
+    colSpan: 2,
+    rowSpan: 1,
+    bgWidth: 551,
+    position: 'center 15%',
+  },
+  {
+    slug: 'mark-scheme',
+    title: 'Mark scheme',
+    body: 'The mark scheme data is stored with the question. Edit the worksheet and the mark scheme updates automatically.',
+    image: '/features/mark-scheme.png',
+    alt: 'A toggle switching between the worksheet view and the mark scheme view',
+    colSpan: 2,
+    rowSpan: 1,
+    bgWidth: 560,
+    position: 'center',
   },
 ]
 
 function FeatureSections() {
   return (
-    <div className="feature-list">
-      {FEATURES.map((f, i) => (
-        <div key={f.slug} className={`feature-row${i % 2 === 1 ? ' feature-row--reverse' : ''}`}>
-          <div className="feature-media" style={{ width: f.size, marginTop: f.nudge }}>
-            <div
-              className="feature-circle"
-              role="img"
-              aria-label={f.alt}
-              style={{
-                width: f.size,
-                height: f.size,
-                backgroundImage: `url(${f.image})`,
-                backgroundSize: `${f.bgWidth}px auto`,
-                backgroundPosition: f.position,
-              }}
-            />
-          </div>
-          <div className="feature-copy">
-            <h3 className="feature-title">{f.title}</h3>
-            <p className="feature-body">{f.body}</p>
+    <div className="bento-grid">
+      {FEATURES.map(f => (
+        <div
+          key={f.slug}
+          className="bento-tile"
+          tabIndex={0}
+          aria-label={`${f.title}: ${f.body}`}
+          style={{
+            gridColumn: `span ${f.colSpan}`,
+            gridRow: `span ${f.rowSpan}`,
+            backgroundImage: `url(${f.image})`,
+            backgroundSize: `${f.bgWidth}px auto`,
+            backgroundPosition: f.position,
+          }}
+        >
+          <div className="bento-tile-overlay">
+            <h3 className="bento-tile-title">{f.title}</h3>
+            <p className="bento-tile-body">{f.body}</p>
           </div>
         </div>
       ))}
