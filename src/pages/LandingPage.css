@@ -394,8 +394,9 @@
 }
 
 /* ════════════════════════════════════════════
-   Feature bento grid — tile size follows the source image,
-   title + description reveal on hover / focus
+   Feature bento grid — tile size follows the source image;
+   each card has its own tint, with the title, description and
+   a framed screenshot all visible at once (no hover needed)
 ════════════════════════════════════════════ */
 .landing-features {
   background: #fff;
@@ -415,66 +416,79 @@
 }
 
 .bento-tile {
-  position: relative;
-  border-radius: 16px;
-  background-color: #f5f3ff;
-  background-repeat: no-repeat;
-  border: 1px solid #ede9fe;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  cursor: pointer;
-  outline: none;
-  transition: box-shadow 0.2s ease;
-}
-.bento-tile:hover,
-.bento-tile:focus-visible {
-  box-shadow: 0 12px 28px rgba(76, 29, 149, 0.18);
-}
-.bento-tile:focus-visible {
-  box-shadow: 0 0 0 3px #c4b5fd, 0 12px 28px rgba(76, 29, 149, 0.18);
-}
-
-.bento-tile-overlay {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  border-radius: 15px;
+  gap: 12px;
+  border-radius: 18px;
+  border: 1px solid;
   padding: 18px;
-  background: linear-gradient(to top, rgba(17, 17, 27, 0.9) 0%, rgba(17, 17, 27, 0.55) 45%, rgba(17, 17, 27, 0) 78%);
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
-.bento-tile:hover .bento-tile-overlay,
-.bento-tile:focus .bento-tile-overlay {
-  opacity: 1;
-  transform: translateY(0);
+.bento-tile:hover {
+  box-shadow: 0 12px 28px rgba(17, 17, 27, 0.1);
+  transform: translateY(-2px);
+}
+
+.bento-tile-copy {
+  flex-shrink: 0;
 }
 
 .bento-tile-title {
   font-family: 'Aileron', system-ui, sans-serif;
   font-size: clamp(15px, 1.6vw, 19px);
   font-weight: 800;
-  color: #fff;
   margin: 0 0 4px;
 }
 
 .bento-tile-body {
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.92);
+  color: #4b5563;
   line-height: 1.5;
   margin: 0;
+}
+
+.bento-tile-shot {
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: 12px;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border: 1px solid rgba(17, 17, 27, 0.08);
+  box-shadow: 0 4px 14px rgba(17, 17, 27, 0.1);
+}
+
+/* Short, wide tiles (single row): screenshot sits beside the text instead of below it */
+.bento-tile--wide {
+  flex-direction: row;
+  align-items: center;
+}
+.bento-tile--wide .bento-tile-copy {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.bento-tile--wide .bento-tile-shot {
+  flex: 0 0 40%;
+  align-self: stretch;
 }
 
 @media (max-width: 720px) {
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .bento-tile {
+  .bento-tile,
+  .bento-tile--wide {
     grid-column: span 2 !important;
     grid-row: span 1 !important;
-    height: 220px;
+    flex-direction: column;
+    height: auto;
+    min-height: 260px;
+  }
+  .bento-tile--wide .bento-tile-shot {
+    flex: 1 1 auto;
+    align-self: auto;
   }
 }
 

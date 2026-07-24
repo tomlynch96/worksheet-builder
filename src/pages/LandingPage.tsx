@@ -263,7 +263,7 @@ function PromptToBubbleSheetFlow() {
   )
 }
 
-// ── Feature bento grid: tile size follows the source image, info on hover ──
+// ── Feature bento grid: tile size follows the source image ─────────────────
 
 interface Feature {
   slug: string
@@ -273,9 +273,12 @@ interface Feature {
   alt: string
   colSpan: number
   rowSpan: number
-  /** rendered background width in px — controls zoom (bigger = tighter crop) */
-  bgWidth: number
   position: string
+  /** overrides the default `cover` fit — needed when the source has a lot of dead space */
+  zoom?: string
+  bg: string
+  border: string
+  accent: string
 }
 
 const FEATURES: Feature[] = [
@@ -287,8 +290,10 @@ const FEATURES: Feature[] = [
     alt: 'A graph question editor with a data table and blank labelled axes ready for pupils to plot',
     colSpan: 4,
     rowSpan: 2,
-    bgWidth: 1050,
     position: 'center 45%',
+    bg: '#eff6ff',
+    border: '#bfdbfe',
+    accent: '#1e40af',
   },
   {
     slug: 'blocks',
@@ -298,8 +303,10 @@ const FEATURES: Feature[] = [
     alt: 'The block picker menu showing question types like Multiple choice, Cloze activity and Worked example',
     colSpan: 2,
     rowSpan: 2,
-    bgWidth: 546,
     position: 'center 15%',
+    bg: '#f5f3ff',
+    border: '#ddd6fe',
+    accent: '#5b21b6',
   },
   {
     slug: 'worked-examples',
@@ -309,8 +316,10 @@ const FEATURES: Feature[] = [
     alt: 'A worked example editor showing a step-by-step model answer for calculating energy transfer',
     colSpan: 2,
     rowSpan: 2,
-    bgWidth: 744,
     position: '68% 40%',
+    bg: '#fffbeb',
+    border: '#fde68a',
+    accent: '#92400e',
   },
   {
     slug: 'follow-ups',
@@ -320,8 +329,10 @@ const FEATURES: Feature[] = [
     alt: 'A bubble-sheet follow-up quiz with a QR code to scan and mark',
     colSpan: 2,
     rowSpan: 2,
-    bgWidth: 515,
     position: 'center 72%',
+    bg: '#ecfeff',
+    border: '#a5f3fc',
+    accent: '#155e75',
   },
   {
     slug: 'booklet',
@@ -331,8 +342,10 @@ const FEATURES: Feature[] = [
     alt: 'The booklet composer with a worksheet list, contents page and Print / Save PDF button',
     colSpan: 2,
     rowSpan: 2,
-    bgWidth: 674,
     position: '66% 60%',
+    bg: '#fdf2f8',
+    border: '#fbcfe8',
+    accent: '#9d174d',
   },
   {
     slug: 'numerical-answers',
@@ -342,8 +355,11 @@ const FEATURES: Feature[] = [
     alt: 'A numerical answers box with a scrambled list of possible answers',
     colSpan: 2,
     rowSpan: 1,
-    bgWidth: 551,
-    position: 'center 15%',
+    position: 'center 0%',
+    zoom: '290% auto',
+    bg: '#f0fdf4',
+    border: '#bbf7d0',
+    accent: '#166534',
   },
   {
     slug: 'mark-scheme',
@@ -353,8 +369,10 @@ const FEATURES: Feature[] = [
     alt: 'A toggle switching between the worksheet view and the mark scheme view',
     colSpan: 2,
     rowSpan: 1,
-    bgWidth: 560,
     position: 'center',
+    bg: '#eef2ff',
+    border: '#c7d2fe',
+    accent: '#3730a3',
   },
 ]
 
@@ -364,21 +382,28 @@ function FeatureSections() {
       {FEATURES.map(f => (
         <div
           key={f.slug}
-          className="bento-tile"
-          tabIndex={0}
-          aria-label={`${f.title}: ${f.body}`}
+          className={`bento-tile${f.rowSpan === 1 ? ' bento-tile--wide' : ''}`}
           style={{
             gridColumn: `span ${f.colSpan}`,
             gridRow: `span ${f.rowSpan}`,
-            backgroundImage: `url(${f.image})`,
-            backgroundSize: `${f.bgWidth}px auto`,
-            backgroundPosition: f.position,
+            background: f.bg,
+            borderColor: f.border,
           }}
         >
-          <div className="bento-tile-overlay">
-            <h3 className="bento-tile-title">{f.title}</h3>
+          <div className="bento-tile-copy">
+            <h3 className="bento-tile-title" style={{ color: f.accent }}>{f.title}</h3>
             <p className="bento-tile-body">{f.body}</p>
           </div>
+          <div
+            className="bento-tile-shot"
+            role="img"
+            aria-label={f.alt}
+            style={{
+              backgroundImage: `url(${f.image})`,
+              backgroundPosition: f.position,
+              ...(f.zoom ? { backgroundSize: f.zoom } : {}),
+            }}
+          />
         </div>
       ))}
     </div>
