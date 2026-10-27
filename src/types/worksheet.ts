@@ -1,3 +1,5 @@
+import type { FigureDiagram } from './diagram'
+
 export type ExamBoard = 'AQA' | 'OCR' | 'Edexcel' | 'WJEC' | 'Pearson' | 'IB'
 export type Tier = 'foundation' | 'higher' | 'both'
 
@@ -64,6 +66,7 @@ export interface FigureBlock {
   size: 'small' | 'medium' | 'large'
   imageData?: string   // base64 for uploaded images
   imageUrl?: string    // remote URL (e.g. Oak CDN)
+  diagram?: FigureDiagram  // parametric SVG; imageData holds its PNG render for PDF export
 }
 
 export interface SpacerBlock {

@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import type { Block, BlockType } from '../../types/worksheet'
+import type { Block, BlockType, FigureBlock, QuestionBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { generateBlock } from '../../utils/generateWorksheet'
+import { figureUpdatesForDiagram } from '../../utils/diagramSvg'
+import { DiagramStudioModal, type DiagramStudioResult } from './DiagramStudioModal'
+import { questionUpdates } from './DiagramContext'
 import './AddBlockMenu.css'
 
 interface Props {
@@ -20,7 +23,7 @@ const BLOCK_OPTIONS: { type: BlockType; label: string; description: string; colo
   { type: 'information',        label: 'Information',           description: 'Highlighted background knowledge block',       color: '#b45309' },
   { type: 'worked_example',     label: 'Worked example',        description: 'Step-by-step model answer in a box',          color: '#c2410c' },
   { type: 'numerical_answers',  label: 'Numerical answers box', description: 'Scrambled numerical answers for self-checking',color: '#374151' },
-  { type: 'figure',             label: 'Figure',                description: 'Diagram placeholder with caption',             color: '#475569' },
+  { type: 'figure',             label: 'Figure',                description: 'Image, or ✦ an AI exam-style diagram',          color: '#475569' },
   { type: 'instructions',       label: 'Instructions',          description: 'Bulleted list of task instructions',           color: '#0369a1' },
   { type: 'spacer',             label: 'Spacer',                description: 'Blank vertical space',                         color: '#9ca3af' },
   { type: 'data',               label: 'Data table / graph',    description: 'Editable data table with optional graph view', color: '#0d9488' },
@@ -70,11 +73,14 @@ interface AIFillState {
   request: string
   loading: boolean
   error: string | null
+  withDiagram?: boolean
 }
 
 export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: Props) {
   const [open, setOpen] = useState(false)
   const [aiFill, setAiFill] = useState<AIFillState | null>(null)
+  // Diagram studio: for a new figure, or for a new question whose prompt asked for a diagram
+  const [studio, setStudio] = useState<{ request?: string; withQuestion: boolean } | null>(null)
 
   function add(type: BlockType) {
     const block = makeBlock(type)
@@ -85,11 +91,22 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
 
   function startAIFill(type: BlockType, e: React.MouseEvent) {
     e.stopPropagation()
+    if (type === 'figure') {
+      setStudio({ withQuestion: false })
+      setOpen(false)
+      return
+    }
     setAiFill({ blockType: type, request: '', loading: false, error: null })
   }
 
   async function submitAIFill() {
     if (!aiFill || !aiFill.request.trim()) return
+    if (aiFill.blockType === 'question' && aiFill.withDiagram) {
+      setStudio({ request: aiFill.request.trim(), withQuestion: true })
+      setAiFill(null)
+      setOpen(false)
+      return
+    }
     setAiFill(s => s && { ...s, loading: true, error: null })
     try {
       const { block, attachedBlocks } = await generateBlock({
@@ -106,6 +123,25 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
       setOpen(false)
     } catch (err) {
       setAiFill(s => s && { ...s, loading: false, error: err instanceof Error ? err.message : String(err) })
+    }
+  }
+
+  async function applyStudio({ diagram, caption, question }: DiagramStudioResult) {
+    const figure: FigureBlock = {
+      id: crypto.randomUUID(), type: 'figure', caption, size: 'medium',
+      ...await figureUpdatesForDiagram(diagram),
+    }
+    if (question) {
+      const q: QuestionBlock = {
+        id: crypto.randomUUID(), type: 'question', stem: '', marks: 0, lines: 0, parts: [],
+        ...questionUpdates(question, diagram.variables), attachedFigureId: figure.id,
+      }
+      dispatch({ type: 'ADD_BLOCK', block: figure, afterId })
+      dispatch({ type: 'ADD_BLOCK', block: q, afterId: figure.id })
+      onAdded?.(q.id)
+    } else {
+      dispatch({ type: 'ADD_BLOCK', block: figure, afterId })
+      onAdded?.(figure.id)
     }
   }
 
@@ -137,6 +173,17 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
                   autoFocus
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitAIFill() }}
                 />
+                {aiFill.blockType === 'question' && (
+                  <label className="add-block-ai-diagram">
+                    <input
+                      type="checkbox"
+                      checked={!!aiFill.withDiagram}
+                      onChange={e => setAiFill(s => s && { ...s, withDiagram: e.target.checked })}
+                      disabled={aiFill.loading}
+                    />
+                    Include an AI diagram
+                  </label>
+                )}
                 {aiFill.error && <p className="add-block-ai-error">{aiFill.error}</p>}
                 <button
                   type="button"
@@ -179,6 +226,14 @@ export function AddBlockMenu({ afterId, dispatch, onAdded, worksheetContext }: P
             )}
           </div>
         </>
+      )}
+      {studio && (
+        <DiagramStudioModal
+          initialRequest={studio.request}
+          questionMode={studio.withQuestion ? 'on' : 'optional'}
+          onApply={applyStudio}
+          onClose={() => setStudio(null)}
+        />
       )}
     </div>
   )

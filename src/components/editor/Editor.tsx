@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Worksheet, BlockType, HeaderBlock } from '../../types/worksheet'
+import { useMemo, useState } from 'react'
+import type { Worksheet, BlockType, HeaderBlock, FigureBlock } from '../../types/worksheet'
 import type { WorksheetAction } from '../../hooks/useWorksheet'
 import { BlockEditor } from './BlockEditor'
 import { AddBlockMenu } from './AddBlockMenu'
@@ -7,6 +7,9 @@ import { AIDialog } from './AIDialog'
 import { BlockAnnotateModal } from './BlockAnnotateModal'
 import { ActiveEditorProvider } from './ActiveEditorContext'
 import { RTEToolbar } from './RTEToolbar'
+import { DiagramContextProvider, describeQuestion, questionUpdates } from './DiagramContext'
+import { DiagramStudioModal, type DiagramStudioResult } from './DiagramStudioModal'
+import { figureUpdatesForDiagram } from '../../utils/diagramSvg'
 import { generateBlock, generateVariation, generateWorkedExample, generateExtraPart } from '../../utils/generateWorksheet'
 import './Editor.css'
 
@@ -60,6 +63,7 @@ interface BlockAIState {
   prompt: string
   loading: boolean
   error: string | null
+  withDiagram?: boolean
 }
 
 export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId, profileId }: Props) {
@@ -71,6 +75,8 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
   const [addingVariation, setAddingVariation] = useState(false)
   const [addingWorkedEx, setAddingWorkedEx] = useState(false)
   const [showAnnotate, setShowAnnotate] = useState(false)
+  // Diagram studio opened from the ✦ panel: for a figure, or for a question that asked for one
+  const [diagramStudio, setDiagramStudio] = useState<{ request?: string } | null>(null)
   function isDataReferenced(id: string, excludeId?: string) {
     return blocks.some(b => {
       if (b.id === excludeId) return false
@@ -110,8 +116,50 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
     header?.specPoint,
   ].filter(Boolean).join(' · ')
 
+  const diagramCtx = useMemo(() => ({
+    context: worksheetContext,
+    topic: header?.topic,
+    specPoint: header?.specPoint,
+    examBoard: header?.examBoard,
+    qualification: header?.qualification,
+    profileId,
+  }), [worksheetContext, header?.topic, header?.specPoint, header?.examBoard, header?.qualification, profileId])
+
+  function openBlockAI() {
+    if (selectedBlock?.type === 'figure') { setDiagramStudio({}); return }
+    setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })
+  }
+
+  async function applyDiagramStudio({ diagram, caption, question }: DiagramStudioResult) {
+    if (!selectedBlock) return
+    const figureUpdates = { ...await figureUpdatesForDiagram(diagram), ...(caption && { caption }) }
+    if (selectedBlock.type === 'figure') {
+      dispatch({ type: 'UPDATE_BLOCK', id: selectedBlock.id, updates: figureUpdates })
+      return
+    }
+    if (selectedBlock.type !== 'question') return
+    let figureId = selectedBlock.attachedFigureId
+    if (figureId && blocks.some(b => b.id === figureId)) {
+      dispatch({ type: 'UPDATE_BLOCK', id: figureId, updates: figureUpdates })
+    } else {
+      const figure: FigureBlock = { id: crypto.randomUUID(), type: 'figure', caption: '', size: 'medium', ...figureUpdates }
+      figureId = figure.id
+      dispatch({ type: 'ADD_BLOCK', block: figure, afterId: selectedBlock.id })
+    }
+    dispatch({
+      type: 'UPDATE_BLOCK',
+      id: selectedBlock.id,
+      updates: { ...(question ? questionUpdates(question, diagram.variables) : {}), attachedFigureId: figureId },
+    })
+  }
+
   async function handleBlockAISubmit() {
     if (!selectedBlock || !blockAI?.prompt.trim()) return
+    if (selectedBlock.type === 'question' && blockAI.withDiagram) {
+      setDiagramStudio({ request: blockAI.prompt.trim() })
+      setBlockAI(null)
+      return
+    }
     setBlockAI(s => s && { ...s, loading: true, error: null })
     try {
       const { block: generated, attachedBlocks } = await generateBlock({
@@ -172,6 +220,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
   }
 
   return (
+    <DiagramContextProvider value={diagramCtx}>
     <ActiveEditorProvider>
       {selectedBlock && <RTEToolbar />}
       <div className="editor">
@@ -191,7 +240,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
               </button>
               <span className="editor-focused-type">{BLOCK_LABELS[selectedBlock.type]}</span>
               <div className="editor-focused-controls">
-                <button type="button" className="ctrl-btn ctrl-btn--ai" data-tutorial-id="ai-fill" onClick={() => setBlockAI(a => a ? null : { prompt: '', loading: false, error: null })} title="AI fill this block" disabled={addingVariation || addingWorkedEx}>✦</button>
+                <button type="button" className="ctrl-btn ctrl-btn--ai" data-tutorial-id="ai-fill" onClick={openBlockAI} title={selectedBlock.type === 'figure' ? 'Generate a diagram with AI' : 'AI fill this block'} disabled={addingVariation || addingWorkedEx}>✦</button>
                 <button
                   type="button"
                   className="ctrl-btn ctrl-btn--vary"
@@ -237,6 +286,17 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
                   disabled={blockAI.loading}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleBlockAISubmit() }}
                 />
+                {selectedBlock.type === 'question' && (
+                  <label className="editor-block-ai-diagram">
+                    <input
+                      type="checkbox"
+                      checked={!!blockAI.withDiagram}
+                      onChange={e => setBlockAI(s => s && { ...s, withDiagram: e.target.checked })}
+                      disabled={blockAI.loading}
+                    />
+                    Include an AI diagram (opens the diagram studio)
+                  </label>
+                )}
                 {blockAI.error && <p className="editor-block-ai-error">{blockAI.error}</p>}
                 <div className="editor-block-ai-actions">
                   <span className="editor-block-ai-hint">⌘↵ to generate</span>
@@ -290,6 +350,18 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
           onClose={() => setShowAnnotate(false)}
         />
       )}
+      {diagramStudio && selectedBlock && (selectedBlock.type === 'figure' || selectedBlock.type === 'question') && (
+        <DiagramStudioModal
+          initial={selectedBlock.type === 'figure' ? selectedBlock.diagram : undefined}
+          initialCaption={selectedBlock.type === 'figure' ? selectedBlock.caption : undefined}
+          initialRequest={diagramStudio.request}
+          questionMode={selectedBlock.type === 'question' ? 'on' : 'none'}
+          questionContext={selectedBlock.type === 'question' ? describeQuestion(selectedBlock) : undefined}
+          onApply={applyDiagramStudio}
+          onClose={() => setDiagramStudio(null)}
+        />
+      )}
     </ActiveEditorProvider>
+    </DiagramContextProvider>
   )
 }
