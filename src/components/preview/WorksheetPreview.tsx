@@ -2,6 +2,7 @@ import katex from 'katex'
 import 'katex/contrib/mhchem'
 import { useRef, useLayoutEffect, useEffect, useState, type RefObject } from 'react'
 import type { Worksheet, Block, HeaderBlock, InstructionsBlock, QuestionBlock, WorkedExampleBlock, FigureBlock, SpacerBlock, InformationBlock, MatchThemUpBlock, ClozeBlock, OrderStepsBlock, MultipleChoiceBlock, DataBlock, NumericalAnswersBlock } from '../../types/worksheet'
+import { renderDiagram, svgDataUrl } from '../../utils/diagramSvg'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages, estimateBlockHeight, type PageBlock } from '../../utils/pagination'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
@@ -329,6 +330,8 @@ function PreviewOrderSteps({ block, num, blocks }: { block: OrderStepsBlock; num
 
 function PreviewFigure({ block }: { block: FigureBlock }) {
   const maxHeights: Record<FigureBlock['size'], number> = { small: 100, medium: 180, large: 300 }
+  // Parametric diagrams render from the SVG so they stay sharp in browser print
+  if (block.diagram) block = { ...block, imageData: svgDataUrl(renderDiagram(block.diagram.template, block.diagram.variables)) }
   const maxH = maxHeights[block.size]
   return (
     <div className="pr-figure">

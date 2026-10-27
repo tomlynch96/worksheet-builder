@@ -181,3 +181,11 @@
   animation: abm-spin 0.7s linear infinite;
 }
 @keyframes abm-spin { to { transform: rotate(360deg); } }
+
+.add-block-ai-diagram {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ui-text);
+}

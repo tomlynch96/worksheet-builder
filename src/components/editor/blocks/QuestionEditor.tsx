@@ -5,6 +5,11 @@ import { Field, Row } from '../EditorPrimitives'
 import { RichTextEditor } from '../RichTextEditor'
 import { DataEditor } from './DataEditor'
 import { FigureEditor } from './FigureEditor'
+import { DiagramStudioModal, type DiagramStudioResult } from '../DiagramStudioModal'
+import { describeQuestion, partUpdates, questionUpdates } from '../DiagramContext'
+import type { DiagramVariable } from '../../../types/diagram'
+import type { GeneratedQuestion } from '../../../utils/generateDiagram'
+import { figureUpdatesForDiagram } from '../../../utils/diagramSvg'
 
 interface Props {
   block: QuestionBlock
@@ -12,7 +17,7 @@ interface Props {
   dispatch: React.Dispatch<WorksheetAction>
 }
 
-function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph?: () => void; onAddFigure?: () => void }) {
+function AttachMenu({ onAddGraph, onAddFigure, onAddDiagram }: { onAddGraph?: () => void; onAddFigure?: () => void; onAddDiagram?: () => void }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="q-attach-add">
@@ -24,6 +29,7 @@ function AttachMenu({ onAddGraph, onAddFigure }: { onAddGraph?: () => void; onAd
         <div className="q-attach-menu">
           {onAddGraph && <button type="button" onClick={() => { onAddGraph(); setOpen(false) }}>Graph / data table</button>}
           {onAddFigure && <button type="button" onClick={() => { onAddFigure(); setOpen(false) }}>Figure / image</button>}
+          {onAddDiagram && <button type="button" onClick={() => { onAddDiagram(); setOpen(false) }}>✦ AI diagram</button>}
         </div>
       )}
     </div>
@@ -62,7 +68,7 @@ function InlineBlockEditor({
 
 function Attachments({
   dataIds, figureId, blocks, afterId, dispatch,
-  onChangeDataIds, onChangeFigureId,
+  onChangeDataIds, onChangeFigureId, questionContext, onApplyQuestion,
 }: {
   dataIds: string[]
   figureId?: string
@@ -71,7 +77,11 @@ function Attachments({
   dispatch: React.Dispatch<WorksheetAction>
   onChangeDataIds: (ids: string[]) => void
   onChangeFigureId: (id: string | undefined) => void
+  questionContext: string
+  // figureId is set when the figure was created alongside the question, so both land in one update
+  onApplyQuestion: (q: GeneratedQuestion, vars: DiagramVariable[], figureId?: string) => void
 }) {
+  const [studioOpen, setStudioOpen] = useState(false)
   const dataBlocks = dataIds
     .map(id => blocks.find(b => b.id === id && b.type === 'data') as DataBlock | undefined)
     .filter((b): b is DataBlock => !!b)
@@ -118,6 +128,19 @@ function Attachments({
     onChangeFigureId(newBlock.id)
   }
 
+  async function addDiagram({ diagram, caption, question }: DiagramStudioResult) {
+    const newBlock: FigureBlock = {
+      id: crypto.randomUUID(),
+      type: 'figure',
+      caption,
+      size: 'medium',
+      ...await figureUpdatesForDiagram(diagram),
+    }
+    dispatch({ type: 'ADD_BLOCK', block: newBlock, afterId })
+    if (question) onApplyQuestion(question, diagram.variables, newBlock.id)
+    else onChangeFigureId(newBlock.id)
+  }
+
   const canAddFigure = !figBlock
   const canAddGraph = dataBlocks.length < 2
 
@@ -137,11 +160,23 @@ function Attachments({
           label="Figure / image"
           onRemove={() => onChangeFigureId(undefined)}
         >
-          <FigureEditor block={figBlock} dispatch={dispatch} />
+          <FigureEditor block={figBlock} dispatch={dispatch} questionContext={questionContext} onQuestionGenerated={onApplyQuestion} />
         </InlineBlockEditor>
       )}
       {(canAddGraph || canAddFigure) && (
-        <AttachMenu onAddGraph={canAddGraph ? addGraph : undefined} onAddFigure={canAddFigure ? addFigure : undefined} />
+        <AttachMenu
+          onAddGraph={canAddGraph ? addGraph : undefined}
+          onAddFigure={canAddFigure ? addFigure : undefined}
+          onAddDiagram={canAddFigure ? () => setStudioOpen(true) : undefined}
+        />
+      )}
+      {studioOpen && (
+        <DiagramStudioModal
+          questionMode="optional"
+          questionContext={questionContext}
+          onApply={addDiagram}
+          onClose={() => setStudioOpen(false)}
+        />
       )}
     </div>
   )
@@ -192,6 +227,8 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
         dispatch={dispatch}
         onChangeDataIds={ids => update({ attachedDataIds: ids.length ? ids : undefined, attachedDataId: ids[0] })}
         onChangeFigureId={id => update({ attachedFigureId: id })}
+        questionContext={describeQuestion(block)}
+        onApplyQuestion={(q, vars, figId) => update({ ...questionUpdates(q, vars), ...(figId && { attachedFigureId: figId }) })}
       />
 
       {!hasParts && (
@@ -228,6 +265,8 @@ export function QuestionEditor({ block, blocks, dispatch }: Props) {
                 dispatch={dispatch}
                 onChangeDataIds={ids => updatePart(i, { attachedDataIds: ids.length ? ids : undefined, attachedDataId: ids[0] })}
                 onChangeFigureId={id => updatePart(i, { attachedFigureId: id })}
+                questionContext={describeQuestion(block, i)}
+                onApplyQuestion={(q, vars, figId) => updatePart(i, { ...partUpdates(q, vars), ...(figId && { attachedFigureId: figId }) })}
               />
               <Row>
                 <Field label="Marks">
