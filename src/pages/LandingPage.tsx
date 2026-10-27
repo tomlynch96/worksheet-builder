@@ -95,11 +95,6 @@ function PhilosophySummary() {
         ))}
       </ul>
 
-      <p className="philosophy-note">
-        Reasonable pushback: "sounds great, but where does the lesson time come from?" I'm still
-        working through that properly — more on it soon.
-      </p>
-
       <a className="landing-cta" href="/onboarding">Try it now</a>
       <p className="landing-cta-note">Help shape what this project becomes</p>
     </div>
