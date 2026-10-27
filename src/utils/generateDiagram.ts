@@ -1,6 +1,7 @@
 import type { DiagramVariable } from '../types/diagram'
 import type { Block, FigureBlock, Worksheet } from '../types/worksheet'
 import { figureUpdatesForDiagram, sanitizeSvg, syncVariables } from './diagramSvg'
+import { saveLibraryDiagram } from '../hooks/useDiagramLibrary'
 
 export interface GeneratedQuestionPart {
   label: string
@@ -107,10 +108,21 @@ function attachedQuestionText(blocks: Block[], figureId: string): string | undef
   return undefined
 }
 
+export interface DiagramSaveTarget {
+  profileId?: string
+  examBoard?: string
+  qualification?: string
+  specPoint?: string
+  topic?: string
+}
+
+const uniq = (xs: (string | undefined)[]) => Array.from(new Set(xs.map(x => x?.trim()).filter((x): x is string => !!x)))
+
 // A generated worksheet may contain figure blocks with only a diagramRequest.
-// Draw them in parallel; any that fail keep their request so the teacher can
-// open the diagram studio on them later.
-export async function drawRequestedDiagrams(worksheet: Worksheet, context: string): Promise<Worksheet> {
+// Draw them in parallel and add each to the shared diagram library, tagged with
+// the worksheet's spec point and topic. Any that fail keep their request so the
+// teacher can open the diagram studio on them later.
+export async function drawRequestedDiagrams(worksheet: Worksheet, context: string, save: DiagramSaveTarget = {}): Promise<Worksheet> {
   const pending = worksheet.blocks
     .filter((b): b is FigureBlock => b.type === 'figure' && !!b.diagramRequest && !b.diagram)
     .slice(0, MAX_AUTO_DIAGRAMS)
@@ -126,7 +138,21 @@ export async function drawRequestedDiagrams(worksheet: Worksheet, context: strin
           ? `${questionText}\nDraw exactly what this question describes, with the values it gives as the default labels.`
           : undefined,
       })
-      const updates = await figureUpdatesForDiagram({ template: draft.template, variables: draft.variables, prompts: [fig.diagramRequest!] })
+      const prompts = [fig.diagramRequest!]
+      const libraryId = save.profileId
+        ? await saveLibraryDiagram(save.profileId, {
+            title: draft.title || fig.caption || 'Diagram',
+            description: draft.description,
+            template: draft.template,
+            variables: draft.variables,
+            specPoints: uniq([save.specPoint, ...draft.specPoints]),
+            topics: uniq([save.topic, ...draft.topics]),
+            examBoard: save.examBoard,
+            qualification: save.qualification,
+            prompts,
+          }) ?? undefined
+        : undefined
+      const updates = await figureUpdatesForDiagram({ template: draft.template, variables: draft.variables, prompts, libraryId })
       return [fig.id, { ...updates, diagramRequest: undefined }] as const
     } catch (err) {
       console.error('[diagrams] auto-draw failed:', err)

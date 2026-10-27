@@ -346,7 +346,13 @@ export function NewSheetWizard({ onGenerated, onCancel }: Props) {
       if (worksheet.blocks.some(b => b.type === 'figure' && b.diagramRequest)) {
         setGenStage('Drawing diagrams…')
         const context = [selectedCourse.exam_board, 'higher', topicTitle || freeText, selectedPoint || freeText].filter(Boolean).join(' · ')
-        finished = await drawRequestedDiagrams(worksheet, context)
+        finished = await drawRequestedDiagrams(worksheet, context, {
+          profileId: profile?.id,
+          examBoard: selectedCourse.exam_board,
+          qualification: selectedCourse.qualification_id,
+          specPoint: selectedPoint || freeText || undefined,
+          topic: topicTitle || undefined,
+        })
       }
       onGenerated(finished, worksheetType)
     } catch (err) {
