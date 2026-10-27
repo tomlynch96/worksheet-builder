@@ -1,4 +1,5 @@
 import type { Worksheet, Block, QuestionBlock, MatchThemUpBlock, MatchItem, QuestionPart, OakContext } from '../types/worksheet'
+import type { WorksheetExemplar } from './generationGuidance'
 
 const API_URL = '/api/generate-worksheet'
 
@@ -84,6 +85,13 @@ function sanitiseWorksheet(ws: Worksheet): Worksheet {
       }
     }
 
+    // Remap figure attachments on any block type that carries one
+    const withFig = sanitised as Block & { attachedFigureId?: string; parts?: { attachedFigureId?: string }[] }
+    if (withFig.attachedFigureId) withFig.attachedFigureId = idMap.get(withFig.attachedFigureId) ?? withFig.attachedFigureId
+    for (const part of withFig.parts ?? []) {
+      if (part.attachedFigureId) part.attachedFigureId = idMap.get(part.attachedFigureId) ?? part.attachedFigureId
+    }
+
     // Remap cross-references on question/multiple_choice blocks
     if (sanitised.type === 'question' || sanitised.type === 'multiple_choice') {
       const q = sanitised as QuestionBlock & { attachedDataIds?: string[] }
@@ -114,7 +122,7 @@ export async function generateWorksheet(params: {
   tier: string
   qualification?: string
   specPoint?: string
-  worksheetType: 'maths' | 'knowledge' | 'practical'
+  worksheetType: 'maths' | 'knowledge' | 'practical' | 'custom'
   extraNotes?: string
   difficulty?: number
   equations?: string[]
@@ -122,6 +130,8 @@ export async function generateWorksheet(params: {
   oakContext?: OakContext
   priorAnnotations?: Array<{ topic: string; rating: number | null; annotation: string }>
   priorBlockAnnotations?: Array<{ block_type: string; topic: string; annotation: string; change_summary?: string; insight?: string }>
+  exemplars?: WorksheetExemplar[]
+  profileInsight?: string
 }): Promise<Worksheet> {
   const raw = await callAPI({ mode: 'worksheet', ...params })
   const parsed = JSON.parse(raw) as Worksheet

@@ -2,10 +2,11 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } from '../data/qualifications'
 import { generateWorksheet } from '../utils/generateWorksheet'
+import { loadGenerationGuidance, type GenerationGuidance } from '../utils/generationGuidance'
+import { drawRequestedDiagrams } from '../utils/generateDiagram'
 import type { OakContext } from '../types/worksheet'
 import { OakDirectoryPicker } from './OakDirectoryPicker'
 import { oakQuestionToBlocks, oakQuestionNeedsImage } from '../utils/oakConvert'
-import { supabase, isConfigured } from '../lib/supabase'
 import type { UserCourse } from '../types/profile'
 import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import type { Worksheet } from '../types/worksheet'
@@ -22,12 +23,13 @@ const BOARD_COLORS: Record<string, string> = {
   AQA: '#1e3a5f', OCR: '#1d4ed8', Edexcel: '#7c2d12', WJEC: '#166534', Pearson: '#0052cc', IB: '#00447c',
 }
 
-type WorksheetType = 'maths' | 'knowledge' | 'practical'
+type WorksheetType = 'maths' | 'knowledge' | 'practical' | 'custom'
 
 const WORKSHEET_TYPES: { id: WorksheetType; label: string; desc: string; icon: string }[] = [
   { id: 'maths',     label: 'Maths / calculation', desc: '20+ scaffolded questions starting with direct substitution and building to multi-step problems. Includes a worked example and full mark scheme. Best for equation-heavy topics.', icon: '∑' },
   { id: 'knowledge', label: 'Knowledge recall',     desc: 'A structured mix: match-up activity, fill-in-the-gaps passage, and progressively harder recall questions — all aligned to your spec point. Best for consolidation lessons.', icon: '🧠' },
   { id: 'practical', label: 'Practical / graph',    desc: 'A realistic dataset, a results table, a graph plotting task and written analysis questions. Best for post-practical follow-up or teaching graph skills.', icon: '📈' },
+  { id: 'custom',    label: 'Custom',               desc: 'Describe the whole worksheet in one prompt. Can use any activity — questions, MCQs, cloze, match-ups, tables, graphs and AI-drawn diagrams — shaped by your best-rated worksheets.', icon: '✦' },
 ]
 
 function CourseButton({
@@ -72,6 +74,14 @@ const PHRASES: Record<WorksheetType, string[]> = {
     'Composing key facts…',
     'Formatting definitions…',
   ],
+  custom: [
+    'Reading your brief…',
+    'Studying your top-rated worksheets…',
+    'Choosing the right activities…',
+    'Writing the questions…',
+    'Planning diagrams…',
+    'Writing mark scheme points…',
+  ],
   practical: [
     'Generating experimental scatter data…',
     'Building the results table…',
@@ -94,7 +104,7 @@ const GENERIC_PHRASES = [
   'Cross-referencing the spec…',
 ]
 
-function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
+function GeneratingScreen({ worksheetType, stage }: { worksheetType: WorksheetType; stage?: string }) {
   const [progress, setProgress] = useState(0)
   const [phraseIdx, setPhraseIdx] = useState(0)
   const phrases = [...(PHRASES[worksheetType] ?? []), ...GENERIC_PHRASES]
@@ -116,7 +126,7 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
     <div className="gen-screen">
       <img src="/paper_blowaway_large.svg" className="gen-logo" alt="" />
       <div className="gen-content">
-        <p className="gen-phrase">{shuffledRef.current[phraseIdx]}</p>
+        <p className="gen-phrase">{stage ?? shuffledRef.current[phraseIdx]}</p>
         <div className="gen-bar-track">
           <div className="gen-bar-fill" style={{ width: `${progress}%` }} />
         </div>
@@ -126,7 +136,7 @@ function GeneratingScreen({ worksheetType }: { worksheetType: WorksheetType }) {
   )
 }
 
-export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
+export function NewSheetWizard({ onGenerated, onCancel }: Props) {
   const { profile } = useProfileContext()
   // Only show courses where the exam board is valid for the qualification (filters out legacy
   // Edexcel/Hodder Exploring Science entries that should now be Pearson)
@@ -145,7 +155,12 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
   const [worksheetType, setWorksheetType] = useState<WorksheetType | null>(null)
   const [extraNotes, setExtraNotes] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [genStage, setGenStage] = useState<string | undefined>()
   const [genError, setGenError] = useState<string | null>(null)
+  // Top-rated worksheets, feedback and Insights the generator will learn from
+  // Keyed by worksheet type because exemplar choice depends on it
+  const [loadedGuidance, setLoadedGuidance] = useState<{ type: WorksheetType; g: GenerationGuidance } | null>(null)
+  const guidance = loadedGuidance && loadedGuidance.type === worksheetType ? loadedGuidance.g : null
 
   const topics = useMemo(() => {
     if (!selectedCourse) return null
@@ -302,46 +317,9 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
     setGenerating(true)
     setGenError(null)
     try {
-      // Build prior annotation context from same-qualification worksheets
-      const sameQual = entries.filter(
-        e => e.qualification_id === selectedCourse.qualification_id &&
-             e.exam_board === selectedCourse.exam_board
-      )
-      const priorAnnotations = sameQual
-        .filter(e => e.annotation)
-        .slice(0, 5)
-        .map(e => ({ topic: e.topic, rating: e.rating, annotation: e.annotation! }))
-
-      // Fetch block annotations for matching worksheets (include change_summary for richer context)
-      let priorBlockAnnotations: Array<{ block_type: string; topic: string; annotation: string; change_summary?: string; insight?: string }> = []
-      if (isConfigured && sameQual.length > 0) {
-        type BlockAnnRow = {
-          block_type: string
-          annotation: string
-          change_summary: string
-          annotation_insights: { insight_text: string }[]
-          worksheets: { topic: string } | null
-        }
-        const { data } = await supabase
-          .from('block_annotations')
-          .select('block_type, annotation, change_summary, annotation_insights(insight_text), worksheets(topic)')
-          .in('worksheet_id', sameQual.map(e => e.id))
-          .neq('annotation', '')
-          .order('updated_at', { ascending: false })
-          .limit(15)
-        if (data) {
-          priorBlockAnnotations = (data as unknown as BlockAnnRow[])
-            .filter(b => b.annotation)
-            .map(b => ({
-              block_type: b.block_type,
-              topic: (b.worksheets as { topic: string } | null)?.topic ?? '',
-              annotation: b.annotation,
-              change_summary: b.change_summary || undefined,
-              insight: b.annotation_insights?.[0]?.insight_text,
-            }))
-        }
-      }
-
+      const target = guidanceTarget()
+      const g: GenerationGuidance = guidance
+        ?? (target ? await loadGenerationGuidance(target) : { exemplars: [], priorAnnotations: [], priorBlockAnnotations: [] })
       const worksheet = await generateWorksheet({
         topic: topicTitle || freeText || selectedPoint,
         examBoard: selectedCourse.exam_board,
@@ -352,8 +330,10 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,
         teachingPhilosophy: profile?.teaching_philosophy || undefined,
-        priorAnnotations: priorAnnotations.length > 0 ? priorAnnotations : undefined,
-        priorBlockAnnotations: priorBlockAnnotations.length > 0 ? priorBlockAnnotations : undefined,
+        priorAnnotations: g.priorAnnotations.length > 0 ? g.priorAnnotations : undefined,
+        priorBlockAnnotations: g.priorBlockAnnotations.length > 0 ? g.priorBlockAnnotations : undefined,
+        exemplars: g.exemplars.length > 0 ? g.exemplars : undefined,
+        profileInsight: g.profileInsight,
         oakContext: oakLesson ? ({
           lessonTitle: oakLesson.lessonTitle,
           learningPoints: oakLesson.keyLearningPoints,
@@ -362,13 +342,41 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
           images: oakTopicImages.length > 0 ? oakTopicImages : undefined,
         } satisfies OakContext) : undefined,
       })
-      onGenerated(worksheet, worksheetType)
+      let finished = worksheet
+      if (worksheet.blocks.some(b => b.type === 'figure' && b.diagramRequest)) {
+        setGenStage('Drawing diagrams…')
+        const context = [selectedCourse.exam_board, 'higher', topicTitle || freeText, selectedPoint || freeText].filter(Boolean).join(' · ')
+        finished = await drawRequestedDiagrams(worksheet, context)
+      }
+      onGenerated(finished, worksheetType)
     } catch (err) {
       setGenError(err instanceof Error ? err.message : String(err))
     } finally {
       setGenerating(false)
+      setGenStage(undefined)
     }
   }
+
+  function guidanceTarget() {
+    if (!profile?.id || !selectedCourse || !worksheetType) return null
+    return {
+      profileId: profile.id,
+      qualification: selectedCourse.qualification_id,
+      examBoard: selectedCourse.exam_board,
+      worksheetType,
+      specPoint: selectedPoint || freeText || undefined,
+      topic: topicTitle || undefined,
+    }
+  }
+
+  useEffect(() => {
+    const target = guidanceTarget()
+    if (step !== 'mode' || !target) return
+    let cancelled = false
+    loadGenerationGuidance(target).then(g => { if (!cancelled) setLoadedGuidance({ type: target.worksheetType, g }) }).catch(() => {})
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, worksheetType, selectedCourse, selectedPoint, freeText, profile?.id])
 
   const specLabel = selectedCourse
     ? offeringLabel(selectedCourse.qualification_id, selectedCourse.exam_board)
@@ -386,7 +394,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
 
         {/* Generating screen — replaces all steps */}
         {generating && (
-          <GeneratingScreen worksheetType={worksheetType ?? 'knowledge'} />
+          <GeneratingScreen worksheetType={worksheetType ?? 'knowledge'} stage={genStage} />
         )}
 
         {/* Step 1: course */}
@@ -591,17 +599,31 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
             {worksheetType && (
               <div className="wizard-field">
                 <label className="wizard-label">
-                  Extra notes for the AI <span className="wizard-optional">(optional)</span>
+                  {worksheetType === 'custom'
+                    ? 'Describe the worksheet you want'
+                    : <>Extra notes for the AI <span className="wizard-optional">(optional)</span></>}
                 </label>
                 <textarea
                   className="wizard-textarea"
-                  rows={2}
+                  rows={worksheetType === 'custom' ? 5 : 2}
                   value={extraNotes}
                   onChange={e => setExtraNotes(e.target.value)}
-                  placeholder="e.g. include a question about the effect of mass on acceleration"
+                  placeholder={worksheetType === 'custom'
+                    ? 'e.g. Year 12 circular motion. Start with 5 retrieval questions on Newton\'s laws, then a key facts box, a worked example on centripetal force, 8 graded calculations (include two with a diagram of a car on a banked track), and finish with a 6-mark explain question.'
+                    : 'e.g. include a question about the effect of mass on acceleration'}
                   disabled={generating}
                 />
               </div>
+            )}
+
+            {worksheetType && guidance && (guidance.exemplars.length > 0 || guidance.profileInsight) && (
+              <p className="wizard-guidance">
+                ✦ Learning from{' '}
+                {[
+                  guidance.exemplars.length > 0 && `${guidance.exemplars.length} of your top-rated worksheets (${guidance.exemplars.map(e => `“${e.title}”`).join(', ')})`,
+                  guidance.profileInsight && 'your latest Insights analysis',
+                ].filter(Boolean).join(' and ')}
+              </p>
             )}
 
             {genError && <p className="wizard-error">{genError}</p>}
@@ -613,7 +635,7 @@ export function NewSheetWizard({ onGenerated, onCancel, entries = [] }: Props) {
               <button
                 className="wizard-btn wizard-btn--generate"
                 onClick={handleGenerate}
-                disabled={!worksheetType || generating}
+                disabled={!worksheetType || generating || (worksheetType === 'custom' && !extraNotes.trim())}
               >
                 {generating
                   ? <><span className="wizard-spinner" /> Generating…</>

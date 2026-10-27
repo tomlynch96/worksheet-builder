@@ -67,6 +67,7 @@ export interface FigureBlock {
   imageData?: string   // base64 for uploaded images
   imageUrl?: string    // remote URL (e.g. Oak CDN)
   diagram?: FigureDiagram  // parametric SVG; imageData holds its PNG render for PDF export
+  diagramRequest?: string  // AI-written description of a diagram still to be drawn
 }
 
 export interface SpacerBlock {
