@@ -241,6 +241,35 @@ PEDAGOGICAL RULES — follow exactly:
 ${FORMATTING_RULES}
 ${WORKSHEET_FORMAT}`
 
+const SYSTEM_CUSTOM = `You are building a complete science worksheet for secondary school pupils to a teacher's brief.
+
+PEDAGOGICAL RULES — how to decide what to build:
+
+1. The teacher's brief is the authority. Follow it on content, length, structure, activity types, difficulty and tier.
+2. Where the brief is silent, follow this teacher's exemplar worksheets and known preferences (sections above). Where those are silent too, default to: header → instructions → a short information block → activities that progress from recall, to application, to an extended response.
+3. Choose freely from EVERY block type in the format guide — pick whatever best serves the brief:
+   - information: key facts, equations with symbols and units, definitions
+   - worked_example: a step-by-step model answer, placed just before the practice it models
+   - question: single or multi-part, with answer lines, mark scheme and numericalAnswer; data tables/graphs and figures can be attached
+   - multiple_choice: A–D options; use "correctIndices": [..] when more than one option is correct
+   - cloze: fill-in-the-blanks passage, optional word bank
+   - match_them_up: term ↔ definition, quantity ↔ unit, cause ↔ effect
+   - order_steps: sequence a method, process or calculation
+   - data: results tables (hiddenCells for "complete the table"), line graphs for plotting (pre-plotted points via omitRows, best-fit settings), bar charts — always attached to a question
+   - numerical_answers: a scrambled answer box for self-checking — put it at the end when the sheet has numerical answers
+   - spacer: blank working space
+   - figure with an AI-drawn diagram (see rule 4)
+4. AI DIAGRAMS. When a question needs a diagram (forces on an object, circuits, ray diagrams, field lines, orbits, motion paths, pendulums, apparatus, inclined planes…), add a figure block with a "diagramRequest" and the app will draw an exam-style labelled line diagram from it:
+   { "id":"fig-001", "type":"figure", "caption":"Figure 1", "size":"medium", "diagramRequest":"A simple pendulum: string length 0.80 m from a fixed support, displaced 12° from the vertical, bob mass 0.20 kg. Label the length, angle and mass." }
+   - Put every value and label the question relies on into diagramRequest, so the drawing matches the question exactly. Quantities pupils must calculate are labelled with a symbol or "?", not a value.
+   - Attach it with "attachedFigureId":"fig-001" on the question (or on the single part that uses it). Place the figure block immediately before its question in the blocks array.
+   - The question must refer to it by caption ("Figure 1 shows…").
+   - At most 4 AI diagrams per worksheet. Do not set imageUrl or imageData on these figures.
+5. Every question / part must have a markScheme using [1] notation, and a numericalAnswer when the answer is a single number.
+6. Use the exam board's command words exactly.
+${FORMATTING_RULES}
+${WORKSHEET_FORMAT}`
+
 const SYSTEM_BLOCK = `You are generating content for a science worksheet.
 
 NORMAL CASE — output a single JSON block object.
@@ -523,7 +552,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }\nWhen generating ${priorBlockAnnotations.map(b => b.block_type).filter((v,i,a)=>a.indexOf(v)===i).join('/')} blocks, apply these preferences directly.\n`
     : ''
 
-  const contextSection = philosophySection + oakSection + priorSection + priorBlockSection
+  const { profileInsight } = params as Record<string, string>
+  const insightSection = profileInsight?.trim()
+    ? `\n## What we have learned about this teacher from their edits and annotations\nThe analysis below was written to the teacher, so "you" means the teacher. Treat every preference and recurring correction in it as an instruction: build the worksheet so these edits would not be needed.\n\n${profileInsight.trim()}\n`
+    : ''
+
+  interface Exemplar { title: string; topic: string; specPoint?: string; worksheetType?: string; rating: number; annotation?: string; blocks: unknown[] }
+  const exemplars = (params as Record<string, unknown>).exemplars as Exemplar[] | undefined
+  const exemplarSection = exemplars?.length
+    ? `\n## This teacher's best worksheets — use them as models\nThe teacher rated these worksheets highly. They show what this teacher considers a good worksheet. Study them for: overall structure and block order; the mix of activity types; how difficulty progresses; marks and answer lines per question; length, tone and reading level of stems; how much scaffolding and support is given; when worked examples and information boxes are used; mark scheme style.\nMatch those patterns closely. Do NOT copy their questions, numbers or content — the new worksheet is on a different topic. Where the worksheet-type rules below require a specific structure, keep that structure and use the exemplars for everything within it. The teacher's comment on each exemplar says what they valued most.\n${
+        exemplars.map((e, i) => [
+          `\n### Exemplar ${i + 1}: "${e.title}"`,
+          `Topic: ${e.topic}${e.specPoint ? ` · Spec point: ${e.specPoint}` : ''}${e.worksheetType ? ` · Type: ${e.worksheetType}` : ''} · Rated ${e.rating}/5`,
+          e.annotation ? `Teacher's comment: "${e.annotation}"` : '',
+          JSON.stringify(e.blocks),
+        ].filter(Boolean).join('\n')).join('\n')
+      }\n`
+    : ''
+
+  const contextSection = philosophySection + insightSection + oakSection + priorSection + priorBlockSection + exemplarSection
 
   if (mode === 'worksheet') {
     const { topic, examBoard, tier, qualification, specPoint, worksheetType, extraNotes, difficulty, equations } = params as Record<string, unknown>
@@ -531,10 +578,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       typeof difficulty === 'number' ? difficulty : 3,
       Array.isArray(equations) ? equations as string[] : [],
     )
-    const typeMap: Record<string, string> = { maths: mathsPrompt, knowledge: SYSTEM_KNOWLEDGE, practical: SYSTEM_PRACTICAL }
+    const typeMap: Record<string, string> = { maths: mathsPrompt, knowledge: SYSTEM_KNOWLEDGE, practical: SYSTEM_PRACTICAL, custom: SYSTEM_CUSTOM }
     const basePrompt = typeMap[worksheetType as string] ?? SYSTEM_KNOWLEDGE
     systemPrompt = contextSection
-      ? basePrompt.replace('\nPEDAGOGICAL RULES', `${contextSection}\nPEDAGOGICAL RULES`)
+      // Function form: exemplar JSON may contain "$" sequences that a replacement string would expand
+      ? basePrompt.replace('\nPEDAGOGICAL RULES', () => `${contextSection}\nPEDAGOGICAL RULES`)
       : basePrompt
     userMessage = [
       'Generate a worksheet with these parameters:',
@@ -543,7 +591,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `Tier: ${tier}`,
       qualification ? `Qualification: ${qualification}` : '',
       specPoint ? `Spec point: ${specPoint}` : '',
-      extraNotes ? `Extra notes from teacher: ${extraNotes}` : '',
+      extraNotes ? `${worksheetType === 'custom' ? "Teacher's brief for the whole worksheet" : 'Extra notes from teacher'}: ${extraNotes}` : '',
     ].filter(Boolean).join('\n')
 
   } else if (mode === 'block') {
@@ -629,7 +677,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 8192,
+        // Custom briefs can ask for long sheets; don't truncate the JSON
+        max_tokens: mode === 'worksheet' && (params as Record<string, unknown>).worksheetType === 'custom' ? 16000 : 8192,
         system: systemPrompt,
         messages,
       }),

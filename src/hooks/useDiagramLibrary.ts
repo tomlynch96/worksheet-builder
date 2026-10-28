@@ -24,6 +24,26 @@ export interface NewLibraryDiagram {
 // PostgREST .or() filters are comma/paren delimited — keep user text out of the syntax
 const clean = (s: string) => s.replace(/[,()%*\\"]/g, ' ').trim()
 
+// Shared by the diagram studio and the custom-worksheet generator
+export async function saveLibraryDiagram(profileId: string, d: NewLibraryDiagram): Promise<string | null> {
+  if (!isConfigured || !profileId) return null
+  const { data, error } = await supabase.from('diagrams').insert({
+    profile_id: profileId,
+    title: d.title,
+    description: d.description,
+    svg_template: d.template,
+    variables: d.variables,
+    spec_points: d.specPoints,
+    topics: d.topics,
+    exam_board: d.examBoard ?? null,
+    qualification: d.qualification ?? null,
+    prompts: d.prompts,
+    parent_id: d.parentId ?? null,
+  }).select('id').single()
+  if (error) { console.error('[diagrams] save failed:', error.message); return null }
+  return (data as { id: string }).id
+}
+
 export function useDiagramLibrary(profileId?: string) {
   const [results, setResults] = useState<LibraryDiagram[]>([])
   const [loading, setLoading] = useState(false)
@@ -44,24 +64,10 @@ export function useDiagramLibrary(profileId?: string) {
     setLoading(false)
   }, [])
 
-  const save = useCallback(async (d: NewLibraryDiagram): Promise<string | null> => {
-    if (!isConfigured || !profileId) return null
-    const { data, error: err } = await supabase.from('diagrams').insert({
-      profile_id: profileId,
-      title: d.title,
-      description: d.description,
-      svg_template: d.template,
-      variables: d.variables,
-      spec_points: d.specPoints,
-      topics: d.topics,
-      exam_board: d.examBoard ?? null,
-      qualification: d.qualification ?? null,
-      prompts: d.prompts,
-      parent_id: d.parentId ?? null,
-    }).select('id').single()
-    if (err) { console.error('[diagrams] save failed:', err.message); return null }
-    return (data as { id: string }).id
-  }, [profileId])
+  const save = useCallback(
+    async (d: NewLibraryDiagram) => profileId ? saveLibraryDiagram(profileId, d) : null,
+    [profileId],
+  )
 
   const recordUse = useCallback(async (id: string) => {
     if (!isConfigured) return

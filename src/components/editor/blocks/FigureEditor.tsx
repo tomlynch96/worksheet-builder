@@ -53,7 +53,7 @@ export function FigureEditor({ block, dispatch, oakImages, questionContext, onQu
 
   async function applyStudio({ diagram, caption, question }: DiagramStudioResult) {
     const updates = await figureUpdatesForDiagram(diagram)
-    update({ ...updates, caption: caption || block.caption })
+    update({ ...updates, caption: caption || block.caption, diagramRequest: undefined })
     setValuesEdited(false)
     if (question && onQuestionGenerated) onQuestionGenerated(question, diagram.variables)
   }
@@ -169,6 +169,8 @@ export function FigureEditor({ block, dispatch, oakImages, questionContext, onQu
       {studio && (
         <DiagramStudioModal
           initial={studio === 'generate' ? block.diagram : undefined}
+          // A diagram the worksheet generator asked for but couldn't draw: start from its description
+          initialRequest={studio === 'generate' && !block.diagram ? block.diagramRequest : undefined}
           initialCaption={block.caption}
           questionMode={onQuestionGenerated ? 'optional' : 'none'}
           questionContext={questionContext}
