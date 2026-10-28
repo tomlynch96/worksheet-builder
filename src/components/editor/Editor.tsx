@@ -10,6 +10,7 @@ import { RTEToolbar } from './RTEToolbar'
 import { DiagramContextProvider, describeQuestion, questionUpdates } from './DiagramContext'
 import { DiagramStudioModal, type DiagramStudioResult } from './DiagramStudioModal'
 import { figureUpdatesForDiagram } from '../../utils/diagramSvg'
+import { describeSpecPoint } from '../../data/qualifications'
 import { generateBlock, generateVariation, generateWorkedExample, generateExtraPart } from '../../utils/generateWorksheet'
 import './Editor.css'
 
@@ -113,7 +114,7 @@ export function Editor({ worksheet, dispatch, selectedId, onSelect, worksheetId,
     header?.examBoard,
     header?.tier,
     header?.topic,
-    header?.specPoint,
+    describeSpecPoint(header?.qualification, header?.examBoard, header?.specPoint),
   ].filter(Boolean).join(' · ')
 
   const diagramCtx = useMemo(() => ({

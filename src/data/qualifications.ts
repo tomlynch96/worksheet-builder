@@ -117,6 +117,17 @@ export function offeringLabel(qualId: string | null | undefined, examBoard: stri
   return `${examBoard} ${offering.shortLabel}`
 }
 
+/** "ref — title" for a stored spec point ref, so the AI sees the learning point, not just its number. */
+export function describeSpecPoint(qualId: string | null | undefined, examBoard: string | null | undefined, ref: string | null | undefined): string | undefined {
+  if (!ref) return undefined
+  if (!qualId || !examBoard) return ref
+  const topics = getSpecTopics(qualId, examBoard)
+  const point = topics?.flatMap(t => t.points).find(p => p.ref === ref)
+  if (point) return `${point.ref} — ${point.title}`
+  const topic = topics?.find(t => t.ref === ref)
+  return topic ? `${topic.ref} — ${topic.title}` : ref
+}
+
 export function getSpecTopics(qualId: string, examBoard: string) {
   const offering = getOffering(qualId)
   if (!offering) return null

@@ -573,7 +573,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const contextSection = philosophySection + insightSection + oakSection + priorSection + priorBlockSection + exemplarSection
 
   if (mode === 'worksheet') {
-    const { topic, examBoard, tier, qualification, specPoint, worksheetType, extraNotes, difficulty, equations } = params as Record<string, unknown>
+    const { topic, examBoard, tier, qualification, specPoint, specPointDescription, worksheetType, extraNotes, difficulty, equations } = params as Record<string, unknown>
     const mathsPrompt = buildMathsPrompt(
       typeof difficulty === 'number' ? difficulty : 3,
       Array.isArray(equations) ? equations as string[] : [],
@@ -590,7 +590,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `Exam board: ${examBoard}`,
       `Tier: ${tier}`,
       qualification ? `Qualification: ${qualification}` : '',
-      specPoint ? `Spec point: ${specPoint}` : '',
+      specPoint ? `Spec point: ${specPointDescription || specPoint}` : '',
+      specPointDescription ? 'Write the worksheet to cover exactly this learning point from the specification.' : '',
       extraNotes ? `${worksheetType === 'custom' ? "Teacher's brief for the whole worksheet" : 'Extra notes from teacher'}: ${extraNotes}` : '',
     ].filter(Boolean).join('\n')
 

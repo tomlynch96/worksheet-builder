@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useProfileContext } from '../context/ProfileContext'
-import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel } from '../data/qualifications'
+import { QUALIFICATION_OFFERINGS, getOffering, getSpecTopics, offeringLabel, describeSpecPoint } from '../data/qualifications'
 import { generateWorksheet } from '../utils/generateWorksheet'
 import { loadGenerationGuidance, type GenerationGuidance } from '../utils/generationGuidance'
 import { drawRequestedDiagrams } from '../utils/generateDiagram'
@@ -326,6 +326,9 @@ export function NewSheetWizard({ onGenerated, onCancel }: Props) {
         tier: 'higher',
         qualification: selectedCourse.qualification_id,
         specPoint: selectedPoint || freeText,
+        specPointDescription: selectedPoint
+          ? describeSpecPoint(selectedCourse.qualification_id, selectedCourse.exam_board, selectedPoint)
+          : undefined,
         worksheetType,
         extraNotes: extraNotes.trim() || undefined,
         difficulty: worksheetType === 'maths' ? difficulty : undefined,

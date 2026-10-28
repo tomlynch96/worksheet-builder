@@ -122,6 +122,7 @@ export async function generateWorksheet(params: {
   tier: string
   qualification?: string
   specPoint?: string
+  specPointDescription?: string   // "ref — title", for the prompt only; the header keeps the bare ref
   worksheetType: 'maths' | 'knowledge' | 'practical' | 'custom'
   extraNotes?: string
   difficulty?: number
