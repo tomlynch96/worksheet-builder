@@ -192,6 +192,13 @@
   top: 90px;
 }
 
+/* Stacked above the philosophy text on narrow screens, so it mustn't pin over it */
+@media (max-width: 760px) {
+  .pdf-preview {
+    position: static;
+  }
+}
+
 .pdf-preview-frame {
   position: relative;
   display: block;
