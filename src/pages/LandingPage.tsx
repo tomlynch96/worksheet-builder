@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import '../components/layout/Topbar.css'
 import './LandingPage.css'
+
+const AI_USE_SOURCE_URL = 'https://neu.org.uk/latest/press-releases/state-education-2026-ai'
 
 // ── Example worksheet preview (Animal Cells, pre-seeded from Oak National Academy) ──
 const WORKSHEET_PAGE_COUNT = 9
@@ -57,7 +59,7 @@ function PdfClickThrough() {
   )
 }
 
-// ── Philosophy bullets ──────────────────────────────────────────────────────
+// ── What a good worksheet looks like ────────────────────────────────────────
 
 const PHILOSOPHY_POINTS = [
   {
@@ -81,11 +83,7 @@ const PHILOSOPHY_POINTS = [
 function PhilosophySummary() {
   return (
     <div className="philosophy">
-      <h2 className="philosophy-title">Why these worksheets look the way they do</h2>
-      <p className="philosophy-intro">
-        What does a good worksheet look like? This didn't use to exist, but with AI — now it can.
-      </p>
-
+      <h3 className="philosophy-title">What I think a good worksheet looks like</h3>
       <ul className="philosophy-list">
         {PHILOSOPHY_POINTS.map(point => (
           <li key={point.title} className="philosophy-item">
@@ -94,323 +92,126 @@ function PhilosophySummary() {
           </li>
         ))}
       </ul>
-
-      <a className="landing-cta" href="/onboarding">Try it now</a>
-      <p className="landing-cta-note">Help shape what this project becomes</p>
     </div>
   )
 }
 
-// ── Prompt → worksheet → bubble sheet flow (animates once, then stays static) ──
+// ── Framed screenshot ───────────────────────────────────────────────────────
 
-function PromptPanel() {
+function Shot({ src, alt, caption, crop, maxWidth }: { src: string; alt: string; caption?: string; crop?: string; maxWidth?: number }) {
   return (
-    <svg viewBox="0 0 200 190" className="flow-svg" role="img" aria-label="A teacher typing a prompt describing the worksheet they need">
-      <rect x="4" y="4" width="192" height="182" rx="12" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
-      <circle className="flow-fade" cx="28" cy="30" r="10" fill="#4f46e5" style={{ animationDelay: '0.1s' }} />
-      <text className="flow-fade" x="28" y="34" textAnchor="middle" fontSize="12" fill="#fff" style={{ animationDelay: '0.1s' }}>✦</text>
-      <text className="flow-fade" x="46" y="34" fontSize="9" fontWeight="700" fill="#4338ca" letterSpacing="0.05em" style={{ animationDelay: '0.2s' }}>
-        YOUR PROMPT
-      </text>
-
-      <text className="flow-fade" x="24" y="66" fontSize="11" fontStyle="italic" fill="#374151" style={{ animationDelay: '0.4s' }}>
-        Worksheet on animal cells,
-      </text>
-      <text className="flow-fade" x="24" y="84" fontSize="11" fontStyle="italic" fill="#374151" style={{ animationDelay: '0.62s' }}>
-        Year 8, starting easy and
-      </text>
-      <text className="flow-fade" x="24" y="102" fontSize="11" fontStyle="italic" fill="#374151" style={{ animationDelay: '0.84s' }}>
-        building to harder questions.
-      </text>
-
-      <rect className="flow-cursor" x="184" y="91" width="2.4" height="13" fill="#4f46e5" style={{ animationDelay: '1.05s, 1.35s' }} />
-    </svg>
+    <figure className="shot" style={maxWidth ? { maxWidth } : undefined}>
+      <div className="shot-frame" style={crop ? { aspectRatio: crop } : undefined}>
+        <img src={src} alt={alt} className={`shot-img${crop ? ' shot-img--crop' : ''}`} />
+      </div>
+      {caption && <figcaption className="shot-caption">{caption}</figcaption>}
+    </figure>
   )
 }
 
-function WorksheetPanel() {
-  const lines = [0.85, 0.6, 0.75, 0.4]
+// ── Problem → approach section ──────────────────────────────────────────────
+
+interface ProblemSectionProps {
+  id: string
+  number: number
+  title: string
+  status: 'working' | 'experimental'
+  problem: ReactNode
+  approach: ReactNode[]
+  media: ReactNode
+  reverse?: boolean
+  tint?: boolean
+  children?: ReactNode
+}
+
+function ProblemSection({ id, number, title, status, problem, approach, media, reverse, tint, children }: ProblemSectionProps) {
   return (
-    <svg viewBox="0 0 200 190" className="flow-svg" role="img" aria-label="A print-ready worksheet being generated">
-      <rect x="4" y="4" width="192" height="182" rx="12" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
-      <rect className="flow-fade" x="20" y="22" width="130" height="10" rx="3" fill="#111827" style={{ animationDelay: '1.6s' }} />
-      <rect className="flow-fade" x="20" y="40" width="80" height="7" rx="3" fill="#9ca3af" style={{ animationDelay: '1.75s' }} />
-      {lines.map((w, i) => (
-        <rect
-          key={i}
-          className="flow-fade"
-          x="20"
-          y={62 + i * 15}
-          width={152 * w}
-          height="6"
-          rx="3"
-          fill="#d1d5db"
-          style={{ animationDelay: `${1.9 + i * 0.13}s` }}
-        />
-      ))}
-      <g transform="translate(20, 132)">
-        <line className="flow-fade" x1="0" y1="40" x2="0" y2="0" stroke="#9ca3af" strokeWidth="2" style={{ animationDelay: '2.5s' }} />
-        <line className="flow-fade" x1="0" y1="40" x2="130" y2="40" stroke="#9ca3af" strokeWidth="2" style={{ animationDelay: '2.5s' }} />
-        <polyline
-          className="flow-draw-el"
-          points="12,32 38,16 64,22 92,6 118,14"
-          fill="none"
-          stroke="#4f46e5"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ animationDelay: '2.65s' }}
-        />
-      </g>
-    </svg>
+    <section className={`problem${tint ? ' problem--tint' : ''}`} id={id}>
+      <div className={`problem-inner${reverse ? ' problem-inner--reverse' : ''}`}>
+        <div className="problem-copy">
+          <div className="problem-meta">
+            <span className="problem-number">{String(number).padStart(2, '0')}</span>
+            <span className={`problem-status problem-status--${status}`}>
+              {status === 'working' ? 'Working now' : 'Experimental'}
+            </span>
+          </div>
+          <h2 className="problem-title">{title}</h2>
+
+          <p className="problem-label">The problem</p>
+          <p className="problem-text">{problem}</p>
+
+          <p className="problem-label problem-label--approach">What I'm doing about it</p>
+          <ul className="problem-approach">
+            {approach.map((item, i) => <li key={i}>{item}</li>)}
+          </ul>
+        </div>
+        <div className="problem-media">{media}</div>
+      </div>
+      {children}
+    </section>
   )
 }
 
-function BubbleSheetPanel() {
-  const answerKey = [1, 3, 0, 2, 1]
-  return (
-    <svg viewBox="0 0 200 190" className="flow-svg" role="img" aria-label="The worksheet becoming an auto-markable bubble sheet">
-      <rect x="4" y="4" width="192" height="182" rx="12" fill="#fff" stroke="#e5e7eb" strokeWidth="2" />
-      <rect className="flow-fade" x="20" y="22" width="100" height="10" rx="3" fill="#111827" style={{ animationDelay: '3.4s' }} />
-      {[...Array(12)].map((_, i) => (
-        <rect key={i} className="flow-fade" x={140 + i * 3.6} y="18" width="1.8" height="18" fill="#d1d5db" style={{ animationDelay: '3.4s' }} />
-      ))}
-      {['A', 'B', 'C', 'D'].map((label, c) => (
-        <text key={label} className="flow-fade" x={92 + c * 20} y="50" textAnchor="middle" fontSize="9" fontWeight="700" fill="#6b7280" style={{ animationDelay: '3.5s' }}>
-          {label}
-        </text>
-      ))}
-      {answerKey.map((filledCol, r) => (
-        <g key={r}>
-          <text className="flow-fade" x="20" y={68 + r * 26} fontSize="9" fill="#6b7280" style={{ animationDelay: '3.5s' }}>{r + 1}</text>
-          {[0, 1, 2, 3].map(c => {
-            const filled = c === filledCol
-            return filled ? (
-              <circle
-                key={c}
-                className="flow-pop-el"
-                cx={92 + c * 20}
-                cy={64 + r * 26}
-                r="6.5"
-                fill="#4f46e5"
-                stroke="#4f46e5"
-                strokeWidth="1.6"
-                style={{ animationDelay: `${3.7 + r * 0.14}s` }}
-              />
-            ) : (
-              <circle key={c} cx={92 + c * 20} cy={64 + r * 26} r="6.5" fill="#fff" stroke="#d1d5db" strokeWidth="1.6" />
-            )
-          })}
-        </g>
-      ))}
-    </svg>
-  )
-}
+// ── Hero background: pinned to the viewport but clipped to the hero, fades in
+//    once loaded and fades out as you scroll down ──────────────────────────
 
-function FlowArrow({ delay }: { delay: number }) {
-  return (
-    <div className="flow-arrow" aria-hidden="true">
-      <svg viewBox="0 0 60 24" className="flow-arrow-svg">
-        <line className="flow-draw-el" x1="2" y1="12" x2="44" y2="12" stroke="#c7d2fe" strokeWidth="3" style={{ animationDelay: `${delay}s` }} />
-        <path className="flow-fade" d="M38 4 L54 12 L38 20 Z" fill="#4f46e5" style={{ animationDelay: `${delay + 0.15}s` }} />
-      </svg>
-    </div>
-  )
-}
+const HERO_BG_URL = '/Background.svg'
 
-function PromptToBubbleSheetFlow() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [played, setPlayed] = useState(false)
+function HeroBackground() {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setPlayed(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.3 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
+    const img = new Image()
+    img.onload = () => setLoaded(true)
+    img.src = HERO_BG_URL
+  }, [])
+
+  useEffect(() => {
+    // Browsers with scroll-driven animations fade it in CSS, in step with scrolling
+    if (CSS.supports('animation-timeline: scroll()')) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const el = scrollRef.current
+      if (!el) return
+      // Fully faded by the time you've scrolled most of a screen
+      const progress = Math.min(1, window.scrollY / (window.innerHeight * 0.7))
+      el.style.opacity = String(1 - progress)
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
   }, [])
 
   return (
-    <div ref={ref} className={`flow${played ? ' flow--played' : ''}`}>
-      <div className="flow-step">
-        <PromptPanel />
-        <p className="flow-step-title">Describe what you need</p>
-      </div>
-      <FlowArrow delay={1.35} />
-      <div className="flow-step">
-        <WorksheetPanel />
-        <p className="flow-step-title">Get a print-ready worksheet</p>
-      </div>
-      <FlowArrow delay={3.2} />
-      <div className="flow-step">
-        <BubbleSheetPanel />
-        <p className="flow-step-title">Auto-mark with a bubble sheet</p>
-      </div>
-    </div>
-  )
-}
-
-// ── Feature bento grid: tile size follows the source image ─────────────────
-
-interface Feature {
-  slug: string
-  title: string
-  body: string
-  image: string
-  alt: string
-  colSpan: number
-  rowSpan: number
-  position: string
-  /** overrides the default `cover` fit — needed when the source has a lot of dead space */
-  zoom?: string
-  bg: string
-  border: string
-  accent: string
-}
-
-// Grid is 6 columns wide, 90px row unit — spans are chosen so each card's
-// shape follows its source screenshot's own aspect ratio instead of a
-// uniform grid, and the whole thing tiles with zero leftover gaps:
-//   rows 1-4:   Graph (hero, full width)
-//   rows 5-10:  Blocks (tall/narrow) | Worked examples (wide) over Follow-ups + Booklet (square-ish pair)
-//   rows 11-12: Numerical answers (wide) + Mark scheme (small, native aspect)
-const FEATURES: Feature[] = [
-  {
-    slug: 'graph',
-    title: 'Graph',
-    body: "Build graph questions with ease. AI seeds the data and you decide how much or little pupils are expected to do with it. If needed, labelled axes, scales and example plots can be provided.",
-    image: '/features/graph.png',
-    alt: 'A graph question editor with a data table and blank labelled axes ready for pupils to plot',
-    colSpan: 6,
-    rowSpan: 4,
-    position: 'center 45%',
-    bg: '#eff6ff',
-    border: '#bfdbfe',
-    accent: '#1e40af',
-  },
-  {
-    slug: 'blocks',
-    title: 'Blocks',
-    body: 'You make the pedagogical decisions by selecting what type of question you want next.',
-    image: '/features/blocks.png',
-    alt: 'The block picker menu showing question types like Multiple choice, Cloze activity and Worked example',
-    colSpan: 2,
-    rowSpan: 6,
-    position: 'left center',
-    bg: '#f5f3ff',
-    border: '#ddd6fe',
-    accent: '#5b21b6',
-  },
-  {
-    slug: 'worked-examples',
-    title: 'Worked examples',
-    body: 'Add a worked example before any question to model the correct process to pupils.',
-    image: '/features/worked-examples.png',
-    alt: 'A worked example editor showing a step-by-step model answer for calculating energy transfer',
-    colSpan: 4,
-    rowSpan: 3,
-    position: '78% 30%',
-    bg: '#fffbeb',
-    border: '#fde68a',
-    accent: '#92400e',
-  },
-  {
-    slug: 'follow-ups',
-    title: 'Follow-ups',
-    body: "Generate a scannable, self-marking quiz to check the learning has happened. Create as many versions as you like to feel confident pupils aren't copying!",
-    image: '/features/follow-ups.png',
-    alt: 'A bubble-sheet follow-up quiz with a QR code to scan and mark',
-    colSpan: 2,
-    rowSpan: 3,
-    position: 'center 85%',
-    bg: '#ecfeff',
-    border: '#a5f3fc',
-    accent: '#155e75',
-  },
-  {
-    slug: 'booklet',
-    title: 'Booklet',
-    body: 'Made 7 worksheets for a topic? Put them together with our booklet generator.',
-    image: '/features/booklet.png',
-    alt: 'The booklet composer with a worksheet list, contents page and Print / Save PDF button',
-    colSpan: 2,
-    rowSpan: 3,
-    position: '55% center',
-    bg: '#fdf2f8',
-    border: '#fbcfe8',
-    accent: '#9d174d',
-  },
-  {
-    slug: 'numerical-answers',
-    title: 'Numerical answers',
-    body: 'Let pupils check if they are on the right path by providing a list of possible numerical answers.',
-    image: '/features/numerical-answers.png',
-    alt: 'A numerical answers box with a scrambled list of possible answers',
-    colSpan: 4,
-    rowSpan: 2,
-    position: 'center top',
-    bg: '#f0fdf4',
-    border: '#bbf7d0',
-    accent: '#166534',
-  },
-  {
-    slug: 'mark-scheme',
-    title: 'Mark scheme',
-    body: 'The mark scheme data is stored with the question. Edit the worksheet and the mark scheme updates automatically.',
-    image: '/features/mark-scheme.png',
-    alt: 'A toggle switching between the worksheet view and the mark scheme view',
-    colSpan: 2,
-    rowSpan: 2,
-    position: 'center',
-    bg: '#eef2ff',
-    border: '#c7d2fe',
-    accent: '#3730a3',
-  },
-]
-
-function FeatureSections() {
-  return (
-    <div className="bento-grid">
-      {FEATURES.map(f => (
-        <div
-          key={f.slug}
-          className="bento-tile"
-          style={{
-            gridColumn: `span ${f.colSpan}`,
-            gridRow: `span ${f.rowSpan}`,
-            background: f.bg,
-            borderColor: f.border,
-          }}
-        >
-          <div className="bento-tile-copy">
-            <h3 className="bento-tile-title" style={{ color: f.accent }}>{f.title}</h3>
-            <p className="bento-tile-body">{f.body}</p>
-          </div>
-          <div
-            className="bento-tile-shot"
-            role="img"
-            aria-label={f.alt}
-            style={{
-              backgroundImage: `url(${f.image})`,
-              backgroundPosition: f.position,
-              ...(f.zoom ? { backgroundSize: f.zoom } : {}),
-            }}
-          />
+    <div className="landing-hero-bg" aria-hidden="true">
+      <div className="landing-hero-bg-pin">
+        <div ref={scrollRef} className="landing-hero-bg-scroll">
+          <div className={`landing-hero-bg-art${loaded ? ' landing-hero-bg-art--loaded' : ''}`} />
         </div>
-      ))}
+      </div>
     </div>
   )
 }
 
 // ── Landing page ─────────────────────────────────────────────────────────────
+
+const PROBLEMS = [
+  { id: 'formatting', label: 'The formatting fights you' },
+  { id: 'sharing', label: 'Everyone starts from scratch' },
+  { id: 'learning', label: 'Edits teach the AI nothing' },
+  { id: 'quality', label: 'Convenience beats excellence' },
+  { id: 'experiments', label: 'Nobody is rethinking the worksheet' },
+]
 
 export function LandingPage() {
   return (
@@ -424,70 +225,216 @@ export function LandingPage() {
           </span>
         </a>
         <nav className="topbar-nav">
-          <a className="topbar-nav-link" href="#example">Example worksheet</a>
-          <a className="topbar-nav-link" href="#features">Features</a>
-          <a className="topbar-nav-link" href="#videos">Videos</a>
+          <a className="topbar-nav-link" href="#problems">The problems</a>
+          <a className="topbar-nav-link" href="#experiments">Experiments</a>
+          <a className="topbar-nav-link" href="#why">Why paper</a>
         </nav>
         <div className="topbar-right">
           <a className="btn-download" href="/onboarding">Log in / Sign up</a>
         </div>
       </header>
 
-      {/* ── Hero: dusty purple gradient, headline only ── */}
+      {/* ── Hero ── */}
       <section className="landing-hero" id="tagline">
+        <HeroBackground />
         <div className="landing-hero-copy">
+          <span className="landing-hero-pill">A work in progress · built by a teacher</span>
           <h1 className="landing-tagline-title">
-            Paper-based teaching,<br />powered by AI.
+            Teachers already use AI to make worksheets. What if that effort added up?
           </h1>
           <p className="landing-tagline-sub">
-            The AI worksheet platform that improves with every teacher who uses it.
+            The Worksheet Project is my open experiment in AI-assisted resource creation —
+            one that builds on teachers' work instead of throwing it away.
           </p>
+          <div className="landing-hero-actions">
+            <a className="landing-cta" href="/onboarding">Sign up</a>
+            <a className="landing-hero-link" href="#problems">Read what I'm trying ↓</a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Context + contents ── */}
+      <section className="landing-context" id="problems">
+        <div className="landing-context-inner">
+          <p className="landing-context-lead">
+            Making resources is{' '}
+            <a href={AI_USE_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+              teachers' main interaction with AI
+            </a>
+            . But the way we do it now has five problems, and this project is my attempt at each of them.
+          </p>
+          <ol className="landing-contents">
+            {PROBLEMS.map((p, i) => (
+              <li key={p.id}>
+                <a href={`#${p.id}`}>
+                  <span className="landing-contents-num">{String(i + 1).padStart(2, '0')}</span>
+                  {p.label}
+                </a>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* ── Prompt → worksheet → bubble sheet flow ── */}
-      <section className="landing-flow">
-        <PromptToBubbleSheetFlow />
-      </section>
-
-      {/* ── Example worksheet + philosophy, side by side ── */}
-      <section className="landing-showcase" id="example">
-        <PdfClickThrough />
-        <PhilosophySummary />
-      </section>
-
-      {/* ── Feature breakdown ── */}
-      <section className="landing-features" id="features">
-        <FeatureSections />
-      </section>
-
-      {/* ── Videos ── */}
-      <section className="landing-videos" id="videos">
-        <h2 className="landing-videos-title">See it in action</h2>
-        <div className="landing-videos-grid">
-          <div className="landing-video-card">
-            <div className="landing-video-embed">
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/kN-pWBYZXjs"
-                title="Graph features"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-            <h3 className="landing-video-card-title">Graph features</h3>
+      <ProblemSection
+        id="formatting"
+        number={1}
+        title="The formatting fights you"
+        status="working"
+        problem="Ask a chatbot for a worksheet and the layout is different every time. By the time it's been wrestled into something printable, it would often have been quicker to start from scratch."
+        approach={[
+          'Every worksheet uses a fixed layout built from a small set of block types, each with sensible constraints.',
+          'Removing or reordering a block is effortless. Mark schemes are stored with their question, so they move and disappear with it.',
+          'What you see on the page is exactly what prints.',
+          'AI requests deal with one block at a time, so nothing elsewhere on the worksheet changes underneath you.',
+        ]}
+        media={
+          <div className="media-stack">
+            <Shot src="/features/blocks.png" alt="The block picker menu showing question types like Multiple choice, Cloze activity and Worked example" caption="Choose the next block — you make the pedagogical decision." />
+            <Shot src="/features/mark-scheme.png" alt="A toggle switching between the worksheet view and the mark scheme view" caption="One toggle between the worksheet and its mark scheme." maxWidth={300} />
           </div>
-          <div className="landing-video-card">
-            <div className="landing-video-embed">
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/aO1_hZk5_dE"
-                title="Follow-up quizzes"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
+        }
+      />
+
+      <ProblemSection
+        id="sharing"
+        number={2}
+        title="Everyone starts from scratch"
+        status="working"
+        tint
+        reverse
+        problem="Teachers up and down the country make the same worksheet on the same topic, independently, every week. We keep producing mediocre resources instead of our efforts building towards something excellent for everyone."
+        approach={[
+          'Finished worksheets are shared publicly by default, tagged against specification points and searchable by keyword.',
+          'Anyone can copy a worksheet into their own library and develop it further.',
+          'Diagrams the AI draws are added automatically to an open, searchable library, where they can be adjusted (changing the values, for example) and reused.',
+        ]}
+        media={
+          <div className="media-stack">
+            <Shot src="/features/public-library.png" alt="The public library: worksheet cards tagged by spec point, exam board and tier" caption="The public library, filterable by spec point." crop="16 / 10" />
+            <Shot src="/features/diagram-library.png" alt="The diagram studio library with searchable gravitational field diagrams" caption="The shared diagram library." />
+          </div>
+        }
+      />
+
+      <ProblemSection
+        id="learning"
+        number={3}
+        title="Edits teach the AI nothing"
+        status="working"
+        problem="Most editing happens outside the tool — in Word, on paper, in your head. Our preferences never feed back, so next time the AI makes exactly the same choices we just corrected."
+        approach={[
+          'Edits happen natively and are tracked, and you can leave a short note on why you changed something.',
+          'AI reads those notes, generates insights about your style, and feeds them into the prompt whenever you generate a new worksheet.',
+          'A star rating pulls the best resources through as exemplars for the prompt.',
+        ]}
+        media={
+          <Shot src="/features/insights.png" alt="The Edit Insights page showing an active feedback loop and AI-written insights about editing patterns" caption="Edit Insights: what the AI has learned from my own annotations." />
+        }
+      />
+
+      <ProblemSection
+        id="quality"
+        number={4}
+        title="Convenience beats excellence"
+        status="working"
+        tint
+        reverse
+        problem="Most platforms cater for convenience: one click, a whole worksheet, done. That's quick, but it rarely produces something genuinely excellent — and that's what's worth sharing."
+        approach={[
+          "It's designed with best practice in mind, and it does need your input: you decide how pupils will show their understanding of an idea, and in what sequence.",
+          'Worked examples are generated to guide pupils through the process before they try it themselves.',
+          'Graph and data blocks allow the careful embedding of key skills.',
+          'Lists of bottom-line numerical answers encourage effective self-assessment and boost confidence.',
+        ]}
+        media={
+          <div className="media-stack">
+            <Shot src="/features/graph.png" alt="A graph question editor with a data table and blank labelled axes ready for pupils to plot" caption="Graph blocks: AI seeds the data, you decide how much pupils do with it." />
+            <Shot src="/features/worked-examples.png" alt="A worked example editor showing a step-by-step model answer" caption="Worked examples model the process before pupils try it." />
+            <Shot src="/features/numerical-answers.png" alt="A numerical answers box with a scrambled list of possible answers" caption="Numerical answers for pupils to check against." crop="1378 / 300" />
+          </div>
+        }
+      >
+        <div className="landing-showcase" id="example">
+          <PdfClickThrough />
+          <PhilosophySummary />
+        </div>
+      </ProblemSection>
+
+      <ProblemSection
+        id="experiments"
+        number={5}
+        title="Nobody is rethinking the worksheet"
+        status="experimental"
+        problem="The worksheet itself hasn't changed in decades. AI makes it cheap to try ideas that used to be impractical, so I'm experimenting."
+        approach={[
+          "Self-marking follow-up multiple-choice quizzes: scannable bubble sheets, in as many versions as you need so you can be confident pupils aren't copying.",
+          'A booklet generator that combines several worksheets into a single printed booklet.',
+          'Schemes of learning: plan topics across the year, and recall questions on everything learnt so far are generated in an instant.',
+        ]}
+        media={
+          <div className="media-stack">
+            <Shot src="/features/schemes.png" alt="A scheme of learning calendar with topics laid out across weeks and recall points marked" caption="Schemes of learning, with recall points along the year." />
+            <Shot src="/features/follow-ups.png" alt="A bubble-sheet follow-up quiz with a QR code to scan and mark" caption="Follow-up quizzes, scanned and marked automatically." />
+            <Shot src="/features/booklet.png" alt="The booklet composer with a worksheet list and contents page" caption="The booklet composer." />
+          </div>
+        }
+      >
+        <div className="landing-videos">
+          <h3 className="landing-videos-title">See it in action</h3>
+          <div className="landing-videos-grid">
+            <div className="landing-video-card">
+              <div className="landing-video-embed">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/kN-pWBYZXjs"
+                  title="Graph features"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+              <p className="landing-video-card-title">Graph features</p>
             </div>
-            <h3 className="landing-video-card-title">Follow-up quizzes</h3>
+            <div className="landing-video-card">
+              <div className="landing-video-embed">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/aO1_hZk5_dE"
+                  title="Follow-up quizzes"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+              <p className="landing-video-card-title">Follow-up quizzes</p>
+            </div>
           </div>
         </div>
+      </ProblemSection>
+
+      {/* ── Why paper: personal note ── */}
+      <section className="landing-why" id="why">
+        <div className="landing-why-inner">
+          <h2 className="landing-why-title">Why I'm building this</h2>
+          <p>
+            This is now my genuine go-to tool whenever I need a worksheet.
+          </p>
+          <p>
+            I, and many others, want to keep student-facing AI and one-to-one devices out of
+            classrooms. Pupils should be thinking on paper, not on screens. So everything here ends
+            in something you print.
+          </p>
+          <p>
+            But I'm still excited about the innovation AI can bring, especially putting the power of
+            resource creation in the hands of teachers rather than publishers. If enough of us use
+            it, share what we make and refine each other's work, the best version of every worksheet
+            can rise to the top.
+          </p>
+          <p className="landing-why-sign">— Tom</p>
+        </div>
+      </section>
+
+      {/* ── Closing call to action ── */}
+      <section className="landing-close">
+        <h2 className="landing-close-title">Try it, and help shape what it becomes.</h2>
+        <a className="landing-cta" href="/onboarding">Sign up</a>
       </section>
 
     </div>
