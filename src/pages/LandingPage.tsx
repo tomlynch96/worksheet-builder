@@ -152,8 +152,8 @@ function ProblemSection({ id, number, title, status, problem, approach, media, r
   )
 }
 
-// ── Hero background: pinned behind the hero, fades in once loaded and fades
-//    out as you scroll down ─────────────────────────────────────────────────
+// ── Hero background: pinned to the viewport but clipped to the hero, fades in
+//    once loaded and fades out as you scroll down ──────────────────────────
 
 const HERO_BG_URL = '/Background.svg'
 
@@ -168,6 +168,8 @@ function HeroBackground() {
   }, [])
 
   useEffect(() => {
+    // Browsers with scroll-driven animations fade it in CSS, in step with scrolling
+    if (CSS.supports('animation-timeline: scroll()')) return
     let frame = 0
     const update = () => {
       frame = 0
@@ -192,8 +194,10 @@ function HeroBackground() {
 
   return (
     <div className="landing-hero-bg" aria-hidden="true">
-      <div ref={scrollRef} className="landing-hero-bg-scroll">
-        <div className={`landing-hero-bg-art${loaded ? ' landing-hero-bg-art--loaded' : ''}`} />
+      <div className="landing-hero-bg-pin">
+        <div ref={scrollRef} className="landing-hero-bg-scroll">
+          <div className={`landing-hero-bg-art${loaded ? ' landing-hero-bg-art--loaded' : ''}`} />
+        </div>
       </div>
     </div>
   )
@@ -231,8 +235,8 @@ export function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <HeroBackground />
       <section className="landing-hero" id="tagline">
+        <HeroBackground />
         <div className="landing-hero-copy">
           <span className="landing-hero-pill">A work in progress · built by a teacher</span>
           <h1 className="landing-tagline-title">

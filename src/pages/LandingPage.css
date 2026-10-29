@@ -34,24 +34,44 @@
    (violet-600/300/200 — the same "AI feature" purple used for
    .btn-topbar--ai, editor AI accents and spec badges elsewhere in the app)
 ════════════════════════════════════════════ */
-/* The artwork lives in a fixed layer below the top bar, so it stays put while
-   the page scrolls over it; JS fades .landing-hero-bg-scroll out on scroll and
-   the art itself fades in once the SVG has loaded. */
+/* The artwork is pinned to the viewport (.landing-hero-bg-pin is fixed) but
+   clipped to the hero box, so it stays still while the page scrolls and can
+   never show outside the hero, even if the scroll fade lags. The fade itself
+   runs as a scroll-driven animation where supported, else from JS. */
 .landing-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  clip-path: inset(0);
+  pointer-events: none;
+}
+
+.landing-hero-bg-pin {
   position: fixed;
   top: 88px;
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 0;
+  height: calc(100vh - 88px);
   background: #fff;
-  pointer-events: none;
 }
 
 .landing-hero-bg-scroll {
   position: absolute;
   inset: 0;
   will-change: opacity;
+}
+
+@supports (animation-timeline: scroll()) {
+  .landing-hero-bg-scroll {
+    animation: landingHeroBgFade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 70vh;
+  }
+}
+
+@keyframes landingHeroBgFade {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .landing-hero-bg-scroll::before {
