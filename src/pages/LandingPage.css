@@ -34,21 +34,27 @@
    (violet-600/300/200 — the same "AI feature" purple used for
    .btn-topbar--ai, editor AI accents and spec badges elsewhere in the app)
 ════════════════════════════════════════════ */
-.landing-hero {
-  position: relative;
-  min-height: calc(100vh - 88px);
-  background: #fff url('/Background.svg') no-repeat center center;
-  background-size: cover;
-  overflow: hidden;
-  padding: 96px 24px 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-sizing: border-box;
+/* The artwork lives in a fixed layer below the top bar, so it stays put while
+   the page scrolls over it; JS fades .landing-hero-bg-scroll out on scroll and
+   the art itself fades in once the SVG has loaded. */
+.landing-hero-bg {
+  position: fixed;
+  top: 88px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background: #fff;
+  pointer-events: none;
 }
 
-.landing-hero::before {
+.landing-hero-bg-scroll {
+  position: absolute;
+  inset: 0;
+  will-change: opacity;
+}
+
+.landing-hero-bg-scroll::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -56,17 +62,46 @@
     radial-gradient(ellipse 640px 380px at 18% 0%, rgba(124, 58, 237, 0.14), transparent 65%),
     radial-gradient(ellipse 560px 360px at 88% 8%, rgba(196, 181, 253, 0.32), transparent 62%),
     radial-gradient(ellipse 820px 460px at 50% -15%, rgba(221, 214, 254, 0.55), transparent 70%);
-  pointer-events: none;
 }
 
-/* Fades the artwork into the white section below as you scroll past it */
+.landing-hero-bg-art {
+  position: absolute;
+  inset: 0;
+  background: url('/Background.svg') no-repeat center center;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.landing-hero-bg-art--loaded {
+  opacity: 1;
+}
+
+/* Everything after the hero scrolls over the pinned artwork */
+.landing > section {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-hero {
+  min-height: calc(100vh - 88px);
+  /* copy sits between the paper aeroplane (left) and the rocket (right) */
+  padding: 96px 24px 120px 31vw;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Softens the edge where the pinned artwork meets the white section below */
 .landing-hero::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 55%;
+  height: 40%;
   background: linear-gradient(to bottom, transparent, #fff);
   pointer-events: none;
 }
@@ -76,14 +111,14 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
-  max-width: 720px;
+  max-width: min(46vw, 860px);
 }
 
 .landing-tagline-title {
   font-family: 'Aileron', system-ui, sans-serif;
-  font-size: clamp(32px, 4.6vw, 52px);
+  font-size: clamp(32px, 3.6vw, 60px);
   font-weight: 800;
   color: #111827;
   line-height: 1.1;
@@ -98,9 +133,12 @@
   margin: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .landing-hero {
     padding: 64px 24px 72px;
+  }
+  .landing-hero-copy {
+    max-width: 560px;
   }
 }
 
@@ -387,7 +425,6 @@
 .landing-hero-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-wrap: wrap;
   gap: 20px;
   margin-top: 8px;

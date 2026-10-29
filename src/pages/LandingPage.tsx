@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import '../components/layout/Topbar.css'
 import './LandingPage.css'
 
@@ -152,6 +152,53 @@ function ProblemSection({ id, number, title, status, problem, approach, media, r
   )
 }
 
+// ── Hero background: pinned behind the hero, fades in once loaded and fades
+//    out as you scroll down ─────────────────────────────────────────────────
+
+const HERO_BG_URL = '/Background.svg'
+
+function HeroBackground() {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => setLoaded(true)
+    img.src = HERO_BG_URL
+  }, [])
+
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const el = scrollRef.current
+      if (!el) return
+      // Fully faded by the time you've scrolled most of a screen
+      const progress = Math.min(1, window.scrollY / (window.innerHeight * 0.7))
+      el.style.opacity = String(1 - progress)
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  return (
+    <div className="landing-hero-bg" aria-hidden="true">
+      <div ref={scrollRef} className="landing-hero-bg-scroll">
+        <div className={`landing-hero-bg-art${loaded ? ' landing-hero-bg-art--loaded' : ''}`} />
+      </div>
+    </div>
+  )
+}
+
 // ── Landing page ─────────────────────────────────────────────────────────────
 
 const PROBLEMS = [
@@ -184,6 +231,7 @@ export function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
+      <HeroBackground />
       <section className="landing-hero" id="tagline">
         <div className="landing-hero-copy">
           <span className="landing-hero-pill">A work in progress · built by a teacher</span>
