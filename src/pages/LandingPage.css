@@ -435,20 +435,8 @@
 }
 
 /* ════════════════════════════════════════════
-   Hero extras: status pill + actions
+   Hero extras: actions
 ════════════════════════════════════════════ */
-.landing-hero-pill {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #5b21b6;
-  background: rgba(237, 233, 254, 0.9);
-  border: 1px solid #ddd6fe;
-  padding: 6px 14px;
-  border-radius: 999px;
-}
-
 .landing-hero-actions {
   display: flex;
   align-items: center;
@@ -560,38 +548,13 @@
   top: 112px;
 }
 
-.problem-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
 .problem-number {
+  display: block;
+  margin-bottom: 12px;
   font-family: 'Aileron', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 800;
   color: #6366f1;
-}
-
-.problem-status {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid;
-}
-.problem-status--working {
-  color: #166534;
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-}
-.problem-status--experimental {
-  color: #92400e;
-  background: #fffbeb;
-  border-color: #fde68a;
 }
 
 .problem-title {
