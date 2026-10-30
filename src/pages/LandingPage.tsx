@@ -24,7 +24,7 @@ function PdfClickThrough() {
       >
         <img
           src={pageImageUrl(page)}
-          alt={`Animal Cells worksheet — page ${page} of ${WORKSHEET_PAGE_COUNT}`}
+          alt={`Animal Cells worksheet, page ${page} of ${WORKSHEET_PAGE_COUNT}`}
           className="pdf-preview-img"
         />
         <span className="pdf-preview-expand">Open full PDF ↗</span>
@@ -64,19 +64,19 @@ function PdfClickThrough() {
 const PHILOSOPHY_POINTS = [
   {
     title: 'Starts super-easy',
-    body: "Most independent practice fails because the class never really settles. Real, silent focus takes a few minutes to build, and any uncertainty about how to start ruins it — so early questions (often a quick recap of key facts) need to be unmissable.",
+    body: "Most independent practice fails because the class never really settles. Real, silent focus takes a few minutes to build, and any uncertainty about how to start ruins it. So early questions (often a quick recap of key facts) need to be unmissable.",
   },
   {
     title: 'Repeats the same idea, slightly differently',
-    body: "As experts we badly underestimate how much repetition it takes to build fluency. The goal isn't 'until they get it right' — it's 'until they can't get it wrong'.",
+    body: "As experts we badly underestimate how much repetition it takes to build fluency. The goal isn't 'until they get it right', it's 'until they can't get it wrong'.",
   },
   {
     title: 'Builds in complexity',
-    body: "By the end, the same core idea is applied in far harder contexts. Not every pupil gets there — that's fine. It's the only part of the lesson where pupils genuinely work at their own pace.",
+    body: "By the end, the same core idea is applied in far harder contexts. Not every pupil gets there, and that's fine. It's the only part of the lesson where pupils genuinely work at their own pace.",
   },
   {
     title: 'Keeps scientific skills embedded',
-    body: "AI makes short knowledge questions trivial to generate. That can't come at the expense of graphs and diagrams — the real risk when teachers build their own resources from scratch.",
+    body: "AI makes short knowledge questions trivial to generate. That can't come at the expense of graphs and diagrams, which is the real risk when teachers build their own resources from scratch.",
   },
 ]
 
@@ -115,7 +115,6 @@ interface ProblemSectionProps {
   id: string
   number: number
   title: string
-  status: 'working' | 'experimental'
   problem: ReactNode
   approach: ReactNode[]
   media: ReactNode
@@ -124,17 +123,12 @@ interface ProblemSectionProps {
   children?: ReactNode
 }
 
-function ProblemSection({ id, number, title, status, problem, approach, media, reverse, tint, children }: ProblemSectionProps) {
+function ProblemSection({ id, number, title, problem, approach, media, reverse, tint, children }: ProblemSectionProps) {
   return (
     <section className={`problem${tint ? ' problem--tint' : ''}`} id={id}>
       <div className={`problem-inner${reverse ? ' problem-inner--reverse' : ''}`}>
         <div className="problem-copy">
-          <div className="problem-meta">
-            <span className="problem-number">{String(number).padStart(2, '0')}</span>
-            <span className={`problem-status problem-status--${status}`}>
-              {status === 'working' ? 'Working now' : 'Experimental'}
-            </span>
-          </div>
+          <span className="problem-number">{String(number).padStart(2, '0')}</span>
           <h2 className="problem-title">{title}</h2>
 
           <p className="problem-label">The problem</p>
@@ -238,13 +232,12 @@ export function LandingPage() {
       <section className="landing-hero" id="tagline">
         <HeroBackground />
         <div className="landing-hero-copy">
-          <span className="landing-hero-pill">A work in progress · built by a teacher</span>
           <h1 className="landing-tagline-title">
             Teachers already use AI to make worksheets. What if that effort added up?
           </h1>
           <p className="landing-tagline-sub">
-            The Worksheet Project is my open experiment in AI-assisted resource creation —
-            one that builds on teachers' work instead of throwing it away.
+            The Worksheet Project is my open experiment in AI-assisted resource creation.
+            It builds on teachers' work instead of throwing it away.
           </p>
           <div className="landing-hero-actions">
             <a className="landing-cta" href="/onboarding">Sign up</a>
@@ -280,7 +273,6 @@ export function LandingPage() {
         id="formatting"
         number={1}
         title="The formatting fights you"
-        status="working"
         problem="Ask a chatbot for a worksheet and the layout is different every time. By the time it's been wrestled into something printable, it would often have been quicker to start from scratch."
         approach={[
           'Every worksheet uses a fixed layout built from a small set of block types, each with sensible constraints.',
@@ -290,7 +282,7 @@ export function LandingPage() {
         ]}
         media={
           <div className="media-stack">
-            <Shot src="/features/blocks.png" alt="The block picker menu showing question types like Multiple choice, Cloze activity and Worked example" caption="Choose the next block — you make the pedagogical decision." />
+            <Shot src="/features/blocks.png" alt="The block picker menu showing question types like Multiple choice, Cloze activity and Worked example" caption="You choose the next block, so you make the pedagogical decision." />
             <Shot src="/features/mark-scheme.png" alt="A toggle switching between the worksheet view and the mark scheme view" caption="One toggle between the worksheet and its mark scheme." maxWidth={300} />
           </div>
         }
@@ -300,7 +292,6 @@ export function LandingPage() {
         id="sharing"
         number={2}
         title="Everyone starts from scratch"
-        status="working"
         tint
         reverse
         problem="Teachers up and down the country make the same worksheet on the same topic, independently, every week. We keep producing mediocre resources instead of our efforts building towards something excellent for everyone."
@@ -321,8 +312,7 @@ export function LandingPage() {
         id="learning"
         number={3}
         title="Edits teach the AI nothing"
-        status="working"
-        problem="Most editing happens outside the tool — in Word, on paper, in your head. Our preferences never feed back, so next time the AI makes exactly the same choices we just corrected."
+        problem="Most editing happens outside the tool: in Word, on paper, in your head. Our preferences never feed back, so next time the AI makes exactly the same choices we just corrected."
         approach={[
           'Edits happen natively and are tracked, and you can leave a short note on why you changed something.',
           'AI reads those notes, generates insights about your style, and feeds them into the prompt whenever you generate a new worksheet.',
@@ -337,10 +327,9 @@ export function LandingPage() {
         id="quality"
         number={4}
         title="Convenience beats excellence"
-        status="working"
         tint
         reverse
-        problem="Most platforms cater for convenience: one click, a whole worksheet, done. That's quick, but it rarely produces something genuinely excellent — and that's what's worth sharing."
+        problem="Most platforms cater for convenience: one click, a whole worksheet, done. That's quick, but it rarely produces something genuinely excellent, and that's what's worth sharing."
         approach={[
           "It's designed with best practice in mind, and it does need your input: you decide how pupils will show their understanding of an idea, and in what sequence.",
           'Worked examples are generated to guide pupils through the process before they try it themselves.',
@@ -365,7 +354,6 @@ export function LandingPage() {
         id="experiments"
         number={5}
         title="Nobody is rethinking the worksheet"
-        status="experimental"
         problem="The worksheet itself hasn't changed in decades. AI makes it cheap to try ideas that used to be impractical, so I'm experimenting."
         approach={[
           "Self-marking follow-up multiple-choice quizzes: scannable bubble sheets, in as many versions as you need so you can be confident pupils aren't copying.",
@@ -427,7 +415,7 @@ export function LandingPage() {
             it, share what we make and refine each other's work, the best version of every worksheet
             can rise to the top.
           </p>
-          <p className="landing-why-sign">— Tom</p>
+          <p className="landing-why-sign">Tom</p>
         </div>
       </section>
 
