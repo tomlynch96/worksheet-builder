@@ -16,6 +16,16 @@ export interface HeaderBlock {
   showTotalMarks?: boolean
   qualification?: string
   specPoint?: string
+  exam?: ExamCover          // set → the header renders as a full exam front page
+}
+
+// Exam front page. Marks per question and the total are computed from the blocks.
+export interface ExamCover {
+  paperName?: string        // e.g. "Paper 1 (Higher Tier)"
+  durationMinutes?: number
+  instructions: string[]
+  information: string[]
+  targetMarks?: number      // the total the teacher asked for when building
 }
 
 export interface InstructionsBlock {

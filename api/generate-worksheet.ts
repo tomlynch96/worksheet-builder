@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 // ── Formatting rules ──────────────────────────────────────────────────────
 
-const FORMATTING_RULES = `
+export const FORMATTING_RULES = `
 ## Critical formatting rules — apply to ALL blocks
 - NEVER include question numbers (1., 2., Q1, etc.) in any stem or heading — the app adds these automatically.
 - NEVER include marks in brackets (e.g. [2 marks], (3)) in any stem or content — marks are displayed separately.
@@ -12,7 +12,7 @@ const FORMATTING_RULES = `
 
 // ── Shared JSON format spec ───────────────────────────────────────────────
 
-const WORKSHEET_FORMAT = `
+export const WORKSHEET_FORMAT = `
 ## JSON format
 
 Every worksheet is a JSON object: { "id": "<uuid>", "blocks": [ ... ] }
@@ -314,7 +314,7 @@ ${FORMATTING_RULES}`
 type Part = { attachedDataId?: string | null; attachedDataIds?: string[] | null }
 type QuestionBlock = { type: 'question'; id: string; attachedDataId?: string | null; attachedDataIds?: string[] | null; parts?: Part[] }
 type DataBlock = { type: 'data'; id: string; display?: string; rows?: string[][]; columns?: { label: string }[]; graph?: { linkedDataId?: string | null } }
-type Block = { type: string; id: string } & Partial<QuestionBlock> & Partial<DataBlock>
+export type Block = { type: string; id: string } & Partial<QuestionBlock> & Partial<DataBlock>
 
 // Collect all data IDs already referenced by questions/parts
 function referencedDataIds(blocks: Block[]): Set<string> {
@@ -332,7 +332,7 @@ function referencedDataIds(blocks: Block[]): Set<string> {
   return ids
 }
 
-function fixDataBlocks(blocks: Block[]): Block[] {
+export function fixDataBlocks(blocks: Block[]): Block[] {
   const blockIds = new Set(blocks.map(b => b.id))
   const tableBlocks = blocks.filter(b => b.type === 'data' && (b as DataBlock).display === 'table') as DataBlock[]
 

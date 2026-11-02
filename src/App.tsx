@@ -19,6 +19,7 @@ import { SchemesPage } from './pages/SchemesPage'
 import { SchemeEditorPage } from './pages/SchemeEditorPage'
 import { MCQuizPage } from './pages/MCQuizPage'
 import { MarkingPage } from './pages/MarkingPage'
+import { ExamBuilderPage } from './pages/ExamBuilderPage'
 import './App.css'
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/" element={<RootPage />} />
           <Route path="/editor" element={<AuthGate><EditorPage /></AuthGate>} />
+          <Route path="/exam/new" element={<AuthGate><ExamBuilderPage /></AuthGate>} />
           <Route path="/gallery" element={<AuthGate><GalleryPage /></AuthGate>} />
           <Route path="/profile" element={<AuthGate><ProfilePage /></AuthGate>} />
           <Route path="/insights" element={<AuthGate><InsightsPage /></AuthGate>} />

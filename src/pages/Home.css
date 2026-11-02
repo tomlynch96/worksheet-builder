@@ -55,6 +55,9 @@
   flex-shrink: 0;
 }
 .home-hero-cta:hover { background: #4338ca; transform: translateY(-1px); }
+.home-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.home-hero-cta--secondary { background: transparent; border: 1.5px solid #6366f1; color: #e0e7ff; }
+.home-hero-cta--secondary:hover { background: rgba(99, 102, 241, 0.18); }
 
 /* ── Sections ── */
 .home-section {

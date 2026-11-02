@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import type { HeaderBlock, ExamBoard, Tier } from '../../../types/worksheet'
+import type { HeaderBlock, ExamBoard, Tier, ExamCover } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
-import { Field, Row, CheckRow } from '../EditorPrimitives'
+import { Field, Row, CheckRow, ListEditor } from '../EditorPrimitives'
+import { DEFAULT_EXAM_INFORMATION, DEFAULT_EXAM_INSTRUCTIONS } from '../../../utils/marks'
 import { QUALIFICATION_OFFERINGS, getSpecTopics } from '../../../data/qualifications'
 
 interface Props {
@@ -21,6 +22,11 @@ export function HeaderEditor({ block, dispatch }: Props) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
 
+  const exam = block.exam
+  function updateExam(updates: Partial<ExamCover>) {
+    if (exam) update({ exam: { ...exam, ...updates } })
+  }
+
   // Offerings compatible with the currently-selected exam board
   const availableOfferings = useMemo(
     () => QUALIFICATION_OFFERINGS.filter(o => o.examBoards.includes(block.examBoard)),
@@ -35,7 +41,7 @@ export function HeaderEditor({ block, dispatch }: Props) {
 
   return (
     <div className="block-fields">
-      <Field label="Worksheet title">
+      <Field label={exam ? 'Exam title' : 'Worksheet title'}>
         <input value={block.title} onChange={e => update({ title: e.target.value })} />
       </Field>
       <Field label="Topic / subject line">
@@ -89,7 +95,51 @@ export function HeaderEditor({ block, dispatch }: Props) {
       <CheckRow label="Show name field" checked={block.showName} onChange={v => update({ showName: v })} />
       <CheckRow label="Show date field" checked={block.showDate} onChange={v => update({ showDate: v })} />
       <CheckRow label="Show class field" checked={block.showClass} onChange={v => update({ showClass: v })} />
-      <CheckRow label="Show total marks" checked={block.showTotalMarks ?? false} onChange={v => update({ showTotalMarks: v })} />
+      {!exam && (
+        <CheckRow label="Show total marks" checked={block.showTotalMarks ?? false} onChange={v => update({ showTotalMarks: v })} />
+      )}
+      <CheckRow
+        label="Exam front page"
+        checked={!!exam}
+        onChange={v => update({
+          exam: v ? { instructions: DEFAULT_EXAM_INSTRUCTIONS, information: DEFAULT_EXAM_INFORMATION } : undefined,
+        })}
+      />
+      {exam && (
+        <>
+          <Row>
+            <Field label="Paper name">
+              <input
+                value={exam.paperName ?? ''}
+                placeholder="e.g. Paper 1 (Higher Tier)"
+                onChange={e => updateExam({ paperName: e.target.value || undefined })}
+              />
+            </Field>
+            <Field label="Time (minutes)">
+              <input
+                type="number" min={0} step={5}
+                value={exam.durationMinutes ?? ''}
+                onChange={e => updateExam({ durationMinutes: e.target.value ? Number(e.target.value) : undefined })}
+              />
+            </Field>
+          </Row>
+          <Field label="Target total marks">
+            <input
+              type="number" min={0}
+              value={exam.targetMarks ?? ''}
+              onChange={e => updateExam({ targetMarks: e.target.value ? Number(e.target.value) : undefined })}
+            />
+          </Field>
+          <div className="ep-field">
+            <span className="ep-label">Instructions</span>
+            <ListEditor items={exam.instructions} onChange={items => updateExam({ instructions: items })} addLabel="+ Add instruction" />
+          </div>
+          <div className="ep-field">
+            <span className="ep-label">Information (the maximum mark is added automatically)</span>
+            <ListEditor items={exam.information} onChange={items => updateExam({ information: items })} addLabel="+ Add line" />
+          </div>
+        </>
+      )}
     </div>
   )
 }

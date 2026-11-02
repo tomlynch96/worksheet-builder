@@ -47,6 +47,16 @@
   }
 }
 
+.panel-preview--with-nav { padding-left: 168px; }
+
+.preview-shell {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .panel-preview {
   flex: 1;
   overflow-y: auto;

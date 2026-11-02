@@ -10,7 +10,7 @@ const QUESTION_STEM_OVERHEAD = 48
 // pagination estimates in sync with what react-pdf actually renders.
 export function estimateBlockHeight(block: Block): number {
   switch (block.type) {
-    case 'header': return 150
+    case 'header': return block.exam ? PAGE_CONTENT_HEIGHT : 150
     case 'instructions': return 44 + block.items.length * 22
     case 'question':
       if (block.parts.length === 0) return 60 + block.lines * 28
@@ -153,9 +153,12 @@ export function splitIntoPages(
       }
       currentPage().push(block as PageBlock)
       used += blockH
+      // An exam front page fills page 1 on its own; questions start on page 2
+      if (!markScheme && block.type === 'header' && block.exam) newPage()
     }
   }
 
+  if (pages.length > 1 && pages[pages.length - 1].length === 0) pages.pop()
   return pages
 }
 

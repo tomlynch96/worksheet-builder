@@ -9,6 +9,7 @@ import { AnnotateNudge } from '../components/editor/AnnotateNudge'
 import { PublishExportModal } from '../components/PublishExportModal'
 import { TutorialWizard, TUTORIAL_KEY } from '../components/TutorialWizard'
 import { MCQuizModal } from '../components/MCQuizModal'
+import { ExamMarksNav } from '../components/exam/ExamMarksNav'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useMCQuiz } from '../hooks/useMCQuiz'
@@ -17,7 +18,7 @@ import { useAnnotateNudge } from '../hooks/useAnnotateNudge'
 import { useProfileContext } from '../context/ProfileContext'
 import { supabase, isConfigured } from '../lib/supabase'
 import { PRESETS } from '../data/presets'
-import type { Block, Worksheet, ExamBoard, Tier } from '../types/worksheet'
+import type { Block, Worksheet, ExamBoard, Tier, HeaderBlock } from '../types/worksheet'
 import './EditorPage.css'
 
 const printPageStyle = `
@@ -69,6 +70,8 @@ export function EditorPage() {
     const h = worksheet.blocks.find(b => b.type === 'header')
     return h && 'title' in h ? (h.title as string) : ''
   })()
+
+  const isExam = !!(worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined)?.exam
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -413,15 +416,20 @@ export function EditorPage() {
             profileId={profile?.id}
           />
         </aside>
-        <main className="panel-preview">
-          <WorksheetPreview
-            worksheet={worksheet}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onAttach={handleAttach}
-            mode={mode}
-          />
-        </main>
+        <div className="preview-shell">
+          {isExam && (
+            <ExamMarksNav blocks={worksheet.blocks} selectedId={selectedId} onSelect={setSelectedId} />
+          )}
+          <main className={`panel-preview${isExam ? ' panel-preview--with-nav' : ''}`}>
+            <WorksheetPreview
+              worksheet={worksheet}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onAttach={handleAttach}
+              mode={mode}
+            />
+          </main>
+        </div>
       </div>
 
       {/* Off-screen on screen; visible in react-to-print iframe (screen media doesn't apply there) */}

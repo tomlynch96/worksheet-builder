@@ -85,9 +85,14 @@ export function Home() {
   return (
     <div className="home-layout">
       <Topbar actions={
-        <button className="btn-topbar" onClick={() => setShowWizard(true)}>
-          + New Worksheet
-        </button>
+        <>
+          <button className="btn-topbar" onClick={() => navigate('/exam/new')}>
+            + New Exam
+          </button>
+          <button className="btn-topbar" onClick={() => setShowWizard(true)}>
+            + New Worksheet
+          </button>
+        </>
       } />
 
       <main className="home-main">
@@ -99,9 +104,14 @@ export function Home() {
             </h1>
             <p className="home-hero-sub">What are you making today?</p>
           </div>
-          <button className="home-hero-cta" onClick={() => setShowWizard(true)}>
-            + New Worksheet
-          </button>
+          <div className="home-hero-ctas">
+            <button className="home-hero-cta home-hero-cta--secondary" onClick={() => navigate('/exam/new')}>
+              + New Exam
+            </button>
+            <button className="home-hero-cta" onClick={() => setShowWizard(true)}>
+              + New Worksheet
+            </button>
+          </div>
         </section>
 
         {/* Recent sheets */}
