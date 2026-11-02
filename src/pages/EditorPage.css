@@ -47,8 +47,6 @@
   }
 }
 
-.panel-preview--with-nav { padding-left: 168px; }
-
 .preview-shell {
   position: relative;
   flex: 1;
@@ -66,4 +64,10 @@
   align-items: center;
   padding: 40px 24px;
   gap: 48px;
+}
+
+/* Leave room for the exam marks tracker; "safe" keeps the page clear of it when the panel is narrow */
+.panel-preview.panel-preview--with-nav {
+  padding-left: 144px;
+  align-items: safe center;
 }
