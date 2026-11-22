@@ -250,9 +250,11 @@ export function GalleryPage() {
     <div className="gallery-layout">
       <Topbar actions={
         <>
-          <button className="btn-topbar" onClick={() => navigate('/exam/new')}>
-            + New Exam
-          </button>
+          {profile?.is_admin && (
+            <button className="btn-topbar" onClick={() => navigate('/exam/new')}>
+              + New Exam
+            </button>
+          )}
           <button className="btn-topbar" onClick={() => setShowWizard(true)}>
             + New Worksheet
           </button>

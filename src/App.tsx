@@ -20,9 +20,11 @@ import { SchemeEditorPage } from './pages/SchemeEditorPage'
 import { MCQuizPage } from './pages/MCQuizPage'
 import { MarkingPage } from './pages/MarkingPage'
 import { ExamBuilderPage } from './pages/ExamBuilderPage'
+import { SpecRefNotice } from './components/SpecRefNotice'
 import './App.css'
 
-function AuthGate({ children }: { children: React.ReactNode }) {
+// adminOnly: features still being trialled, shown only to admin accounts
+function AuthGate({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { profile, loading } = useProfileContext()
   const navigate = useNavigate()
 
@@ -39,6 +41,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!profile) return null
+  if (adminOnly && !profile.is_admin) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -50,7 +53,7 @@ export default function App() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/" element={<RootPage />} />
           <Route path="/editor" element={<AuthGate><EditorPage /></AuthGate>} />
-          <Route path="/exam/new" element={<AuthGate><ExamBuilderPage /></AuthGate>} />
+          <Route path="/exam/new" element={<AuthGate adminOnly><ExamBuilderPage /></AuthGate>} />
           <Route path="/gallery" element={<AuthGate><GalleryPage /></AuthGate>} />
           <Route path="/profile" element={<AuthGate><ProfilePage /></AuthGate>} />
           <Route path="/insights" element={<AuthGate><InsightsPage /></AuthGate>} />
@@ -69,6 +72,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      <SpecRefNotice />
       <Analytics />
     </ProfileProvider>
   )

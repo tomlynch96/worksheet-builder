@@ -86,9 +86,11 @@ export function Home() {
     <div className="home-layout">
       <Topbar actions={
         <>
-          <button className="btn-topbar" onClick={() => navigate('/exam/new')}>
-            + New Exam
-          </button>
+          {profile?.is_admin && (
+            <button className="btn-topbar" onClick={() => navigate('/exam/new')}>
+              + New Exam
+            </button>
+          )}
           <button className="btn-topbar" onClick={() => setShowWizard(true)}>
             + New Worksheet
           </button>
@@ -105,9 +107,11 @@ export function Home() {
             <p className="home-hero-sub">What are you making today?</p>
           </div>
           <div className="home-hero-ctas">
-            <button className="home-hero-cta home-hero-cta--secondary" onClick={() => navigate('/exam/new')}>
-              + New Exam
-            </button>
+            {profile?.is_admin && (
+              <button className="home-hero-cta home-hero-cta--secondary" onClick={() => navigate('/exam/new')}>
+                + New Exam
+              </button>
+            )}
             <button className="home-hero-cta" onClick={() => setShowWizard(true)}>
               + New Worksheet
             </button>

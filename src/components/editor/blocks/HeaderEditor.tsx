@@ -3,7 +3,9 @@ import type { HeaderBlock, ExamBoard, Tier, ExamCover } from '../../../types/wor
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row, CheckRow, ListEditor } from '../EditorPrimitives'
 import { DEFAULT_EXAM_INFORMATION, DEFAULT_EXAM_INSTRUCTIONS } from '../../../utils/marks'
+import { useProfileContext } from '../../../context/ProfileContext'
 import { QUALIFICATION_OFFERINGS, getSpecTopics } from '../../../data/qualifications'
+import { SpecIssueButton } from '../../SpecIssueButton'
 
 interface Props {
   block: HeaderBlock
@@ -22,7 +24,10 @@ export function HeaderEditor({ block, dispatch }: Props) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
   }
 
-  const exam = block.exam
+  const { profile } = useProfileContext()
+  // Exam front-page options are admin-only while being trialled
+  const isAdmin = !!profile?.is_admin
+  const exam = isAdmin ? block.exam : undefined
   function updateExam(updates: Partial<ExamCover>) {
     if (exam) update({ exam: { ...exam, ...updates } })
   }
@@ -90,6 +95,7 @@ export function HeaderEditor({ block, dispatch }: Props) {
               </optgroup>
             ))}
           </select>
+          <SpecIssueButton context={{ qualificationId: block.qualification, examBoard: block.examBoard, specRef: block.specPoint }} />
         </Field>
       )}
       <CheckRow label="Show name field" checked={block.showName} onChange={v => update({ showName: v })} />
@@ -98,13 +104,13 @@ export function HeaderEditor({ block, dispatch }: Props) {
       {!exam && (
         <CheckRow label="Show total marks" checked={block.showTotalMarks ?? false} onChange={v => update({ showTotalMarks: v })} />
       )}
-      <CheckRow
+      {isAdmin && <CheckRow
         label="Exam front page"
         checked={!!exam}
         onChange={v => update({
           exam: v ? { instructions: DEFAULT_EXAM_INSTRUCTIONS, information: DEFAULT_EXAM_INFORMATION } : undefined,
         })}
-      />
+      />}
       {exam && (
         <>
           <Row>

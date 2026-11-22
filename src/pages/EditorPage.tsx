@@ -71,7 +71,8 @@ export function EditorPage() {
     return h && 'title' in h ? (h.title as string) : ''
   })()
 
-  const isExam = !!(worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined)?.exam
+  // Exam tools are admin-only while being trialled
+  const isExam = !!profile?.is_admin && !!(worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined)?.exam
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
