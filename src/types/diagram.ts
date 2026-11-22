@@ -14,6 +14,11 @@ export interface FigureDiagram {
   variables: DiagramVariable[]
   libraryId?: string             // row in the shared `diagrams` table
   prompts?: string[]             // generation + refinement history
+  // Library metadata for diagrams that arrive outside the studio (e.g. an
+  // uploaded JSON worksheet), used when the teacher shares them to the library.
+  title?: string
+  description?: string
+  topics?: string[]
 }
 
 // Row in the shared diagram library.

@@ -53,9 +53,10 @@ export function DiagramStudioModal({
 
   const [tab, setTab] = useState<'generate' | 'library'>(startTab)
   const [draft, setDraft] = useState<DiagramDraft | null>(() => initial ? {
-    title: '', description: '', caption: initialCaption ?? '',
+    title: initial.title ?? '', description: initial.description ?? '', caption: initialCaption ?? '',
     template: initial.template, variables: initial.variables,
-    topics: ctx.topic ? [ctx.topic] : [], specPoints: ctx.specPoint ? [ctx.specPoint] : [], question: null,
+    topics: initial.topics?.length ? initial.topics : ctx.topic ? [ctx.topic] : [],
+    specPoints: ctx.specPoint ? [ctx.specPoint] : [], question: null,
   } : null)
   const [prompts, setPrompts] = useState<string[]>(initial?.prompts ?? [])
   const [undoStack, setUndoStack] = useState<Snapshot[]>([])
