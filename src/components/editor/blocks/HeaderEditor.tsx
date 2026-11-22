@@ -3,6 +3,7 @@ import type { HeaderBlock, ExamBoard, Tier } from '../../../types/worksheet'
 import type { WorksheetAction } from '../../../hooks/useWorksheet'
 import { Field, Row, CheckRow } from '../EditorPrimitives'
 import { QUALIFICATION_OFFERINGS, getSpecTopics } from '../../../data/qualifications'
+import { SpecIssueButton } from '../../SpecIssueButton'
 
 interface Props {
   block: HeaderBlock
@@ -84,6 +85,7 @@ export function HeaderEditor({ block, dispatch }: Props) {
               </optgroup>
             ))}
           </select>
+          <SpecIssueButton context={{ qualificationId: block.qualification, examBoard: block.examBoard, specRef: block.specPoint }} />
         </Field>
       )}
       <CheckRow label="Show name field" checked={block.showName} onChange={v => update({ showName: v })} />

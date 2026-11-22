@@ -6,6 +6,7 @@ import { loadGenerationGuidance, type GenerationGuidance } from '../utils/genera
 import { drawRequestedDiagrams } from '../utils/generateDiagram'
 import type { OakContext } from '../types/worksheet'
 import { OakDirectoryPicker } from './OakDirectoryPicker'
+import { SpecIssueButton } from './SpecIssueButton'
 import { oakQuestionToBlocks, oakQuestionNeedsImage } from '../utils/oakConvert'
 import type { UserCourse } from '../types/profile'
 import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
@@ -472,6 +473,12 @@ export function NewSheetWizard({ onGenerated, onCancel }: Props) {
                   {selectedCourse.exam_board} isn't in our spec library yet — type your topic or spec point above and we'll generate to it directly.
                 </p>
               </div>
+            )}
+
+            {topics && (
+              <p className="wizard-field-hint">
+                <SpecIssueButton context={{ qualificationId: selectedCourse.qualification_id, examBoard: selectedCourse.exam_board, specRef: selectedPoint || selectedTopic || undefined }} />
+              </p>
             )}
 
             <div className="wizard-actions">

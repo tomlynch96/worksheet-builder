@@ -5,6 +5,8 @@ import { useProfileContext } from '../context/ProfileContext'
 import { supabase } from '../lib/supabase'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import type { UserCourse } from '../types/profile'
+import { OPEN_SPEC_NOTICE_EVENT } from '../components/SpecRefNotice'
+import '../components/SpecRefNotice.css'
 import './ProfilePage.css'
 
 const EXAM_BOARDS = ['AQA', 'OCR', 'Edexcel', 'WJEC']
@@ -180,6 +182,14 @@ export function ProfilePage() {
 
             <div className="profile-field">
               <label className="profile-label">Courses you teach</label>
+              {[...selected].some(k => k.startsWith('alevel-physics:')) && (
+                <p className="profile-field-hint">
+                  Your A Level specs were updated to match the official documents.{' '}
+                  <button type="button" className="sr-link" onClick={() => window.dispatchEvent(new Event(OPEN_SPEC_NOTICE_EVENT))}>
+                    Review what changed
+                  </button>
+                </p>
+              )}
               <p className="profile-field-hint">
                 Select every combination you teach — this organises your worksheets and pre-fills new ones.
               </p>
