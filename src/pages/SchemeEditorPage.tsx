@@ -481,12 +481,15 @@ export function SchemeEditorPage() {
   const wsPickerAllowedRefs = (() => {
     if (!wsPickerTopic?.topic_ref) return null
     const refs = new Set<string>([wsPickerTopic.topic_ref])
+    let known = false
     for (const q of browsableQuals) {
       const specTopics = getSpecTopics(q.qualification_id, q.exam_board)
       const parent = specTopics?.find(t => t.ref === wsPickerTopic.topic_ref)
-      if (parent) parent.points.forEach(p => refs.add(p.ref))
+      if (parent) { known = true; parent.points.forEach(p => refs.add(p.ref)) }
     }
-    return refs
+    // A ref that no longer exists in any spec (e.g. after spec data was rebuilt) can't
+    // filter anything sensibly: show every worksheet rather than an empty list.
+    return known ? refs : null
   })()
 
   async function addSelectedWorksheets() {

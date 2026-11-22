@@ -7,6 +7,7 @@ import { useWelcomeConfig } from '../hooks/useAppConfig'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import { TUTORIAL_WORKSHEET } from '../data/tutorialWorksheet'
 import { supabase } from '../lib/supabase'
+import { SpecFlagsAdmin } from '../components/SpecFlagsAdmin'
 import type { WorksheetEntry } from '../hooks/useSupabaseWorksheets'
 import './AdminPage.css'
 
@@ -271,6 +272,8 @@ export function AdminPage() {
             </button>
           </div>
         </section>
+
+        <SpecFlagsAdmin />
 
         <h2 className="admin-section-title">Public library</h2>
 

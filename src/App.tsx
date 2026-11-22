@@ -19,6 +19,7 @@ import { SchemesPage } from './pages/SchemesPage'
 import { SchemeEditorPage } from './pages/SchemeEditorPage'
 import { MCQuizPage } from './pages/MCQuizPage'
 import { MarkingPage } from './pages/MarkingPage'
+import { SpecRefNotice } from './components/SpecRefNotice'
 import './App.css'
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      <SpecRefNotice />
       <Analytics />
     </ProfileProvider>
   )

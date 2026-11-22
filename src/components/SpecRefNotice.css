@@ -1,0 +1,78 @@
+.sr-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 30, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+  padding: 20px;
+}
+.sr-backdrop--top { z-index: 1000; }
+
+.sr-modal,
+.sr-dialog {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 30px;
+}
+.sr-modal { max-width: 640px; max-height: calc(100vh - 40px); }
+.sr-dialog { max-width: 460px; }
+
+.sr-title { margin: 0; font-size: 20px; font-weight: 700; color: #1a1a2e; line-height: 1.3; }
+.sr-dialog-title { margin: 0; font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.sr-text { margin: 0; font-size: 14px; line-height: 1.6; color: #374151; }
+.sr-text--small { font-size: 13px; color: #6b7280; }
+.sr-context { margin: 0; font-size: 12px; color: #6b7280; }
+
+.sr-summary { margin: 0; padding: 12px 16px 12px 32px; background: #f5f3ff; border-radius: 10px; font-size: 14px; color: #374151; display: flex; flex-direction: column; gap: 6px; }
+
+.sr-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
+.sr-btn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.sr-btn:hover:not(:disabled) { background: #f9fafb; }
+.sr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sr-btn--primary { background: var(--ui-accent, #4f46e5); border-color: var(--ui-accent, #4f46e5); color: #fff; font-weight: 600; }
+.sr-btn--primary:hover:not(:disabled) { background: var(--ui-accent-hover, #4338ca); }
+.sr-btn--ghost { border-color: transparent; background: transparent; color: #6b7280; }
+.sr-btn--sm { padding: 4px 10px; font-size: 12px; }
+
+.sr-link { background: none; border: none; padding: 0; font-size: 12px; font-family: inherit; color: var(--ui-accent, #4f46e5); text-decoration: underline; cursor: pointer; }
+
+.sr-label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #4b5563; }
+.sr-input { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; font-family: inherit; font-weight: 400; color: #1f2937; width: 100%; box-sizing: border-box; }
+.sr-error { margin: 0; font-size: 12px; color: #dc2626; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 6px 10px; }
+
+.sr-review-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sr-scroll { overflow-y: auto; display: flex; flex-direction: column; gap: 18px; min-height: 0; padding-right: 4px; }
+.sr-section { margin: 0 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; }
+.sr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.sr-item { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.sr-item-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.sr-item-title { font-size: 13px; font-weight: 600; color: #1f2937; }
+.sr-item-board { font-size: 11px; color: #6b7280; white-space: nowrap; }
+.sr-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.sr-tag { background: #f3f4f6; border-radius: 6px; padding: 3px 8px; color: #374151; }
+.sr-tag em { font-style: normal; font-weight: 600; color: #6b7280; margin-right: 4px; }
+.sr-tag--new { background: #ecfdf5; color: #065f46; }
+.sr-tag--old-strike { text-decoration: line-through; color: #9ca3af; }
+.sr-arrow { color: #9ca3af; }
+.sr-muted { color: #9ca3af; }
+.sr-note { margin: 0; font-size: 12px; color: #92400e; background: #fffbeb; border-radius: 6px; padding: 5px 8px; }
+.sr-row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.sr-picker { display: flex; flex-direction: column; gap: 6px; }
