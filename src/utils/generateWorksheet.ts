@@ -63,7 +63,7 @@ function sanitiseBlock(block: Block): Block {
   return { ...block, id }
 }
 
-function sanitiseWorksheet(ws: Worksheet): Worksheet {
+export function sanitiseWorksheet(ws: Worksheet): Worksheet {
   // Build old→new ID map before sanitising so we can remap cross-references.
   // For valid UUIDs keep as-is; for short placeholder IDs (e.g. "data-001") generate
   // exactly one new UUID here so that sanitiseBlock and the cross-reference remapping

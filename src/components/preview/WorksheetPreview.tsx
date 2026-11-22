@@ -6,7 +6,8 @@ import { renderDiagram, svgDataUrl } from '../../utils/diagramSvg'
 import { seededShuffle, clozeToDisplayParts, extractClozeWords } from '../../utils/shuffle'
 import { splitIntoPages, estimateBlockHeight, type PageBlock } from '../../utils/pagination'
 import { computeGraphLayout, toSvgCoords, catmullRomPath, computeBarLayout } from '../../utils/graphLayout'
-import { computeTotalMarks } from '../../utils/marks'
+import { computeTotalMarks, questionMarksList } from '../../utils/marks'
+import { offeringLabel } from '../../data/qualifications'
 import './WorksheetPreview.css'
 
 const NUMBERED_TYPES = new Set(['question', 'multiple_choice', 'match_them_up', 'cloze', 'order_steps'])
@@ -104,6 +105,89 @@ function PreviewHeader({ block, allBlocks }: { block: HeaderBlock; allBlocks: Bl
         </div>
       )}
       <div className="pr-header-rule" />
+    </div>
+  )
+}
+
+function formatDuration(mins: number): string {
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  const hs = h ? `${h} hour${h > 1 ? 's' : ''}` : ''
+  const ms = m ? `${m} minute${m > 1 ? 's' : ''}` : ''
+  return [hs, ms].filter(Boolean).join(' ')
+}
+
+// Full-page exam front cover with candidate details, instructions and the
+// examiner's marks grid. Marks are always computed live from the questions.
+function PreviewExamCover({ block, allBlocks }: { block: HeaderBlock; allBlocks: Block[] }) {
+  const exam = block.exam!
+  const questions = questionMarksList(allBlocks)
+  const total = questions.reduce((s, q) => s + q.marks, 0)
+  const qual = offeringLabel(block.qualification, block.examBoard)
+  // Split the marks grid into two side-by-side columns when the paper is long
+  const half = questions.length > 10 ? Math.ceil(questions.length / 2) : questions.length
+  const columns = half < questions.length ? [questions.slice(0, half), questions.slice(half)] : [questions]
+  return (
+    <div className="pr-exam-cover">
+      <div className="pr-exam-top">
+        <div className="pr-header-badges">
+          <span className="pr-badge pr-badge--board">{block.examBoard}</span>
+          {block.tier !== 'both' && (
+            <span className="pr-badge pr-badge--tier">{block.tier === 'higher' ? 'Higher Tier' : 'Foundation Tier'}</span>
+          )}
+        </div>
+        {qual && <span className="pr-exam-qual">{qual}</span>}
+      </div>
+
+      <div className="pr-exam-titles">
+        <h1 className="pr-exam-title">{block.title || 'Exam Title'}</h1>
+        {block.topic && <p className="pr-exam-topic">{block.topic}</p>}
+        {exam.paperName && <p className="pr-exam-paper">{exam.paperName}</p>}
+        {!!exam.durationMinutes && <p className="pr-exam-time">Time allowed: {formatDuration(exam.durationMinutes)}</p>}
+      </div>
+
+      {(block.showName || block.showClass || block.showDate) && (
+        <div className="pr-exam-candidate">
+          {block.showName && <div className="pr-exam-field pr-exam-field--wide"><span>Name</span><div className="pr-exam-box" /></div>}
+          {block.showClass && <div className="pr-exam-field"><span>Class</span><div className="pr-exam-box" /></div>}
+          {block.showDate && <div className="pr-exam-field"><span>Date</span><div className="pr-exam-box" /></div>}
+        </div>
+      )}
+
+      <div className="pr-exam-body">
+        <div className="pr-exam-notes">
+          {exam.instructions.length > 0 && (
+            <>
+              <h2 className="pr-exam-h">Instructions</h2>
+              <ul>{exam.instructions.map((t, i) => <li key={i}>{t}</li>)}</ul>
+            </>
+          )}
+          <h2 className="pr-exam-h">Information</h2>
+          <ul>
+            <li>The maximum mark for this paper is <strong>{total}</strong>.</li>
+            {exam.information.map((t, i) => <li key={i}>{t}</li>)}
+          </ul>
+        </div>
+
+        <div className="pr-exam-grid-wrap">
+          <div className="pr-exam-grid-title">For teacher&rsquo;s use</div>
+          <div className="pr-exam-grid-cols">
+            {columns.map((col, ci) => (
+              <table key={ci} className="pr-exam-grid">
+                <thead><tr><th>Question</th><th>Mark</th><th>Out of</th></tr></thead>
+                <tbody>
+                  {col.map(q => (
+                    <tr key={q.id}><td>{q.num}</td><td /><td>{q.marks}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            ))}
+          </div>
+          <table className="pr-exam-grid pr-exam-grid--total">
+            <tbody><tr><th>TOTAL</th><td /><td>{total}</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
@@ -886,7 +970,7 @@ function PreviewBlock({ block, blocks, mode, showLines }: { block: PageBlock; bl
     }
   }
   switch (block.type) {
-    case 'header':          return isContinuation ? null : <PreviewHeader block={block} allBlocks={blocks} />
+    case 'header':          return isContinuation ? null : block.exam ? <PreviewExamCover block={block} allBlocks={blocks} /> : <PreviewHeader block={block} allBlocks={blocks} />
     case 'instructions':    return isContinuation ? null : <PreviewInstructions block={block} />
     case 'question':        return <PreviewQuestion block={block} blocks={blocks} num={num} showLines={showLines} isContinuation={isContinuation} />
     case 'multiple_choice': return <PreviewMultipleChoice block={block} num={num} blocks={blocks} />
@@ -1025,6 +1109,7 @@ export function WorksheetPreview({ worksheet, selectedId, onSelect, onAttach, mo
                 return (
                   <div
                     key={blockKey}
+                    data-block-id={block.id}
                     draggable={isDraggable || undefined}
                     className={[
                       'preview-block-wrap',
