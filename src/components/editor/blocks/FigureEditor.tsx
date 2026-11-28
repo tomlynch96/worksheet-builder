@@ -6,7 +6,12 @@ import type { GeneratedQuestion } from '../../../utils/generateDiagram'
 import { figureUpdatesForDiagram, renderDiagram, svgDataUrl } from '../../../utils/diagramSvg'
 import { Field } from '../EditorPrimitives'
 import { DiagramStudioModal, type DiagramStudioResult } from '../DiagramStudioModal'
+import { useDiagramContext } from '../DiagramContext'
+import { saveLibraryDiagram } from '../../../hooks/useDiagramLibrary'
 import '../DiagramStudioModal.css'
+
+// "Figure 1: A wave on water" → "A wave on water"
+const captionTitle = (caption: string) => caption.replace(/^\s*fig(ure)?\.?\s*\d+\s*[:.\-–—]?\s*/i, '').trim()
 
 interface Props {
   block: FigureBlock
@@ -25,9 +30,33 @@ export function FigureEditor({ block, dispatch, oakImages, questionContext, onQu
   const [pasteReady, setPasteReady] = useState(false)
   const [studio, setStudio] = useState<'generate' | 'library' | null>(null)
   const [valuesEdited, setValuesEdited] = useState(false)
+  const [sharing, setSharing] = useState<'idle' | 'saving' | 'error'>('idle')
+  const ctx = useDiagramContext()
 
   function update(updates: Partial<FigureBlock>) {
     dispatch({ type: 'UPDATE_BLOCK', id: block.id, updates })
+  }
+
+  // Diagrams that arrive without going through the studio (uploaded JSON, older
+  // sheets) have no library row — let the teacher share them, tagged with the sheet's spec point.
+  async function shareToLibrary() {
+    const diagram = block.diagram
+    if (!diagram || !ctx.profileId) return
+    setSharing('saving')
+    const libraryId = await saveLibraryDiagram(ctx.profileId, {
+      title: diagram.title?.trim() || captionTitle(block.caption) || ctx.topic || 'Diagram',
+      description: diagram.description?.trim() ?? '',
+      template: diagram.template,
+      variables: diagram.variables,
+      specPoints: ctx.specPoint ? [ctx.specPoint] : [],
+      topics: diagram.topics?.length ? diagram.topics : ctx.topic ? [ctx.topic] : [],
+      examBoard: ctx.examBoard,
+      qualification: ctx.qualification,
+      prompts: diagram.prompts ?? [],
+    })
+    if (!libraryId) { setSharing('error'); return }
+    update({ diagram: { ...diagram, libraryId } })
+    setSharing('idle')
   }
 
   const imageSrc = block.diagram
@@ -121,6 +150,18 @@ export function FigureEditor({ block, dispatch, oakImages, questionContext, onQu
             </button>
           )}
         </div>
+        {block.diagram && !block.diagram.libraryId && ctx.profileId && (
+          <div className="figure-library-share">
+            <span>
+              {sharing === 'error'
+                ? 'Couldn’t add it to the library. Try again.'
+                : `Not in the diagram library yet${ctx.specPoint ? ` — it will be tagged ${ctx.specPoint}` : ''}.`}
+            </span>
+            <button type="button" className="btn-secondary" onClick={shareToLibrary} disabled={sharing === 'saving'}>
+              {sharing === 'saving' ? 'Sharing…' : 'Share in library'}
+            </button>
+          </div>
+        )}
       </Field>
       {oakImages && oakImages.length > 0 && (
         <Field label="Oak lesson images">

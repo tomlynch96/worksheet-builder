@@ -74,6 +74,7 @@ function WorksheetCard({ entry, quizId, onOpen, onDelete }: {
         <div className="gallery-card-badges">
           {entry.exam_board && <span className="gallery-badge gallery-badge--board">{entry.exam_board}</span>}
           {tierLabel && <span className="gallery-badge gallery-badge--tier">{tierLabel}</span>}
+          {entry.needs_review && <span className="gallery-badge gallery-badge--review" title="Saved from Claude: open it to check it over">From Claude · review</span>}
         </div>
         <div className="gallery-card-title">{entry.title || 'Untitled'}</div>
         {entry.topic && <div className="gallery-card-topic">{entry.topic}</div>}
@@ -200,6 +201,8 @@ export function GalleryPage() {
   const [templatesOpen, setTemplatesOpen] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
+  const toReview = entries.filter(e => e.needs_review)
+
   function handleOpen(worksheet: Worksheet) {
     navigate('/editor', { state: { worksheet } })
   }
@@ -318,6 +321,23 @@ export function GalleryPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
+            </div>
+          )}
+
+          {!loading && toReview.length > 0 && (
+            <div className="gallery-review">
+              <p className="gallery-review-title">
+                From Claude · {toReview.length === 1 ? '1 worksheet' : `${toReview.length} worksheets`} waiting for your review
+              </p>
+              <div className="gallery-review-list">
+                {toReview.map(e => (
+                  <button key={e.id} className="gallery-review-item" onClick={() => handleOpen(e.worksheet)}>
+                    <span className="gallery-review-name">{e.title || 'Untitled'}</span>
+                    {e.spec_point && <span className="gallery-review-spec">{e.exam_board} · {e.spec_point}</span>}
+                    <span className="gallery-review-go">Review →</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

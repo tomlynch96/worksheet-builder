@@ -53,13 +53,17 @@ export function SharePreviewPage() {
   const [reallocBoard, setReallocBoard] = useState('')
   const [reallocSpec, setReallocSpec] = useState('')
 
+  // Wait for sign-in to settle: the sheet's owner can open the link before it is shared.
   useEffect(() => {
-    if (!id) return
+    if (!id || authLoading) return
+    let cancelled = false
     fetchByShareId(id).then(res => {
-      if (res) setEntry(res)
-      else setLoadError(true)
+      if (cancelled) return
+      setEntry(res)
+      setLoadError(!res)
     })
-  }, [id, fetchByShareId])
+    return () => { cancelled = true }
+  }, [id, authLoading, fetchByShareId])
 
   if (loadError) {
     return (
@@ -67,7 +71,10 @@ export function SharePreviewPage() {
         <Topbar />
         <main className="sp-main sp-main--center">
           <p className="sp-error">This share link is no longer active.</p>
-          <a className="sp-cta-btn" href="/">Go to home</a>
+          {!profile && <p className="sp-error-hint">If this is your worksheet, log in to open it.</p>}
+          {!profile
+            ? <a className="sp-cta-btn" href={`/onboarding?return=/share/${id}`}>Log in</a>
+            : <a className="sp-cta-btn" href="/">Go to home</a>}
         </main>
       </div>
     )
@@ -84,6 +91,7 @@ export function SharePreviewPage() {
     )
   }
 
+  const isOwner = !!profile && entry.profile_id === profile.id
   const myCourses = profile?.user_courses ?? []
   const teachesThisCourse = profile
     ? myCourses.some(c => c.qualification_id === entry.qualification_id && c.exam_board === entry.exam_board)
@@ -146,8 +154,16 @@ export function SharePreviewPage() {
             {entry.question_count} question{entry.question_count !== 1 ? 's' : ''}
           </p>
 
+          {isOwner && entry.needs_review && (
+            <p className="sp-review-note">Made with Claude — check it over before you use it.</p>
+          )}
+
           {/* Action area */}
-          {!profile ? (
+          {isOwner ? (
+            <button className="sp-copy-btn" onClick={() => navigate('/editor', { state: { worksheet: entry.worksheet } })}>
+              {entry.needs_review ? 'Review and edit →' : 'Open in editor →'}
+            </button>
+          ) : !profile ? (
             <a
               className="sp-copy-btn"
               href={`/onboarding?return=/share/${id}`}

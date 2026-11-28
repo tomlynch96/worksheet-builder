@@ -1,0 +1,389 @@
+{
+  "id": "d4804b6c-4618-4c08-a7f6-9376ff6f1cac",
+  "blocks": [
+    {
+      "id": "hdr-001",
+      "type": "header",
+      "title": "The wave equation",
+      "topic": "Waves",
+      "examBoard": "AQA",
+      "tier": "higher",
+      "qualification": "gcse-physics",
+      "specPoint": "P6.2",
+      "showName": true,
+      "showDate": true,
+      "showClass": true
+    },
+    {
+      "id": "ins-001",
+      "type": "instructions",
+      "items": [
+        "Answer all questions.",
+        "Write your answers in the spaces provided.",
+        "Show your working for all calculations.",
+        "The marks for each question are shown in brackets."
+      ]
+    },
+    {
+      "id": "inf-001",
+      "type": "information",
+      "heading": "Key facts",
+      "content": "<p><strong>Wave equation:</strong> v = f λ, where v is wave speed (m/s), f is frequency (Hz) and λ is wavelength (m).</p><p><strong>Frequency:</strong> the number of waves passing a point each second. 1 Hz = 1 wave per second.</p><p><strong>Wavelength:</strong> the distance from a point on one wave to the equivalent point on the next wave.</p><p><strong>Period:</strong> the time for one complete wave to pass a point. T = 1 / f</p>"
+    },
+    {
+      "id": "we-001",
+      "type": "worked_example",
+      "title": "Calculating wave speed",
+      "steps": [
+        "A wave on a rope has a frequency of 4.0 Hz and a wavelength of 0.50 m. Calculate the wave speed.",
+        "Write the equation: v = f λ",
+        "Substitute the values: v = 4.0 × 0.50",
+        "Answer with unit: v = 2.0 m/s"
+      ]
+    },
+    {
+      "id": "clz-001",
+      "type": "cloze",
+      "heading": "Fill in the blanks using the words in the word bank.",
+      "text": "The [frequency] of a wave is the number of waves passing a point each [second]. It is measured in [hertz]. The [wavelength] of a wave is measured in metres. If the frequency of a wave increases and its speed stays the same, its wavelength [decreases].",
+      "showWordBank": true
+    },
+    {
+      "id": "mc-001",
+      "type": "multiple_choice",
+      "stem": "Which equation links wave speed (v), frequency (f) and wavelength (λ)?",
+      "marks": 1,
+      "options": [
+        "v = f / λ",
+        "v = f λ",
+        "v = λ / f",
+        "v = f + λ"
+      ],
+      "correctIndex": 1,
+      "markScheme": "B — v = f λ [1]"
+    },
+    {
+      "id": "q-001",
+      "type": "question",
+      "stem": "A water wave has a frequency of 2.0 Hz and a wavelength of 0.15 m. Calculate the speed of the wave.",
+      "marks": 2,
+      "lines": 3,
+      "parts": [],
+      "markScheme": "v = 2.0 × 0.15 [1]; v = 0.30 m/s [1]",
+      "numericalAnswer": "0.3",
+      "attachedDataId": null,
+      "attachedDataIds": null
+    },
+    {
+      "id": "q-002",
+      "type": "question",
+      "stem": "A sound wave travels through air at 330 m/s. Its frequency is 660 Hz. Calculate the wavelength of the sound wave.",
+      "marks": 3,
+      "lines": 4,
+      "parts": [],
+      "markScheme": "λ = v / f [1]; λ = 330 / 660 [1]; λ = 0.50 m [1]",
+      "numericalAnswer": "0.5",
+      "attachedDataId": null,
+      "attachedDataIds": null
+    },
+    {
+      "id": "q-003",
+      "type": "question",
+      "stem": "A radio station broadcasts using radio waves with a wavelength of 1.5 km. Radio waves travel at 3.0 × 10⁸ m/s. Calculate the frequency of the radio waves.",
+      "marks": 3,
+      "lines": 4,
+      "parts": [],
+      "markScheme": "Converts 1.5 km to 1500 m [1]; f = 3.0 × 10⁸ / 1500 [1]; f = 2.0 × 10⁵ Hz [1]",
+      "numericalAnswer": "200000",
+      "attachedDataId": null,
+      "attachedDataIds": null
+    },
+    {
+      "id": "fig-001",
+      "type": "figure",
+      "caption": "Figure 1: A wave on the surface of water",
+      "size": "large",
+      "diagram": {
+        "template": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"700\" height=\"300\" viewBox=\"0 0 700 300\"><defs><marker id=\"arrow\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\"><path d=\"M0 0 L10 5 L0 10 z\" fill=\"#000\"/></marker></defs><line x1=\"40\" y1=\"150\" x2=\"590\" y2=\"150\" stroke=\"#000\" stroke-width=\"1.5\" stroke-dasharray=\"6 4\"/><path d=\"M60 150.0 L64 142.7 L68 135.4 L72 128.4 L76 121.5 L80 115.0 L84 108.9 L88 103.2 L92 98.0 L96 93.4 L100 89.4 L104 86.1 L108 83.4 L112 81.5 L116 80.4 L120 80.0 L124 80.4 L128 81.5 L132 83.4 L136 86.1 L140 89.4 L144 93.4 L148 98.0 L152 103.2 L156 108.9 L160 115.0 L164 121.5 L168 128.4 L172 135.4 L176 142.7 L180 150.0 L184 157.3 L188 164.6 L192 171.6 L196 178.5 L200 185.0 L204 191.1 L208 196.8 L212 202.0 L216 206.6 L220 210.6 L224 213.9 L228 216.6 L232 218.5 L236 219.6 L240 220.0 L244 219.6 L248 218.5 L252 216.6 L256 213.9 L260 210.6 L264 206.6 L268 202.0 L272 196.8 L276 191.1 L280 185.0 L284 178.5 L288 171.6 L292 164.6 L296 157.3 L300 150.0 L304 142.7 L308 135.4 L312 128.4 L316 121.5 L320 115.0 L324 108.9 L328 103.2 L332 98.0 L336 93.4 L340 89.4 L344 86.1 L348 83.4 L352 81.5 L356 80.4 L360 80.0 L364 80.4 L368 81.5 L372 83.4 L376 86.1 L380 89.4 L384 93.4 L388 98.0 L392 103.2 L396 108.9 L400 115.0 L404 121.5 L408 128.4 L412 135.4 L416 142.7 L420 150.0 L424 157.3 L428 164.6 L432 171.6 L436 178.5 L440 185.0 L444 191.1 L448 196.8 L452 202.0 L456 206.6 L460 210.6 L464 213.9 L468 216.6 L472 218.5 L476 219.6 L480 220.0 L484 219.6 L488 218.5 L492 216.6 L496 213.9 L500 210.6 L504 206.6 L508 202.0 L512 196.8 L516 191.1 L520 185.0 L524 178.5 L528 171.6 L532 164.6 L536 157.3 L540 150.0\" fill=\"none\" stroke=\"#000\" stroke-width=\"2.5\"/><line x1=\"120\" y1=\"80\" x2=\"120\" y2=\"48\" stroke=\"#000\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"360\" y1=\"80\" x2=\"360\" y2=\"48\" stroke=\"#000\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"122\" y1=\"55\" x2=\"358\" y2=\"55\" stroke=\"#000\" stroke-width=\"1.5\" marker-start=\"url(#arrow)\" marker-end=\"url(#arrow)\"/><text x=\"240\" y=\"40\" font-family=\"Arial, Helvetica, sans-serif\" font-size=\"22\" text-anchor=\"middle\">λ = {{wavelength}}</text><line x1=\"480\" y1=\"220\" x2=\"585\" y2=\"220\" stroke=\"#000\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><line x1=\"575\" y1=\"152\" x2=\"575\" y2=\"218\" stroke=\"#000\" stroke-width=\"1.5\" marker-start=\"url(#arrow)\" marker-end=\"url(#arrow)\"/><text x=\"585\" y=\"192\" font-family=\"Arial, Helvetica, sans-serif\" font-size=\"20\" text-anchor=\"start\">A = {{amplitude}}</text><line x1=\"230\" y1=\"268\" x2=\"350\" y2=\"268\" stroke=\"#000\" stroke-width=\"2\" marker-end=\"url(#arrow)\"/><text x=\"360\" y=\"275\" font-family=\"Arial, Helvetica, sans-serif\" font-size=\"18\" text-anchor=\"start\">direction of travel</text><text x=\"680\" y=\"290\" font-family=\"Arial, Helvetica, sans-serif\" font-size=\"14\" font-style=\"italic\" text-anchor=\"end\">Not drawn to scale</text></svg>",
+        "variables": [
+          {
+            "key": "wavelength",
+            "label": "Wavelength",
+            "value": "0.40",
+            "unit": "m"
+          },
+          {
+            "key": "amplitude",
+            "label": "Amplitude",
+            "value": "0.05",
+            "unit": "m"
+          }
+        ],
+        "prompts": [
+          "Transverse water wave, two wavelengths, wavelength and amplitude labelled with dimension lines, direction of travel arrow"
+        ],
+        "title": "Transverse wave with wavelength and amplitude marked",
+        "description": "Two cycles of a transverse water wave with wavelength and amplitude dimension lines and a direction-of-travel arrow.",
+        "topics": [
+          "Waves"
+        ]
+      }
+    },
+    {
+      "id": "q-005",
+      "type": "question",
+      "stem": "Figure 1 shows a wave on the surface of water. The frequency of the wave is 5.0 Hz.",
+      "marks": 0,
+      "lines": 0,
+      "attachedDataId": null,
+      "attachedDataIds": null,
+      "attachedFigureId": "fig-001",
+      "markScheme": "",
+      "parts": [
+        {
+          "id": "part-006",
+          "label": "a",
+          "stem": "State the amplitude of the wave.",
+          "marks": 1,
+          "lines": 1,
+          "markScheme": "0.05 m [1]",
+          "numericalAnswer": "0.05",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        },
+        {
+          "id": "part-007",
+          "label": "b",
+          "stem": "Calculate the speed of the wave.",
+          "marks": 2,
+          "lines": 4,
+          "markScheme": "v = 5.0 × 0.40 [1]; v = 2.0 m/s [1]",
+          "numericalAnswer": "2",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        },
+        {
+          "id": "part-008",
+          "label": "c",
+          "stem": "Calculate the period of the wave.",
+          "marks": 2,
+          "lines": 4,
+          "markScheme": "T = 1 / 5.0 [1]; T = 0.20 s [1]",
+          "numericalAnswer": "0.2",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        }
+      ]
+    },
+    {
+      "id": "tbl-001",
+      "type": "data",
+      "heading": "Table 1: Frequency and wavelength of sound waves in air",
+      "columns": [
+        {
+          "label": "Frequency",
+          "unit": "Hz"
+        },
+        {
+          "label": "Wavelength",
+          "unit": "m"
+        },
+        {
+          "label": "Wave speed",
+          "unit": "m/s"
+        }
+      ],
+      "rows": [
+        [
+          "200",
+          "1.70",
+          "340"
+        ],
+        [
+          "400",
+          "0.85",
+          "340"
+        ],
+        [
+          "500",
+          "0.68",
+          "340"
+        ],
+        [
+          "680",
+          "0.50",
+          "340"
+        ],
+        [
+          "850",
+          "0.40",
+          "340"
+        ]
+      ],
+      "display": "table",
+      "hiddenCells": [
+        "1,2",
+        "2,2",
+        "3,2",
+        "4,2"
+      ],
+      "graph": {
+        "xCol": 0,
+        "yCol": 1,
+        "showXLabel": true,
+        "showYLabel": true,
+        "showXScale": true,
+        "showYScale": true,
+        "omitRows": [],
+        "fitType": "none",
+        "showFitLine": false,
+        "linkedDataId": null
+      }
+    },
+    {
+      "id": "gph-001",
+      "type": "data",
+      "heading": "Graph 1: Wavelength against frequency",
+      "columns": [
+        {
+          "label": "Frequency",
+          "unit": "Hz"
+        },
+        {
+          "label": "Wavelength",
+          "unit": "m"
+        },
+        {
+          "label": "Wave speed",
+          "unit": "m/s"
+        }
+      ],
+      "rows": [],
+      "display": "graph",
+      "hiddenCells": [],
+      "graph": {
+        "xCol": 0,
+        "yCol": 1,
+        "showXLabel": true,
+        "showYLabel": true,
+        "showXScale": true,
+        "showYScale": true,
+        "omitRows": [
+          2,
+          3,
+          4
+        ],
+        "fitType": "curve",
+        "showFitLine": false,
+        "linkedDataId": "tbl-001"
+      }
+    },
+    {
+      "id": "q-004",
+      "type": "question",
+      "stem": "A student used a signal generator and a loudspeaker to produce sound waves of different frequencies. Table 1 and Graph 1 show the results.",
+      "marks": 0,
+      "lines": 0,
+      "attachedDataId": null,
+      "attachedDataIds": [
+        "tbl-001",
+        "gph-001"
+      ],
+      "parts": [
+        {
+          "id": "part-001",
+          "label": "a",
+          "stem": "Complete Table 1 by calculating the wave speed for each frequency.",
+          "marks": 2,
+          "lines": 2,
+          "markScheme": "Uses v = f λ for at least one row [1]; all four values given as 340 m/s [1]",
+          "numericalAnswer": "340",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        },
+        {
+          "id": "part-002",
+          "label": "b",
+          "stem": "Plot the remaining points on Graph 1 and draw a smooth curve of best fit.",
+          "marks": 3,
+          "lines": 1,
+          "markScheme": "All three remaining points plotted to within half a small square [2] (one point correct [1]); smooth curve through all points [1]",
+          "numericalAnswer": "",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        },
+        {
+          "id": "part-003",
+          "label": "c",
+          "stem": "Describe the relationship between the frequency and the wavelength of the sound waves.",
+          "marks": 2,
+          "lines": 3,
+          "markScheme": "As frequency increases, wavelength decreases [1]; wavelength is inversely proportional to frequency / doubling frequency halves wavelength [1]",
+          "numericalAnswer": "",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        },
+        {
+          "id": "part-004",
+          "label": "d",
+          "stem": "Use Graph 1 to estimate the wavelength of a sound wave with a frequency of 300 Hz.",
+          "marks": 1,
+          "lines": 2,
+          "markScheme": "Value read correctly from candidate's curve; expected 1.1 m (accept 1.05–1.20 m) [1]",
+          "numericalAnswer": "",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        },
+        {
+          "id": "part-005",
+          "label": "e",
+          "stem": "Explain why the wave speed is the same for every frequency in Table 1.",
+          "marks": 2,
+          "lines": 3,
+          "markScheme": "The speed of a wave depends on the medium it travels through [1]; all the sound waves travelled through the same medium (air) [1]",
+          "numericalAnswer": "",
+          "attachedDataId": null,
+          "attachedDataIds": null
+        }
+      ],
+      "markScheme": ""
+    },
+    {
+      "id": "mtu-001",
+      "type": "match_them_up",
+      "heading": "Draw a line to match each quantity to its definition.",
+      "items": [
+        {
+          "id": "item-001",
+          "left": "Amplitude",
+          "right": "The maximum displacement of a point on a wave from its undisturbed position"
+        },
+        {
+          "id": "item-002",
+          "left": "Wavelength",
+          "right": "The distance from a point on one wave to the equivalent point on the next wave"
+        },
+        {
+          "id": "item-003",
+          "left": "Frequency",
+          "right": "The number of waves passing a point each second"
+        },
+        {
+          "id": "item-004",
+          "left": "Period",
+          "right": "The time taken for one complete wave to pass a point"
+        },
+        {
+          "id": "item-005",
+          "left": "Wave speed",
+          "right": "The distance travelled by a wave each second"
+        }
+      ]
+    },
+    {
+      "id": "na-001",
+      "type": "numerical_answers",
+      "heading": "Numerical answers"
+    }
+  ]
+}

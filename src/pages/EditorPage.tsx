@@ -10,6 +10,8 @@ import { PublishExportModal } from '../components/PublishExportModal'
 import { TutorialWizard, TUTORIAL_KEY } from '../components/TutorialWizard'
 import { MCQuizModal } from '../components/MCQuizModal'
 import { ExamMarksNav } from '../components/exam/ExamMarksNav'
+import { ClaudeReviewBar, ClaudeReviewDialog } from '../components/ClaudeReview'
+import { describeSpecPoint } from '../data/qualifications'
 import { useWorksheet } from '../hooks/useWorksheet'
 import { useSupabaseWorksheets } from '../hooks/useSupabaseWorksheets'
 import { useMCQuiz } from '../hooks/useMCQuiz'
@@ -63,6 +65,9 @@ export function EditorPage() {
     !!(location.state as { tutorialMode?: boolean } | null)?.tutorialMode
     || !localStorage.getItem(TUTORIAL_KEY)
   )
+  // Sheets saved from Claude arrive flagged for review (see ClaudeReview)
+  const [review, setReview] = useState<{ worksheetId: string; createdAt: string; showDialog: boolean } | null>(null)
+  const reviewBaselineRef = useRef<string | null>(null)
   const openRef = useRef<HTMLInputElement>(null)
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -83,6 +88,9 @@ export function EditorPage() {
   const originalBlocksRef = useRef<Block[]>([])
   const worksheetTypeRef = useRef<string>('')
   const isAIGeneratedRef = useRef(false)
+  // Which worksheet the AI refs above belong to, so switching sheets never compares
+  // one sheet's edits against another's original
+  const aiRefsForIdRef = useRef<string | null>(null)
 
   const saveRef = useRef(save)
   saveRef.current = save
@@ -95,6 +103,14 @@ export function EditorPage() {
   const committedRef = useRef(false)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
+  const markReviewed = useCallback(async (id: string) => {
+    setReview(null)
+    if (!isConfigured) return
+    await supabase.from('worksheets')
+      .update({ needs_review: false, reviewed_at: new Date().toISOString() })
+      .eq('id', id)
+  }, [])
+
   const triggerAutoSave = useCallback((w: typeof worksheet) => {
     if (!committedRef.current || !profile) return
     clearTimeout(autoSaveTimer.current)
@@ -106,6 +122,11 @@ export function EditorPage() {
           originalBlocks: originalBlocksRef.current,
         } : undefined
         await saveRef.current(w, aiMeta)
+        // The first edit to a sheet from Claude counts as reviewing it
+        if (reviewBaselineRef.current !== null && JSON.stringify(w.blocks) !== reviewBaselineRef.current) {
+          reviewBaselineRef.current = null
+          markReviewed(w.id)
+        }
         if (isAIGeneratedRef.current && originalBlocksRef.current.length > 0) {
           await trackEditRef.current(w, originalBlocksRef.current, worksheetTypeRef.current)
           // Check if we should nudge about annotations
@@ -126,7 +147,7 @@ export function EditorPage() {
         setTimeout(() => setSaveStatus('idle'), 4000)
       }
     }, 1500)
-  }, [profile])
+  }, [profile, markReviewed])
 
   useEffect(() => {
     if (location.state?.worksheet) {
@@ -144,6 +165,7 @@ export function EditorPage() {
           isAIGeneratedRef.current = true
           originalBlocksRef.current = ws.blocks
           worksheetTypeRef.current = location.state.worksheetType ?? ''
+          aiRefsForIdRef.current = ws.id
         }
       }
     } else if (typeof location.state?.preset === 'number') {
@@ -208,20 +230,45 @@ export function EditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
-  // Load existing rating/annotation for the current worksheet
+  // Load the saved state of the current worksheet: rating/annotation, its AI baseline
+  // (so edits are tracked however the sheet was opened), and the review flag.
   useEffect(() => {
-    if (!worksheet.id || !isConfigured) return
+    const id = worksheet.id
+    if (!id || !isConfigured) return
+    let cancelled = false
+    reviewBaselineRef.current = null
     supabase
       .from('worksheets')
-      .select('rating, annotation')
-      .eq('id', worksheet.id)
+      .select('rating, annotation, ai_generated, worksheet_type, original_blocks, source, needs_review, first_opened_at, created_at')
+      .eq('id', id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data) return
-        const row = data as Record<string, unknown>
+        if (cancelled || worksheetRef.current.id !== id) return
+        const row = (data ?? {}) as Record<string, unknown>
         setSheetRating((row.rating as number) ?? null)
         setSheetAnnotation((row.annotation as string) ?? '')
+
+        if (row.ai_generated && Array.isArray(row.original_blocks) && row.original_blocks.length) {
+          isAIGeneratedRef.current = true
+          originalBlocksRef.current = row.original_blocks as Block[]
+          worksheetTypeRef.current = (row.worksheet_type as string) ?? ''
+          aiRefsForIdRef.current = id
+        } else if (aiRefsForIdRef.current !== id) {
+          isAIGeneratedRef.current = false
+          originalBlocksRef.current = []
+          worksheetTypeRef.current = ''
+          aiRefsForIdRef.current = null
+        }
+
+        if (row.source === 'mcp' && row.needs_review) {
+          reviewBaselineRef.current = JSON.stringify(worksheetRef.current.blocks)
+          setReview({ worksheetId: id, createdAt: (row.created_at as string) ?? new Date().toISOString(), showDialog: !row.first_opened_at })
+          if (!row.first_opened_at) {
+            supabase.from('worksheets').update({ first_opened_at: new Date().toISOString() }).eq('id', id).then(() => {})
+          }
+        }
       })
+    return () => { cancelled = true }
   }, [worksheet.id])
 
   function handleOpen(e: React.ChangeEvent<HTMLInputElement>) {
@@ -301,6 +348,7 @@ export function EditorPage() {
   }
 
   const existingQuiz = worksheet.id ? getByWorksheetId(worksheet.id) : undefined
+  const activeReview = review && review.worksheetId === worksheet.id ? review : null
 
   const saveLabel =
     saveStatus === 'saving' ? '● Saving…' :
@@ -391,7 +439,8 @@ export function EditorPage() {
         onClick={() => {
           const existingEntry = entries.find(en => en.id === worksheet.id)
           const alreadyDecided = existingEntry && (existingEntry.is_public || existingEntry.publish_opt_out)
-          if (!alreadyDecided) {
+          // Don't offer the public library until a sheet from Claude has been reviewed
+          if (!alreadyDecided && !activeReview) {
             setShowPublishModal(true)
           } else {
             handlePrint()
@@ -406,6 +455,19 @@ export function EditorPage() {
   return (
     <div className="editor-layout">
       <Topbar actions={topbarActions} />
+      {activeReview && !activeReview.showDialog && <ClaudeReviewBar onApprove={() => markReviewed(activeReview.worksheetId)} />}
+      {activeReview?.showDialog && (() => {
+        const h = worksheet.blocks.find(b => b.type === 'header') as HeaderBlock | undefined
+        return (
+          <ClaudeReviewDialog
+            createdAt={activeReview.createdAt}
+            specLabel={describeSpecPoint(h?.qualification, h?.examBoard, h?.specPoint)}
+            hasFigures={worksheet.blocks.some(b => b.type === 'figure')}
+            onApprove={() => markReviewed(activeReview.worksheetId)}
+            onStart={() => setReview(r => r && { ...r, showDialog: false })}
+          />
+        )
+      })()}
       <div className="editor-workspace">
         <aside className="panel-editor">
           <Editor

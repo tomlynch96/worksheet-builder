@@ -4,6 +4,9 @@ import type { Worksheet, HeaderBlock, OakContext } from '../types/worksheet'
 
 export interface WorksheetEntry {
   id: string
+  profile_id: string
+  source: 'app' | 'mcp'
+  needs_review: boolean
   title: string
   topic: string
   qualification_id: string | null
@@ -30,6 +33,9 @@ function rowToEntry(row: Record<string, unknown>): WorksheetEntry {
   const blocks = (row.blocks as unknown[]) ?? []
   return {
     id: row.id as string,
+    profile_id: row.profile_id as string,
+    source: row.source === 'mcp' ? 'mcp' : 'app',
+    needs_review: (row.needs_review as boolean) ?? false,
     title: (row.title as string) || 'Untitled',
     topic: (row.topic as string) || '',
     qualification_id: (row.qualification_id as string) || null,
@@ -194,19 +200,22 @@ export function useSupabaseWorksheets(profileId: string | null) {
     setEntries(prev => prev.map(e => e.id === id ? { ...e } : e))
   }
 
-  async function fetchByShareId(id: string): Promise<WorksheetEntry | null> {
+  // A share link opens for anyone once sharing is on, and always for the sheet's owner
+  // (so links from the Claude connector work before the teacher chooses to share).
+  const fetchByShareId = useCallback(async (id: string): Promise<WorksheetEntry | null> => {
     if (!isConfigured) return null
     const { data } = await supabase
       .from('worksheets')
       .select('*, profiles(name)')
       .eq('id', id)
-      .eq('share_enabled', true)
-      .single()
+      .maybeSingle()
     if (!data) return null
     const row = data as Record<string, unknown>
+    const isOwner = !!profileId && row.profile_id === profileId
+    if (!row.share_enabled && !isOwner) return null
     const profileData = row.profiles as { name: string } | null
     return { ...rowToEntry(row), author_name: row.attribution === 'named' ? (profileData?.name ?? 'Teacher') : undefined }
-  }
+  }, [profileId])
 
   async function fetchPublicById(id: string): Promise<WorksheetEntry | null> {
     const { data } = await supabase
