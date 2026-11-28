@@ -16,9 +16,14 @@ export interface WorksheetFilters {
   limit: number
 }
 
+export interface TokenAccess {
+  profileId: string
+  isAdmin: boolean
+}
+
 export interface Store {
-  /** Profile id for a live token, or null. Also records that the token was used. */
-  profileForToken(token: string): Promise<string | null>
+  /** Who a live token belongs to, or null. Also records that the token was used. */
+  accessForToken(token: string): Promise<TokenAccess | null>
   profile(profileId: string): Promise<Row | null>
   courses(profileId: string): Promise<{ qualification_id: string; exam_board: string }[]>
 
@@ -63,11 +68,11 @@ export function supabaseStore(): Store {
   }
 
   return {
-    async profileForToken(token) {
-      const rows = check(await db.from('mcp_tokens').select('id, profile_id').eq('token_hash', hashToken(token)).is('revoked_at', null).limit(1), 'token') as Row[]
+    async accessForToken(token) {
+      const rows = check(await db.from('mcp_tokens').select('id, profile_id, profiles(is_admin)').eq('token_hash', hashToken(token)).is('revoked_at', null).limit(1), 'token') as Row[]
       if (!rows?.length) return null
       await db.from('mcp_tokens').update({ last_used_at: new Date().toISOString() }).eq('id', rows[0].id)
-      return rows[0].profile_id as string
+      return { profileId: rows[0].profile_id as string, isAdmin: rows[0].profiles?.is_admin === true }
     },
     async profile(profileId) {
       return check(await db.from('profiles').select('id, name').eq('id', profileId).maybeSingle(), 'profile') as Row | null

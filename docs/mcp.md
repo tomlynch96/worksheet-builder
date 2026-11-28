@@ -2,19 +2,26 @@
 
 Teachers can plan and write worksheets with Claude, and Claude saves them straight into their Worksheet Project library: tagged to the site's spec taxonomy, private, and flagged for review the first time the teacher opens them.
 
+> **Admin accounts only for now.** Three layers enforce this:
+> - the Profile page only shows the connector to admins
+> - the database only lets admins create tokens (`mcp_tokens` insert policy)
+> - `api/mcp.ts` refuses tokens whose owner isn't an admin, with a 403
+>
+> To open it to every teacher, set `ADMIN_ONLY = false` in `api/mcp.ts`, recreate the insert policy without `and public.is_admin()`, and drop the `profile?.is_admin &&` guard in `src/pages/ProfilePage.tsx`.
+
 - Endpoint: `https://<site>/api/mcp` (stateless Streamable HTTP, POST only)
 - Auth: a personal token each teacher creates on their **Profile** page, sent as `Authorization: Bearer <token>`
 - Code: `api/mcp.ts`, `api/_lib/`
 
 ## One-off setup (site owner)
 
-1. **Run the migration.** In the Supabase SQL editor, run `supabase/migrations/028_mcp_connector.sql`. It adds the `mcp_tokens` table and the `source`, `needs_review`, `first_opened_at` and `reviewed_at` columns on `worksheets`. To undo it, run `supabase/rollbacks/028_mcp_connector_down.sql`.
+1. **Run the migrations** (done on the `worksheet-builder` project on 28 Nov 2026). In the Supabase SQL editor, run `supabase/migrations/029_protect_is_admin.sql`, then `supabase/migrations/028_mcp_connector.sql`. 029 stops users from setting `is_admin` on their own profile, which the admin-only gate depends on. It adds the `mcp_tokens` table and the `source`, `needs_review`, `first_opened_at` and `reviewed_at` columns on `worksheets`. To undo it, run `supabase/rollbacks/028_mcp_connector_down.sql`.
 2. **Add the service-role key to Vercel.** Project → Settings → Environment Variables → `SUPABASE_SERVICE_ROLE_KEY`, copied from Supabase → Project Settings → API. It is server-only: never prefix it with `VITE_`. The server also needs the project URL; it reads `SUPABASE_URL`, falling back to the existing `VITE_SUPABASE_URL`.
    - Preview deployments use the Preview environment's values. If previews point at your live database, testing the connector on a preview writes to live data.
 3. *(Optional)* `SITE_URL`, e.g. `https://theworksheetproject.co.uk`, if links in Claude's replies should always use your main domain. Otherwise they use the domain the request came in on.
 4. Deploy.
 
-## Connecting Claude (each teacher)
+## Connecting Claude (each admin, for now)
 
 On the site: **Profile → Claude connector → Connect Claude**. The token is shown once, with ready-to-copy setup for:
 

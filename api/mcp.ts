@@ -2,11 +2,16 @@
 //
 // Stateless Streamable HTTP: every POST is handled by a fresh server bound to the teacher
 // whose personal token (created on the site's Profile page) is in the Authorization header.
+// While the connector is trialled it is ADMIN-ONLY: tokens of non-admin profiles are refused
+// here (and supabase/migrations/028 only lets admins create tokens). Set ADMIN_ONLY to false,
+// and drop "and public.is_admin()" from the mcp_tokens insert policy, to open it to everyone.
 // Needs SUPABASE_SERVICE_ROLE_KEY in the Vercel environment. Setup: docs/mcp.md
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { buildServer } from './_lib/mcp-server.js'
 import { supabaseStore, type Store } from './_lib/store.js'
+
+const ADMIN_ONLY = true
 
 let cachedStore: Store | null = null
 
@@ -30,15 +35,19 @@ export async function handleMcp(req: VercelRequest, res: VercelResponse, store: 
 
   const auth = String(req.headers.authorization ?? '')
   const token = /^Bearer\s+(\S+)$/i.exec(auth)?.[1]
-  const profileId = token ? await store.profileForToken(token) : null
-  if (!profileId) {
+  const access = token ? await store.accessForToken(token) : null
+  if (!access) {
     res.setHeader('WWW-Authenticate', 'Bearer realm="The Worksheet Project"')
     return rpcError(res, 401, token
       ? 'This connector token is not valid or has been revoked. Create a new one on your Profile page in The Worksheet Project.'
       : 'Missing connector token. Create one on your Profile page in The Worksheet Project and send it as "Authorization: Bearer <token>".')
   }
 
-  const server = buildServer({ store, profileId, origin: siteOrigin(req) })
+  if (ADMIN_ONLY && !access.isAdmin) {
+    return rpcError(res, 403, 'The Claude connector is only available to admin accounts at the moment.')
+  }
+
+  const server = buildServer({ store, profileId: access.profileId, origin: siteOrigin(req) })
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
   res.on('close', () => { transport.close(); server.close() })
   await server.connect(transport)

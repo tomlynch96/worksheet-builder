@@ -10,9 +10,13 @@ import { hashToken, type Row, type Store } from '../api/_lib/store.ts'
 const ME = '11111111-1111-4111-8111-111111111111'
 const OTHER = '22222222-2222-4222-8222-222222222222'
 const TOKEN = 'wsp_test_token_abc'
+const TEACHER_TOKEN = 'wsp_non_admin_token'
 const db = {
-  tokens: [{ token_hash: hashToken(TOKEN), profile_id: ME, revoked_at: null as string | null }],
-  profiles: [{ id: ME, name: 'Ms Test' }, { id: OTHER, name: 'Mr Other' }],
+  tokens: [
+    { token_hash: hashToken(TOKEN), profile_id: ME, revoked_at: null as string | null },
+    { token_hash: hashToken(TEACHER_TOKEN), profile_id: OTHER, revoked_at: null as string | null },
+  ],
+  profiles: [{ id: ME, name: 'Ms Test', is_admin: true }, { id: OTHER, name: 'Mr Other', is_admin: false }],
   courses: [{ profile_id: ME, qualification_id: 'gcse-physics', exam_board: 'AQA' }],
   worksheets: [] as Row[],
   schemes: [{ id: '33333333-3333-4333-8333-333333333333', profile_id: ME, name: 'Y10 Physics', academic_year: '2026-27', qualification_id: 'gcse-physics', exam_board: 'AQA', browsable_qualifications: [] }],
@@ -26,7 +30,10 @@ const match = (r: Row, f: { qualification?: string; examBoard?: string; specPoin
   (!f.qualification || r.qualification_id === f.qualification) && (!f.examBoard || r.exam_board === f.examBoard) && (!f.specPoint || r.spec_point === f.specPoint)
 let uid = 0
 const store: Store = {
-  async profileForToken(t) { return db.tokens.find(x => x.token_hash === hashToken(t) && !x.revoked_at)?.profile_id ?? null },
+  async accessForToken(t) {
+    const tok = db.tokens.find(x => x.token_hash === hashToken(t) && !x.revoked_at)
+    return tok ? { profileId: tok.profile_id, isAdmin: !!db.profiles.find(p => p.id === tok.profile_id)?.is_admin } : null
+  },
   async profile(id) { return db.profiles.find(p => p.id === id) ?? null },
   async courses(id) { return db.courses.filter(c => c.profile_id === id) },
   async publicWorksheets(f) { return db.worksheets.filter(w => w.is_public && match(w, f)).slice(0, f.limit) },
@@ -61,9 +68,13 @@ const ok = (cond: unknown, name: string, detail?: unknown) => { if (cond) { pass
 const txt = (r: any) => r.content?.map((c: any) => c.text).join('\n') ?? ''
 
 // Auth
-for (const [name, headers] of [['no token', {}], ['bad token', { Authorization: 'Bearer nope' }]] as const) {
+for (const [name, headers, status] of [
+  ['no token', {}, 401],
+  ['bad token', { Authorization: 'Bearer nope' }, 401],
+  ['non-admin teacher token', { Authorization: `Bearer ${TEACHER_TOKEN}` }, 403],
+] as const) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', ...headers }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }) })
-  ok(r.status === 401, `${name} → 401`, r.status)
+  ok(r.status === status, `${name} → ${status}`, r.status)
 }
 
 const client = new Client({ name: 'e2e', version: '1.0.0' })

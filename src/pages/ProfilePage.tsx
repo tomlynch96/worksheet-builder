@@ -333,7 +333,8 @@ export function ProfilePage() {
             Link your Google or Microsoft account so you can sign in either way without losing your worksheets.
           </p>
         </div>
-        {profile && <ClaudeConnector profileId={profile.id} />}
+        {/* Admin-only while the connector is trialled (also enforced by the server and the database) */}
+        {profile?.is_admin && <ClaudeConnector profileId={profile.id} />}
         </div>{/* end profile-card */}
       </main>
     </div>

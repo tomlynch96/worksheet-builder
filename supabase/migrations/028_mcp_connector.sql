@@ -35,10 +35,12 @@ create policy "owner: read own mcp tokens"
   on public.mcp_tokens for select
   using (profile_id = auth.uid());
 
+-- Admins only while the connector is being trialled. To open it to every teacher, recreate
+-- this policy without "and public.is_admin()" (and remove the check in api/mcp.ts).
 drop policy if exists "owner: create own mcp tokens" on public.mcp_tokens;
 create policy "owner: create own mcp tokens"
   on public.mcp_tokens for insert
-  with check (profile_id = auth.uid());
+  with check (profile_id = auth.uid() and public.is_admin());
 
 drop policy if exists "owner: revoke own mcp tokens" on public.mcp_tokens;
 create policy "owner: revoke own mcp tokens"
