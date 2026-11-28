@@ -1,11 +1,19 @@
-// Builds the "write a worksheet JSON" prompt for any Claude chat from the
-// hand-written guide plus the site's own curriculum taxonomy, so spec refs in
-// the prompt always match src/data. Re-run after changing the specs or the guide.
+// Builds everything that describes the worksheet format and taxonomy to Claude,
+// from one hand-written guide (docs/worksheet-json-prompt.template.md) and the
+// site's own spec data (src/data), so the two can never drift apart:
 //
+//   docs/worksheet-json-prompt.md        prompt for any Claude chat (upload the JSON by hand),
+//                                        with the full taxonomy appended
+//   api/_lib/guide.generated.ts          the same guide, worded for the MCP connector's tools
+//   api/_lib/taxonomy.generated.ts       the taxonomy as data, for the MCP server
+//
+// The api/ files are self-contained (no imports) because Vercel runs api/ as plain Node
+// ES modules, which can't load src/data's extensionless imports.
+//
+// Re-run after changing the guide or the spec data:
 //   npx tsx scripts/gen-worksheet-prompt.mts
-//       → docs/worksheet-json-prompt.md (every course and board)
+// One course only (a much shorter chat prompt, written alongside the full one):
 //   npx tsx scripts/gen-worksheet-prompt.mts --course gcse-physics --board AQA
-//       → docs/worksheet-json-prompt.gcse-physics.AQA.md (one course, much shorter)
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { QUALIFICATION_OFFERINGS, getSpecTopics } from '../src/data/qualifications'
@@ -18,42 +26,70 @@ const arg = (name: string) => {
 const onlyCourse = arg('course')
 const onlyBoard = arg('board')
 
-const offerings = QUALIFICATION_OFFERINGS.filter(q => !onlyCourse || q.id === onlyCourse)
-if (!offerings.length) throw new Error(`Unknown course "${onlyCourse}". Courses: ${QUALIFICATION_OFFERINGS.map(q => q.id).join(', ')}`)
+// ── Taxonomy as data ─────────────────────────────────────────────────────────
+interface Point { ref: string; title: string }
+interface Topic { ref: string; title: string; points: Point[] }
+interface Board { board: string; topics: Topic[] }
+interface Course { id: string; label: string; boards: Board[] }
 
-const sections: string[] = []
+const taxonomy: Course[] = QUALIFICATION_OFFERINGS.map(q => ({
+  id: q.id,
+  label: q.label,
+  boards: q.examBoards.flatMap(board => {
+    const topics = getSpecTopics(q.id, board)
+    return topics ? [{ board, topics: topics.map(t => ({ ref: t.ref, title: t.title, points: t.points.map(p => ({ ref: p.ref, title: p.title })) })) }] : []
+  }),
+})).filter(c => c.boards.length)
 
-sections.push('### Courses\n\n| Course id (`qualification`) | Course | Exam boards (`examBoard`) |\n|---|---|---|')
-for (const q of offerings) {
-  const boards = q.examBoards.filter(b => (!onlyBoard || b === onlyBoard) && getSpecTopics(q.id, b))
-  if (boards.length) sections[0] += `\n| \`${q.id}\` | ${q.label} | ${boards.join(', ')} |`
+// ── Guide variants ───────────────────────────────────────────────────────────
+const template = readFileSync(join(root, 'docs/worksheet-json-prompt.template.md'), 'utf8')
+const variant = (keep: 'FILE' | 'MCP') => {
+  const drop = keep === 'FILE' ? 'MCP' : 'FILE'
+  return template
+    .replace(new RegExp(`<!-- ${drop}-ONLY -->[\\s\\S]*?<!-- /${drop}-ONLY -->\\n?`, 'g'), '')
+    .replace(new RegExp(`<!-- /?${keep}-ONLY -->\\n?`, 'g'), '')
 }
 
-let points = 0
-for (const q of offerings) {
-  for (const board of q.examBoards) {
-    if (onlyBoard && board !== onlyBoard) continue
-    const topics = getSpecTopics(q.id, board)
-    if (!topics) continue
-    const lines = [`### ${q.label} — ${board}\n\n\`"qualification": "${q.id}", "examBoard": "${board}"\`\n`]
-    for (const topic of topics) {
-      lines.push(`\n**${topic.ref} ${topic.title}**`)
-      for (const p of topic.points) {
-        lines.push(`- \`${p.ref}\` ${p.title}`)
-        points++
-      }
+function taxonomyMarkdown(courses: Course[]): { md: string; points: number } {
+  let points = 0
+  const table = ['### Courses\n\n| Course id (`qualification`) | Course | Exam boards (`examBoard`) |\n|---|---|---|']
+  for (const c of courses) table.push(`| \`${c.id}\` | ${c.label} | ${c.boards.map(b => b.board).join(', ')} |`)
+  const sections = [table.join('\n')]
+  for (const c of courses) for (const b of c.boards) {
+    const lines = [`### ${c.label} — ${b.board}\n\n\`"qualification": "${c.id}", "examBoard": "${b.board}"\`\n`]
+    for (const t of b.topics) {
+      lines.push(`\n**${t.ref} ${t.title}**`)
+      for (const p of t.points) { lines.push(`- \`${p.ref}\` ${p.title}`); points++ }
     }
     sections.push(lines.join('\n'))
   }
+  return { md: sections.join('\n\n'), points }
 }
-if (!points) throw new Error(`No spec data for course "${onlyCourse}" with board "${onlyBoard}"`)
 
-const template = readFileSync(join(root, 'docs/worksheet-json-prompt.template.md'), 'utf8')
-if (!template.includes('<!-- TAXONOMY -->')) throw new Error('Template is missing the <!-- TAXONOMY --> marker')
-const out = template.replace('<!-- TAXONOMY -->', sections.join('\n\n'))
+const fileGuide = variant('FILE')
+if (!fileGuide.includes('<!-- TAXONOMY -->')) throw new Error('Template is missing the <!-- TAXONOMY --> marker')
 
-const file = onlyCourse
+const selected = taxonomy
+  .filter(c => !onlyCourse || c.id === onlyCourse)
+  .map(c => ({ ...c, boards: c.boards.filter(b => !onlyBoard || b.board === onlyBoard) }))
+  .filter(c => c.boards.length)
+if (!selected.length) throw new Error(`No spec data for course "${onlyCourse}"${onlyBoard ? ` with board "${onlyBoard}"` : ''}. Courses: ${taxonomy.map(c => c.id).join(', ')}`)
+
+const { md, points } = taxonomyMarkdown(selected)
+const promptFile = onlyCourse
   ? `docs/worksheet-json-prompt.${onlyCourse}${onlyBoard ? `.${onlyBoard}` : ''}.md`
   : 'docs/worksheet-json-prompt.md'
-writeFileSync(join(root, file), out)
-console.log(`Wrote ${file}: ${points} spec points, ${Math.round(out.length / 1024)} KB`)
+writeFileSync(join(root, promptFile), fileGuide.replace('<!-- TAXONOMY -->', md))
+console.log(`Wrote ${promptFile}: ${points} spec points`)
+
+if (!onlyCourse) {
+  const header = '// GENERATED by scripts/gen-worksheet-prompt.mts — do not edit by hand.\n'
+  writeFileSync(join(root, 'api/_lib/guide.generated.ts'),
+    `${header}// The worksheet format guide, worded for the MCP connector. Source: docs/worksheet-json-prompt.template.md\n\nexport const WORKSHEET_GUIDE = ${JSON.stringify(variant('MCP'))}\n`)
+  writeFileSync(join(root, 'api/_lib/taxonomy.generated.ts'),
+    `${header}// Course → exam board → spec topics and points, from src/data/qualifications.ts and specs*.ts.\n\n` +
+    `export interface SpecPoint { ref: string; title: string }\nexport interface SpecTopic { ref: string; title: string; points: SpecPoint[] }\n` +
+    `export interface CourseBoard { board: string; topics: SpecTopic[] }\nexport interface Course { id: string; label: string; boards: CourseBoard[] }\n\n` +
+    `export const TAXONOMY: Course[] = ${JSON.stringify(taxonomy)}\n`)
+  console.log('Wrote api/_lib/guide.generated.ts and api/_lib/taxonomy.generated.ts')
+}

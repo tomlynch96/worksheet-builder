@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { QUALIFICATION_OFFERINGS } from '../data/qualifications'
 import type { UserCourse } from '../types/profile'
 import { OPEN_SPEC_NOTICE_EVENT } from '../components/SpecRefNotice'
+import { ClaudeConnector } from '../components/ClaudeConnector'
 import '../components/SpecRefNotice.css'
 import './ProfilePage.css'
 
@@ -332,6 +333,7 @@ export function ProfilePage() {
             Link your Google or Microsoft account so you can sign in either way without losing your worksheets.
           </p>
         </div>
+        {profile && <ClaudeConnector profileId={profile.id} />}
         </div>{/* end profile-card */}
       </main>
     </div>

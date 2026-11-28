@@ -73,6 +73,7 @@ Online learning platforms have content trapped on screens. "Export to The Worksh
 - **Backend**: Supabase (Postgres + Auth + RLS + Edge Functions)
 - **PDF generation**: Browser print via CSS (print stylesheets)
 - **AI**: Anthropic Claude API for worksheet generation
+- **Claude connector**: MCP server at `api/mcp.ts` so teachers can build and save sheets from Claude itself — see `docs/mcp.md`. `api/` runs as plain Node ESM on Vercel: relative imports need `.js` extensions, and it can't import `src/data` (use the generated `api/_lib/*.generated.ts`; regenerate with `npm run gen:prompt`).
 
 ## Core Data Models
 

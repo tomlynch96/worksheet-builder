@@ -67,9 +67,9 @@ The site auto-computes marks for cloze (one per blank), match_them_up (one per p
   "qualification": "gcse-physics", "examBoard": "AQA", "tier": "higher", "specPoint": "P6.2",
   "showName": true, "showDate": true, "showClass": true, "showTotalMarks": true }
 ```
-- `qualification`: a **course id** from the appendix (e.g. `gcse-physics`, `alevel-physics`). It must be offered by that `examBoard`.
+- `qualification`: a **course id** from the taxonomy (e.g. `gcse-physics`, `alevel-physics`). It must be offered by that `examBoard`.
 - `examBoard`: one of the boards listed for that course: `AQA`, `OCR`, `Edexcel`, `WJEC`, `Pearson` or `IB`.
-- `specPoint`: a **point ref** copied exactly from that course and board's list in the appendix (e.g. `P6.2`, `4.2.1`, `3.6.1.1`). This is what files the sheet in the library.
+- `specPoint`: a **point ref** copied exactly from that course and board's list in the taxonomy (e.g. `P6.2`, `4.2.1`, `3.6.1.1`). This is what files the sheet in the library.
 - `tier`: `foundation` or `higher` for GCSE; `both` for KS3, A level and IB, or a GCSE sheet for both tiers.
 - `title` is printed big; `topic` is a short subtitle.
 
@@ -326,7 +326,7 @@ Every sheet starts **header → instructions → information** (key facts, or th
 ## 10. Checklist before you deliver
 
 - [ ] Valid strict JSON; `id` is a fresh UUID v4 (or the existing id when revising this worksheet).
-- [ ] First block is the header, with `qualification`, `examBoard`, `tier` and `specPoint` copied **exactly** from the appendix, and the board is offered for that course.
+- [ ] First block is the header, with `qualification`, `examBoard`, `tier` and `specPoint` copied **exactly** from the taxonomy, and the board is offered for that course.
 - [ ] Every id is unique, including part and item ids.
 - [ ] Every `attachedDataId(s)`, `attachedFigureId` and `linkedDataId` points at an id that exists.
 - [ ] Every data block is attached to a question or part. Linked graphs have `rows: []` and a full copy of the table's columns.
