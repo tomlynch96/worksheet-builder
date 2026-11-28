@@ -22,6 +22,20 @@ function siteOrigin(req: VercelRequest): string {
   return `${proto}://${host}`
 }
 
+// The token can arrive as "Authorization: Bearer <token>" (Claude Code, Claude Desktop) or,
+// for claude.ai's request-header connectors, which only offer pre-approved header names, as
+// the bare token in "x-api-key" or "x-auth-token".
+export function tokenFromRequest(headers: VercelRequest['headers']): string | undefined {
+  const auth = String(headers.authorization ?? '').trim()
+  const bearer = /^Bearer\s+(\S+)$/i.exec(auth)?.[1]
+  if (bearer) return bearer
+  for (const name of ['x-api-key', 'x-auth-token']) {
+    const v = String(headers[name] ?? '').trim().replace(/^Bearer\s+/i, '')
+    if (v && !/\s/.test(v)) return v
+  }
+  return undefined
+}
+
 function rpcError(res: VercelResponse, status: number, message: string) {
   res.status(status).json({ jsonrpc: '2.0', error: { code: -32001, message }, id: null })
 }
@@ -33,14 +47,13 @@ export async function handleMcp(req: VercelRequest, res: VercelResponse, store: 
     return rpcError(res, 405, 'Method not allowed. The Worksheet Project MCP server accepts POST only.')
   }
 
-  const auth = String(req.headers.authorization ?? '')
-  const token = /^Bearer\s+(\S+)$/i.exec(auth)?.[1]
+  const token = tokenFromRequest(req.headers)
   const access = token ? await store.accessForToken(token) : null
   if (!access) {
     res.setHeader('WWW-Authenticate', 'Bearer realm="The Worksheet Project"')
     return rpcError(res, 401, token
       ? 'This connector token is not valid or has been revoked. Create a new one on your Profile page in The Worksheet Project.'
-      : 'Missing connector token. Create one on your Profile page in The Worksheet Project and send it as "Authorization: Bearer <token>".')
+      : 'Missing connector token. Create one on your Profile page in The Worksheet Project and send it as "Authorization: Bearer <token>" or in an "x-api-key" header.')
   }
 
   if (ADMIN_ONLY && !access.isAdmin) {

@@ -36,7 +36,13 @@ On the site: **Profile → Claude connector → Connect Claude**. The token is s
       "args": ["-y", "mcp-remote", "https://<site>/api/mcp", "--header", "Authorization:${AUTH_HEADER}"],
       "env": { "AUTH_HEADER": "Bearer <token>" } } } }
   ```
-- **claude.ai on the web:** not yet. Custom connectors there need OAuth sign-in, which is the next step (see *Not built yet*).
+- **claude.ai in the browser:** go to **Customize → Connectors → + Add → Add custom connector** (Team/Enterprise: Organization settings → Connectors → Add → Custom → Web). Fill it in as:
+  - **Name:** The Worksheet Project
+  - **URL:** `https://<site>/api/mcp`
+  - **Authentication:** **No sign-in**
+  - **Request headers** (may be under Advanced): pick **`x-api-key`** from the list, and paste the bare token as the value
+
+  The server accepts the token as `Authorization: Bearer <token>`, or bare in `x-api-key` or `x-auth-token`. claude.ai only allows header names from its approved list. Request headers are in beta and only available to some accounts; if the section doesn't appear, you'll need OAuth sign-in (see *Not built yet*). Headers can't be edited after adding: to change the token, remove the connector and add it again.
 
 Teachers can name, see the last use of, and disconnect each connection on the same page.
 
@@ -105,7 +111,7 @@ npm run test:mcp     # end-to-end: the real handler + MCP client against an in-m
 
 ## Not built yet
 
-- **OAuth sign-in,** so teachers can add the connector in claude.ai on the web (and Desktop without the config file).
+- **OAuth sign-in,** so teachers can connect without copying a token, including claude.ai accounts that don't have request headers.
 - **Print-ready PDF and page previews.** The plan is a server-side render of the same print view in headless Chromium, so Claude can check layout and hand back a PDF.
 - **Booklet images for diagrams.** Booklets print diagrams from a PNG copy the editor makes in the browser. A diagram from Claude only gets that copy when the teacher changes its labelled values or edits it in the Diagram Studio; until then it may be missing from booklets.
 - **Planned-use date and post-use reflection** (priority 7 in CLAUDE.md).
