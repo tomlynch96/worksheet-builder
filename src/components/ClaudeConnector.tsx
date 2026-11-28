@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
 import './ClaudeConnector.css'
 
-// Personal tokens for the Claude connector (the MCP server at /api/mcp). The token is
-// shown once; only its SHA-256 hash is stored, and the server looks it up by hash.
+// Connecting Claude to the connector (the MCP server at /api/mcp). Claude in the browser,
+// the desktop app and Claude Code sign in with OAuth: the teacher adds the URL and clicks
+// Allow (src/pages/OAuthAuthorizePage). Personal tokens are the fallback for other clients:
+// shown once, only their SHA-256 hash is stored. Both kinds are listed and can be disconnected.
 
 interface TokenRow {
   id: string
   name: string
+  kind: 'personal' | 'oauth'
   token_hint: string
   created_at: string
   last_used_at: string | null
@@ -41,7 +44,7 @@ export function ClaudeConnector({ profileId }: { profileId: string }) {
     if (!isConfigured) return []
     const { data, error: err } = await supabase
       .from('mcp_tokens')
-      .select('id, name, token_hint, created_at, last_used_at')
+      .select('id, name, kind, token_hint, created_at, last_used_at')
       .eq('profile_id', profileId)
       .is('revoked_at', null)
       .order('created_at', { ascending: false })
@@ -108,6 +111,8 @@ export function ClaudeConnector({ profileId }: { profileId: string }) {
     },
   }, null, 2) : ''
 
+  const codeOAuth = `claude mcp add --transport http worksheet-project ${endpoint}`
+
   return (
     <div className="profile-linked-section cc-section">
       <p className="profile-linked-title">Claude connector</p>
@@ -116,63 +121,80 @@ export function ClaudeConnector({ profileId }: { profileId: string }) {
         Sheets saved from Claude stay private and are flagged for you to review here first.
       </p>
 
-      {created && (
-        <div className="cc-created">
-          <p className="cc-created-title">Your new connection token — copy it now, it won't be shown again.</p>
-          <div className="cc-code-row">
-            <code className="cc-code">{created}</code>
-            <button type="button" className="profile-linked-btn" onClick={() => copy('token', created)}>{copied === 'token' ? 'Copied' : 'Copy'}</button>
-          </div>
-
-          <p className="cc-step"><strong>Claude in the browser (claude.ai):</strong> Customize → Connectors → + Add → Add custom connector.
-            Name it “The Worksheet Project”, URL <code>{endpoint}</code>, Authentication <strong>No sign-in</strong>.
-            Under <strong>Request headers</strong> (maybe inside Advanced) choose <strong>x-api-key</strong> from the list and paste the token above as the value. Then Add.</p>
-
-          <p className="cc-step"><strong>Claude Code:</strong> run this in a terminal.</p>
-          <div className="cc-code-row">
-            <code className="cc-code cc-code--block">{codeCommand}</code>
-            <button type="button" className="profile-linked-btn" onClick={() => copy('code', codeCommand)}>{copied === 'code' ? 'Copied' : 'Copy'}</button>
-          </div>
-
-          <p className="cc-step"><strong>Claude Desktop:</strong> Settings → Developer → Edit Config, add this to <code>claude_desktop_config.json</code>, then restart Claude. Needs Node.js.</p>
-          <div className="cc-code-row">
-            <pre className="cc-code cc-code--block">{desktopConfig}</pre>
-            <button type="button" className="profile-linked-btn" onClick={() => copy('desktop', desktopConfig)}>{copied === 'desktop' ? 'Copied' : 'Copy'}</button>
-          </div>
-
-          <p className="cc-step">Then ask Claude, for example: “Make a Higher retrieval sheet on the wave equation and save it to The Worksheet Project.”</p>
-          <button type="button" className="cc-done" onClick={() => setCreated(null)}>Done</button>
+      <div className="cc-how">
+        <p className="cc-step"><strong>Claude in the browser or the desktop app:</strong> Customize → Connectors → + Add → <strong>Add custom connector</strong>.
+          Name it “The Worksheet Project” and paste this URL, leave sign-in switched on, then <strong>Add</strong> and <strong>Connect</strong>.
+          You’ll be sent here to click <strong>Allow</strong>.</p>
+        <div className="cc-code-row">
+          <code className="cc-code">{endpoint}</code>
+          <button type="button" className="profile-linked-btn" onClick={() => copy('url', endpoint)}>{copied === 'url' ? 'Copied' : 'Copy'}</button>
         </div>
-      )}
+        <p className="cc-step"><strong>Claude Code:</strong> run this, then type <code>/mcp</code> in Claude Code and choose <strong>Authenticate</strong>.</p>
+        <div className="cc-code-row">
+          <code className="cc-code cc-code--block">{codeOAuth}</code>
+          <button type="button" className="profile-linked-btn" onClick={() => copy('code-oauth', codeOAuth)}>{copied === 'code-oauth' ? 'Copied' : 'Copy'}</button>
+        </div>
+      </div>
 
       {tokens.length > 0 && (
-        <div className="profile-linked-list cc-list">
-          {tokens.map(t => (
-            <div key={t.id} className="profile-linked-row">
-              <span className="profile-linked-connected">
-                {t.name} <span className="cc-hint">…{t.token_hint}</span>
-                <span className="cc-meta">made {fmtDate(t.created_at)} · last used {fmtDate(t.last_used_at)}</span>
-              </span>
-              <button type="button" className="profile-linked-btn" onClick={() => revoke(t.id)}>Disconnect</button>
-            </div>
-          ))}
-        </div>
+        <>
+          <p className="cc-subtitle">Your connections</p>
+          <div className="profile-linked-list cc-list">
+            {tokens.map(t => (
+              <div key={t.id} className="profile-linked-row">
+                <span className="profile-linked-connected">
+                  {t.name} <span className="cc-hint">{t.kind === 'oauth' ? 'signed in' : `token …${t.token_hint}`}</span>
+                  <span className="cc-meta">since {fmtDate(t.created_at)} · last used {fmtDate(t.last_used_at)}</span>
+                </span>
+                <button type="button" className="profile-linked-btn" onClick={() => revoke(t.id)}>Disconnect</button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {!created && (
-        <div className="cc-new">
-          <input
-            className="profile-input cc-name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Name this connection, e.g. Laptop Claude"
-            maxLength={60}
-          />
-          <button type="button" className="profile-linked-btn" onClick={create} disabled={busy}>
-            {busy ? 'Creating…' : 'Connect Claude'}
-          </button>
-        </div>
-      )}
+      <details className="cc-advanced">
+        <summary>Use a personal token instead (for apps without sign-in)</summary>
+
+        {created ? (
+          <div className="cc-created">
+            <p className="cc-created-title">Your new connection token — copy it now, it won't be shown again.</p>
+            <div className="cc-code-row">
+              <code className="cc-code">{created}</code>
+              <button type="button" className="profile-linked-btn" onClick={() => copy('token', created)}>{copied === 'token' ? 'Copied' : 'Copy'}</button>
+            </div>
+
+            <p className="cc-step"><strong>Claude in the browser, with request headers:</strong> add a custom connector with the URL above, Authentication <strong>No sign-in</strong>,
+              and under <strong>Request headers</strong> choose <strong>x-api-key</strong> with the token as the value.</p>
+
+            <p className="cc-step"><strong>Claude Code:</strong> run this in a terminal.</p>
+            <div className="cc-code-row">
+              <code className="cc-code cc-code--block">{codeCommand}</code>
+              <button type="button" className="profile-linked-btn" onClick={() => copy('code', codeCommand)}>{copied === 'code' ? 'Copied' : 'Copy'}</button>
+            </div>
+
+            <p className="cc-step"><strong>Claude Desktop config file:</strong> Settings → Developer → Edit Config, add this to <code>claude_desktop_config.json</code>, then restart Claude. Needs Node.js.</p>
+            <div className="cc-code-row">
+              <pre className="cc-code cc-code--block">{desktopConfig}</pre>
+              <button type="button" className="profile-linked-btn" onClick={() => copy('desktop', desktopConfig)}>{copied === 'desktop' ? 'Copied' : 'Copy'}</button>
+            </div>
+            <button type="button" className="cc-done" onClick={() => setCreated(null)}>Done</button>
+          </div>
+        ) : (
+          <div className="cc-new">
+            <input
+              className="profile-input cc-name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Name this token, e.g. Laptop Claude"
+              maxLength={60}
+            />
+            <button type="button" className="profile-linked-btn" onClick={create} disabled={busy}>
+              {busy ? 'Creating…' : 'Create token'}
+            </button>
+          </div>
+        )}
+      </details>
       {error && <p className="profile-linked-error">{error}</p>}
     </div>
   )

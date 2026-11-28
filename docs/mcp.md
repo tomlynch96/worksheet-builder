@@ -2,20 +2,32 @@
 
 Teachers can plan and write worksheets with Claude, and Claude saves them straight into their Worksheet Project library: tagged to the site's spec taxonomy, private, and flagged for review the first time the teacher opens them.
 
-> **Admin accounts only for now.** Three layers enforce this:
+> **Admin accounts only for now.** Enforced in five places:
 > - the Profile page only shows the connector to admins
-> - the database only lets admins create tokens (`mcp_tokens` insert policy)
-> - `api/mcp.ts` refuses tokens whose owner isn't an admin, with a 403
+> - the database only lets admins create personal tokens (`mcp_tokens` insert policy)
+> - the consent page and `/api/oauth/approve` refuse non-admins
+> - `/api/oauth/token` refuses to issue or refresh tokens for non-admins
+> - `api/mcp.ts` refuses any token whose owner isn't an admin, with a 403
 >
-> To open it to every teacher, set `ADMIN_ONLY = false` in `api/mcp.ts`, recreate the insert policy without `and public.is_admin()`, and drop the `profile?.is_admin &&` guard in `src/pages/ProfilePage.tsx`.
+> To open it to every teacher:
+> - set `ADMIN_ONLY = false` in `api/mcp.ts`
+> - remove the `isAdmin` checks in `api/_lib/oauth.ts` (`approve` and both grants in `token`)
+> - remove the admin note and the disabled state in `src/pages/OAuthAuthorizePage.tsx`
+> - recreate the insert policy without `and public.is_admin()`
+> - drop the `profile?.is_admin &&` guard in `src/pages/ProfilePage.tsx`
 
 - Endpoint: `https://<site>/api/mcp` (stateless Streamable HTTP, POST only)
-- Auth: a personal token each teacher creates on their **Profile** page, sent as `Authorization: Bearer <token>`
+- Auth: **OAuth sign-in** (claude.ai, the Claude desktop app, Claude Code), or a personal token from the **Profile** page for clients without sign-in
 - Code: `api/mcp.ts`, `api/_lib/`
 
 ## One-off setup (site owner)
 
-1. **Run the migrations** (done on the `worksheet-builder` project on 28 Nov 2026). In the Supabase SQL editor, run `supabase/migrations/029_protect_is_admin.sql`, then `supabase/migrations/028_mcp_connector.sql`. 029 stops users from setting `is_admin` on their own profile, which the admin-only gate depends on. 028 adds the `mcp_tokens` table and the `source`, `needs_review`, `first_opened_at` and `reviewed_at` columns on `worksheets`. Rollbacks for both are in `supabase/rollbacks/`.
+1. **Run the migrations** (all done on the `worksheet-builder` project on 28 Nov 2026). In the Supabase SQL editor, run them in this order: `029_protect_is_admin.sql`, `028_mcp_connector.sql`, `030_mcp_oauth.sql`.
+   - **029** stops users from setting `is_admin` on their own profile, which the admin-only gate depends on.
+   - **028** adds the `mcp_tokens` table and the `source`, `needs_review`, `first_opened_at` and `reviewed_at` columns on `worksheets`.
+   - **030** adds the OAuth tables (`oauth_clients`, `oauth_codes`) and lets `mcp_tokens` hold sign-in connections.
+
+   Rollbacks for all three are in `supabase/rollbacks/`.
 2. **Add the service-role key to Vercel.** Project → Settings → Environment Variables → `SUPABASE_SERVICE_ROLE_KEY`, copied from Supabase → Project Settings → API. It is server-only: never prefix it with `VITE_`. The server also needs the project URL; it reads `SUPABASE_URL`, falling back to the existing `VITE_SUPABASE_URL`.
    - Preview deployments use the Preview environment's values. If previews point at your live database, testing the connector on a preview writes to live data.
 3. *(Optional)* `SITE_URL`, e.g. `https://theworksheetproject.co.uk`, if links in Claude's replies should always use your main domain. Otherwise they use the domain the request came in on.
@@ -23,28 +35,41 @@ Teachers can plan and write worksheets with Claude, and Claude saves them straig
 
 ## Connecting Claude (each admin, for now)
 
-On the site: **Profile → Claude connector → Connect Claude**. The token is shown once, with ready-to-copy setup for:
+**Claude in the browser, or the Claude desktop app** (sign-in, no token):
+1. Go to **Customize → Connectors → + Add → Add custom connector** (Team/Enterprise: Organization settings → Connectors → Add → Custom → Web).
+2. Set **Name** to The Worksheet Project and **URL** to `https://<site>/api/mcp`. Leave sign-in switched on, and leave the OAuth client on the recommended default.
+3. Click **Add**, then **Connect**. Claude sends you to `https://<site>/oauth/authorize`: log in if asked, then click **Allow**, and you're returned to Claude.
 
-- **Claude Code**
-  ```bash
-  claude mcp add --transport http worksheet-project https://<site>/api/mcp --header "Authorization: Bearer <token>"
-  ```
-- **Claude Desktop** (needs Node.js): add this to `claude_desktop_config.json` (Settings → Developer → Edit Config), then restart Claude:
-  ```json
-  { "mcpServers": { "worksheet-project": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://<site>/api/mcp", "--header", "Authorization:${AUTH_HEADER}"],
-      "env": { "AUTH_HEADER": "Bearer <token>" } } } }
-  ```
-- **claude.ai in the browser:** go to **Customize → Connectors → + Add → Add custom connector** (Team/Enterprise: Organization settings → Connectors → Add → Custom → Web). Fill it in as:
-  - **Name:** The Worksheet Project
-  - **URL:** `https://<site>/api/mcp`
-  - **Authentication:** **No sign-in**
-  - **Request headers** (may be under Advanced): pick **`x-api-key`** from the list, and paste the bare token as the value
+**Claude Code:**
 
-  The server accepts the token as `Authorization: Bearer <token>`, or bare in `x-api-key` or `x-auth-token`. claude.ai only allows header names from its approved list. Request headers are in beta and only available to some accounts; if the section doesn't appear, you'll need OAuth sign-in (see *Not built yet*). Headers can't be edited after adding: to change the token, remove the connector and add it again.
+```bash
+claude mcp add --transport http worksheet-project https://<site>/api/mcp
+```
 
-Teachers can name, see the last use of, and disconnect each connection on the same page.
+Then type `/mcp` in Claude Code and choose **Authenticate**. It opens the same consent page.
+
+**Anything without sign-in:** on the Profile page, open **Use a personal token instead** to create a token. It's shown once, with setup for Claude Code (`--header "Authorization: Bearer <token>"`), the Claude Desktop config file (via `mcp-remote`), and claude.ai's beta request headers (`x-api-key`). The server accepts the token as `Authorization: Bearer <token>`, or bare in `x-api-key` or `x-auth-token`.
+
+The Profile page lists every connection, both sign-ins and tokens, with when each was last used, and **Disconnect** ends it straight away.
+
+### How sign-in works (`api/oauth.ts`, `api/_lib/oauth.ts`)
+
+It follows the MCP authorization spec (OAuth 2.1 with PKCE). It's a single Vercel function; `vercel.json` rewrites these paths to it:
+
+| Path | Purpose |
+|---|---|
+| `/.well-known/oauth-protected-resource` | Says which sign-in service protects `/api/mcp`. Linked from the 401's `WWW-Authenticate` header. |
+| `/.well-known/oauth-authorization-server` | What the sign-in service supports |
+| `/api/oauth/register` | Automatic client registration (Dynamic Client Registration) |
+| `/oauth/authorize` | The consent page (React, `src/pages/OAuthAuthorizePage.tsx`) |
+| `/api/oauth/authorize-info`, `/api/oauth/approve` | Called by the consent page. `approve` checks the site login and creates a 10-minute, single-use code. |
+| `/api/oauth/token` | Code + PKCE → a 1-hour access token and a 90-day refresh token, rotated on every use |
+| `/api/oauth/revoke` | Token revocation |
+
+- **Client identity:** clients can identify themselves by registering, or with a published client metadata document (claude.ai's default, "Claude's published identity"). Metadata documents are only fetched from Anthropic domains.
+- **Redirect addresses:** while trialling, only Claude (`claude.ai`, `claude.com`) and local apps (`http://localhost`, `127.0.0.1`) can be sent a code. This is `isAllowedRedirect` in `api/_lib/oauth.ts`.
+- **Connections:** stored in `mcp_tokens` as `kind = 'oauth'`, with hashed access and refresh tokens. `/api/mcp` checks them exactly like personal tokens.
+- **Login caveat:** the consent page sends logged-out teachers to `/onboarding` and back. Google, Microsoft and password sign-in return to the same page. **Magic-link emails currently always open `worksheet-builder-ten.vercel.app`** (`emailRedirectTo` in `src/hooks/useProfile.ts`), so a teacher who signs in by email mid-connection lands on that domain and has to start connecting again.
 
 ## What Claude can do
 
@@ -89,7 +114,13 @@ It also adds two slash commands: `/make-worksheet` and `/plan-unit`.
 
 ## Security notes
 
-- **Token storage:** only a SHA-256 hash of each token is stored. Revoking a token sets `revoked_at`, and the server rejects it straight away.
+- **Token storage:** only SHA-256 hashes of tokens, refresh tokens and authorization codes are stored. Revoking (Disconnect, or the revocation endpoint) sets `revoked_at`, and the server rejects the connection straight away.
+- **OAuth safeguards:**
+  - PKCE (S256) is required
+  - codes are single-use and expire after 10 minutes
+  - redirect addresses must exactly match a registered one and be on the allowed list; errors are only sent back to trusted addresses
+  - refresh tokens rotate, so an old one stops working
+  - `oauth_clients` and `oauth_codes` have row security with no policies, so only the server can read them
 - **Service-role key:** the server uses it, which bypasses row-level security. Every query in `api/_lib/store.ts` therefore filters on the token's teacher explicitly. Keep it that way when adding tools.
 - **Library content:** text from library worksheets is returned to Claude as content written by other teachers. The server instructions tell Claude to treat it as data, not instructions.
 
@@ -107,11 +138,14 @@ npm run check:api    # type-check the MCP server the way Vercel runs it (Node ES
 npm run test:mcp     # end-to-end: the real handler + MCP client against an in-memory database
 ```
 
+```bash
+npm run test:oauth   # end-to-end sign-in: discovery, registration, published identity, PKCE, refresh, revocation, admin gate
+```
+
 `api/` runs as plain Node ES modules on Vercel, so relative imports there need `.js` extensions and can't import `src/data` directly. That's why the taxonomy and guide are generated into `api/_lib/*.generated.ts`. Commit the regenerated files.
 
 ## Not built yet
 
-- **OAuth sign-in,** so teachers can connect without copying a token, including claude.ai accounts that don't have request headers.
 - **Print-ready PDF and page previews.** The plan is a server-side render of the same print view in headless Chromium, so Claude can check layout and hand back a PDF.
 - **Booklet images for diagrams.** Booklets print diagrams from a PNG copy the editor makes in the browser. A diagram from Claude only gets that copy when the teacher changes its labelled values or edits it in the Diagram Studio; until then it may be missing from booklets.
 - **Planned-use date and post-use reflection** (priority 7 in CLAUDE.md).

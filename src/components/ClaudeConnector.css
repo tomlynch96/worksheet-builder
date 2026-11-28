@@ -83,3 +83,31 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.cc-how {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 2px 14px 14px;
+  margin-bottom: 14px;
+}
+
+.cc-subtitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  margin: 0 0 8px;
+}
+
+.cc-advanced {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.cc-advanced > summary {
+  cursor: pointer;
+  color: #4f46e5;
+  font-weight: 600;
+  margin-bottom: 10px;
+}

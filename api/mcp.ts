@@ -10,17 +10,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { buildServer } from './_lib/mcp-server.js'
 import { supabaseStore, type Store } from './_lib/store.js'
+import { siteOrigin } from './_lib/http.js'
 
 const ADMIN_ONLY = true
 
 let cachedStore: Store | null = null
 
-function siteOrigin(req: VercelRequest): string {
-  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/+$/, '')
-  const proto = String(req.headers['x-forwarded-proto'] ?? 'https').split(',')[0].trim()
-  const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '').split(',')[0].trim()
-  return `${proto}://${host}`
-}
 
 // The token can arrive as "Authorization: Bearer <token>" (Claude Code, Claude Desktop) or,
 // for claude.ai's request-header connectors, which only offer pre-approved header names, as
@@ -50,10 +45,14 @@ export async function handleMcp(req: VercelRequest, res: VercelResponse, store: 
   const token = tokenFromRequest(req.headers)
   const access = token ? await store.accessForToken(token) : null
   if (!access) {
-    res.setHeader('WWW-Authenticate', 'Bearer realm="The Worksheet Project"')
+    // Points OAuth clients (claude.ai) at the sign-in service: see api/_lib/oauth.ts
+    const metadata = `${siteOrigin(req)}/.well-known/oauth-protected-resource`
+    res.setHeader('WWW-Authenticate', token
+      ? `Bearer error="invalid_token", error_description="The token is invalid, expired or revoked", resource_metadata="${metadata}"`
+      : `Bearer resource_metadata="${metadata}"`)
     return rpcError(res, 401, token
-      ? 'This connector token is not valid or has been revoked. Create a new one on your Profile page in The Worksheet Project.'
-      : 'Missing connector token. Create one on your Profile page in The Worksheet Project and send it as "Authorization: Bearer <token>" or in an "x-api-key" header.')
+      ? 'This connector token is not valid, has expired or has been revoked. Sign in again, or create a new token on your Profile page in The Worksheet Project.'
+      : 'Sign in required. Connect through your MCP client’s sign-in, or create a token on your Profile page in The Worksheet Project and send it as "Authorization: Bearer <token>" or in an "x-api-key" header.')
   }
 
   if (ADMIN_ONLY && !access.isAdmin) {

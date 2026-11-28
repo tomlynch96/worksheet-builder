@@ -40,6 +40,22 @@ export interface Store {
   schemeTopic(id: string): Promise<Row | null>
   insertSchemeTopic(row: Row): Promise<Row>
   insertSchemeTopicWorksheet(row: Row): Promise<Row>
+
+  // ── OAuth sign-in (api/_lib/oauth.ts) ──
+  /** Profile id for a site login (a Supabase Auth access token), or null. */
+  profileForUserJwt(jwt: string): Promise<string | null>
+  isAdmin(profileId: string): Promise<boolean>
+  oauthClient(clientId: string): Promise<Row | null>
+  upsertOAuthClient(row: Row): Promise<void>
+  insertOAuthCode(row: Row): Promise<void>
+  /** Marks a code used and returns it, or null if it doesn't exist or was already used. */
+  consumeOAuthCode(codeHash: string): Promise<Row | null>
+  insertConnection(row: Row): Promise<void>
+  /** A live (not revoked) OAuth connection by refresh-token hash. */
+  connectionByRefresh(refreshHash: string): Promise<Row | null>
+  updateConnection(id: string, patch: Row): Promise<void>
+  /** Revoke whichever connection this access or refresh token belongs to. */
+  revokeByTokenHash(hash: string): Promise<void>
 }
 
 export const hashToken = (token: string) => createHash('sha256').update(token).digest('hex')
@@ -69,8 +85,9 @@ export function supabaseStore(): Store {
 
   return {
     async accessForToken(token) {
-      const rows = check(await db.from('mcp_tokens').select('id, profile_id, profiles(is_admin)').eq('token_hash', hashToken(token)).is('revoked_at', null).limit(1), 'token') as Row[]
+      const rows = check(await db.from('mcp_tokens').select('id, profile_id, expires_at, profiles(is_admin)').eq('token_hash', hashToken(token)).is('revoked_at', null).limit(1), 'token') as Row[]
       if (!rows?.length) return null
+      if (rows[0].expires_at && new Date(rows[0].expires_at).getTime() <= Date.now()) return null
       await db.from('mcp_tokens').update({ last_used_at: new Date().toISOString() }).eq('id', rows[0].id)
       return { profileId: rows[0].profile_id as string, isAdmin: rows[0].profiles?.is_admin === true }
     },
@@ -122,6 +139,44 @@ export function supabaseStore(): Store {
     },
     async insertSchemeTopicWorksheet(row) {
       return check(await db.from('scheme_topic_worksheets').insert(row).select().single(), 'add worksheet to scheme') as Row
+    },
+
+    async profileForUserJwt(jwt) {
+      const { data, error } = await db.auth.getUser(jwt)
+      return error || !data.user ? null : data.user.id
+    },
+    async isAdmin(profileId) {
+      const row = check(await db.from('profiles').select('is_admin').eq('id', profileId).maybeSingle(), 'admin check') as Row | null
+      return row?.is_admin === true
+    },
+    async oauthClient(clientId) {
+      return check(await db.from('oauth_clients').select('*').eq('client_id', clientId).maybeSingle(), 'oauth client') as Row | null
+    },
+    async upsertOAuthClient(row) {
+      check(await db.from('oauth_clients').upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'client_id' }), 'save oauth client')
+    },
+    async insertOAuthCode(row) {
+      check(await db.from('oauth_codes').insert(row), 'save authorization code')
+    },
+    async consumeOAuthCode(codeHash) {
+      // Single conditional update, so a code can only ever be exchanged once
+      const rows = check(await db.from('oauth_codes').update({ used_at: new Date().toISOString() })
+        .eq('code_hash', codeHash).is('used_at', null).select(), 'use authorization code') as Row[]
+      return rows?.[0] ?? null
+    },
+    async insertConnection(row) {
+      check(await db.from('mcp_tokens').insert(row), 'save connection')
+    },
+    async connectionByRefresh(refreshHash) {
+      return check(await db.from('mcp_tokens').select('*').eq('refresh_token_hash', refreshHash).eq('kind', 'oauth').is('revoked_at', null).maybeSingle(), 'refresh token') as Row | null
+    },
+    async updateConnection(id, patch) {
+      check(await db.from('mcp_tokens').update(patch).eq('id', id), 'update connection')
+    },
+    async revokeByTokenHash(hash) {
+      const now = new Date().toISOString()
+      check(await db.from('mcp_tokens').update({ revoked_at: now }).eq('token_hash', hash).is('revoked_at', null), 'revoke')
+      check(await db.from('mcp_tokens').update({ revoked_at: now }).eq('refresh_token_hash', hash).is('revoked_at', null), 'revoke')
     },
   }
 }

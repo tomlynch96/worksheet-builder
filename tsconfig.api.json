@@ -9,5 +9,5 @@
     "types": ["node"],
     "noUnusedLocals": true
   },
-  "files": ["api/mcp.ts"]
+  "files": ["api/mcp.ts", "api/oauth.ts"]
 }
