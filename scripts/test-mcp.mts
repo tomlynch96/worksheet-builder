@@ -72,9 +72,22 @@ for (const [name, headers, status] of [
   ['no token', {}, 401],
   ['bad token', { Authorization: 'Bearer nope' }, 401],
   ['non-admin teacher token', { Authorization: `Bearer ${TEACHER_TOKEN}` }, 403],
+  ['bad x-api-key', { 'x-api-key': 'nope' }, 401],
 ] as const) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', ...headers }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }) })
   ok(r.status === status, `${name} → ${status}`, r.status)
+}
+
+// claude.ai request-header connectors: the bare token in x-api-key or x-auth-token
+for (const [name, headers] of [
+  ['x-api-key', { 'x-api-key': TOKEN }],
+  ['x-auth-token', { 'x-auth-token': TOKEN }],
+  ['x-api-key with "Bearer "', { 'x-api-key': `Bearer ${TOKEN}` }],
+] as const) {
+  const c = new Client({ name: 'e2e-header', version: '1.0.0' })
+  await c.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers } }))
+  ok((await c.listTools()).tools.length === 12, `token accepted in ${name}`)
+  await c.close()
 }
 
 const client = new Client({ name: 'e2e', version: '1.0.0' })

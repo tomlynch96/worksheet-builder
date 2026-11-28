@@ -124,6 +124,10 @@ export function ClaudeConnector({ profileId }: { profileId: string }) {
             <button type="button" className="profile-linked-btn" onClick={() => copy('token', created)}>{copied === 'token' ? 'Copied' : 'Copy'}</button>
           </div>
 
+          <p className="cc-step"><strong>Claude in the browser (claude.ai):</strong> Customize → Connectors → + Add → Add custom connector.
+            Name it “The Worksheet Project”, URL <code>{endpoint}</code>, Authentication <strong>No sign-in</strong>.
+            Under <strong>Request headers</strong> (maybe inside Advanced) choose <strong>x-api-key</strong> from the list and paste the token above as the value. Then Add.</p>
+
           <p className="cc-step"><strong>Claude Code:</strong> run this in a terminal.</p>
           <div className="cc-code-row">
             <code className="cc-code cc-code--block">{codeCommand}</code>
