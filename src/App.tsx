@@ -20,6 +20,7 @@ import { SchemeEditorPage } from './pages/SchemeEditorPage'
 import { MCQuizPage } from './pages/MCQuizPage'
 import { MarkingPage } from './pages/MarkingPage'
 import { ExamBuilderPage } from './pages/ExamBuilderPage'
+import { OAuthAuthorizePage } from './pages/OAuthAuthorizePage'
 import { SpecRefNotice } from './components/SpecRefNotice'
 import './App.css'
 
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/library" element={<AuthGate><PublicLibraryPage /></AuthGate>} />
           <Route path="/library/:id" element={<AuthGate><LibraryPreviewPage /></AuthGate>} />
           <Route path="/share/:id" element={<SharePreviewPage />} />
+          <Route path="/oauth/authorize" element={<OAuthAuthorizePage />} />
           <Route path="/admin" element={<AuthGate><AdminPage /></AuthGate>} />
           <Route path="/follow-ups" element={<AuthGate><FollowUpsPage /></AuthGate>} />
           <Route path="/schemes" element={<AuthGate><SchemesPage /></AuthGate>} />

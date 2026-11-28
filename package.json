@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "check:api": "tsc -p tsconfig.api.json",
     "gen:prompt": "npx tsx scripts/gen-worksheet-prompt.mts",
-    "test:mcp": "npx tsx scripts/test-mcp.mts"
+    "test:mcp": "npx tsx scripts/test-mcp.mts",
+    "test:oauth": "npx tsx scripts/test-oauth.mts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
